@@ -1,7 +1,6 @@
 import logging
 import zeep
 from requests import Session
-from suds.client import Client
 from zeep.transports import Transport
 
 
@@ -14,7 +13,7 @@ def main(service_agreement_uuid, user_system_uuid, user_uuid, service_uuid):
     endpoint_url ='https://exttest.serviceplatformen.dk/service/CVROnline/CVROnline/1'
 
     session = Session()
-    session.cert = './magenta_ava_2017-03.crt'
+    session.cert = './magenta_ava_test_2017-03.crt'
     transport = Transport(session=session)
     client = zeep.Client(wsdl=wsdl_url, transport=transport)
     service = client.create_service('{http://rep.oio.dk/eogs/xml.wsdl/}CvrBinding', endpoint_url)
