@@ -1,0 +1,555 @@
+
+Prefixes:
+     ns11: http://rep.oio.dk/itst.dk/xml/schemas/2005/01/10/
+     ns12: http://rep.oio.dk/cvr.dk/xml/schemas/2005/03/22/
+     ns8: http://rep.oio.dk/xkom.dk/xml/schemas/2006/01/06/
+     ns9: http://rep.oio.dk/ebxml/xml/schemas/dkcc/2005/03/15/
+     ns2: http://rep.oio.dk/eogs/xml.schema/
+     xsd: http://www.w3.org/2001/XMLSchema
+     ns13: http://rep.oio.dk/cpr.dk/xml/schemas/2007/01/02/
+     ns0: http://rep.oio.dk/eogs/xml.wsdl/
+     ns1: http://serviceplatformen.dk/xml/schemas/InvocationContext/1/
+     ns10: http://rep.oio.dk/ebxml/xml/schemas/dkcc/2005/05/13/
+     ns3: http://rep.oio.dk/ebxml/xml/schemas/dkcc/2003/02/13/
+     ns4: http://rep.oio.dk/itst.dk/xml/schemas/2005/06/24/
+     ns5: http://rep.oio.dk/kms.dk/xml/schemas/2007/05/23/
+     ns6: http://rep.oio.dk/cpr.dk/xml/schemas/core/2005/03/18/
+     ns7: http://rep.oio.dk/xkom.dk/xml/schemas/2005/03/15/
+
+Global elements:
+     ns13:PersonCivilregistrationIdentifier(ns13:PersonCivilRegistrationIdentifierType)
+     ns6:AuthorityCode(ns6:AuthorityCodeType)
+     ns6:MunicipalityCode(ns6:AuthorityCodeType)
+     ns6:StreetCode(ns6:StreetCodeType)
+     ns6:StreetNameForAddressingName(ns6:StreetNameForAddressingNameType)
+     ns12:ExporterIndicator(xsd:boolean)
+     ns12:ImporterIndicator(xsd:boolean)
+     ns3:CountryIdentificationCode(ns3:CountryIdentificationCodeType)
+     ns3:FloorIdentifier(ns3:FloorIdentifierType)
+     ns3:MailDeliverySublocationIdentifier(ns3:MailDeliverySublocationIdentifierType)
+     ns3:StreetBuildingIdentifier(ns3:StreetBuildingIdentifierType)
+     ns3:SuiteIdentifier(ns3:SuiteIdentifierType)
+     ns9:DistrictName(ns9:DistrictNameType)
+     ns9:DistrictSubdivisionIdentifier(ns9:DistrictSubdivisionIdentifierType)
+     ns9:PostCodeIdentifier(ns9:PostCodeIdentifierType)
+     ns9:StreetName(ns9:StreetNameType)
+     ns10:PostOfficeBoxIdentifier(ns10:PostOfficeBoxIdentifierType)
+     ns2:Activity(ns2:ActivityType)
+     ns2:ActivityCode(ns2:ActivityCodeType)
+     ns2:ActivityDescription(ns2:ActivityDescriptionType)
+     ns2:ActivityInformation(ns2:ActivityInformationType)
+     ns2:ActivityRank(ns2:ActivityRankType)
+     ns2:ActivityResponsibilityCode(ns2:ActivityResponsibilityCodeType)
+     ns2:AddressDescription(ns2:AddressDescriptionType)
+     ns2:AddressLineText(ns2:AddressLineTextType)
+     ns2:AddressPOBox(ns2:AddressPOBoxType)
+     ns2:AddressProtectionIndicator(ns2:AddressProtectionIndicatorType)
+     ns2:AdvertisingProtectionIndicator(ns2:AdvertisingProtectionIndicatorType)
+     ns2:AncillaryUnitIndicator(ns2:AncillaryUnitIndicatorType)
+     ns2:BusinessFormat(ns2:BusinessFormatType)
+     ns2:BusinessFormatCode(ns2:BusinessFormatCodeType)
+     ns2:ContactInformation(ns2:ContactInformationType)
+     ns2:CreditorInformation(ns2:CreditorInformationType)
+     ns2:CreditorStatusCode(ns2:CreditorStatusCodeType)
+     ns2:CreditorStatusInformationCode(ns2:CreditorStatusInformationCodeType)
+     ns2:DataSupplierIdentifier(ns2:DataSupplierIdentifierType)
+     ns2:EmploymentInterval(ns2:EmploymentIntervalType)
+     ns2:EmploymentIntervalCode(ns2:EmploymentIntervalCodeType)
+     ns2:EmploymentQuarter(ns2:EmploymentQuarterType)
+     ns2:EmploymentYear(ns2:EmploymentYearType)
+     ns2:LegalUnit(ns2:LegalUnitType)
+     ns2:LegalUnitAffiliation(ns2:LegalUnitAffiliationType)
+     ns2:LegalUnitIdentifier(ns2:LegalUnitIdentifierType)
+     ns2:LegalUnitName(ns2:LegalUnitNameType)
+     ns2:Lifecycle(ns2:LifecycleType)
+     ns2:MainDivisionIndicator(ns2:MainDivisionIndicatorType)
+     ns2:NumberOfEmployees(ns2:NumberOfEmployeesType)
+     ns2:Obligation(ns2:ObligationType)
+     ns2:ObligationCode(ns2:ObligationCodeType)
+     ns2:Participant(ns2:ParticipantType)
+     ns2:ParticipantDanishPerson(ns2:ParticipantDanishPersonType)
+     ns2:ParticipantIdentifier(ns2:ParticipantIdentifierType)
+     ns2:ParticipantLegalUnit(ns2:ParticipantLegalUnitType)
+     ns2:ParticipantName(ns2:ParticipantNameType)
+     ns2:ParticipantOther(ns2:ParticipantOtherType)
+     ns2:ProductionUnit(ns2:ProductionUnitType)
+     ns2:ProductionUnitAffiliation(ns2:ProductionUnitAffiliationType)
+     ns2:ProductionUnitIdentifier(ns2:ProductionUnitIdentifierType)
+     ns2:ProductionUnitName(ns2:ProductionUnitNameType)
+     ns0:GetLegalUnitRequest(ns0:GetLegalUnitRequestType)
+     ns0:GetLegalUnitResponse(LegalUnit: ns2:LegalUnitType)
+     ns0:GetProductionUnitRequest(ns0:GetProductionUnitRequestType)
+     ns0:GetProductionUnitResponse(ProductionUnit: ns2:ProductionUnitType)
+     ns0:GetRelatedProductionUnitNameAndAddressRequest(ns0:GetRelatedProductionUnitNameAndAddressRequestType)
+     ns0:GetRelatedProductionUnitNameAndAddressResponse(ProductionUnitNameAndAddressCollection: ns0:ProductionUnitNameAndAddressCollectionType)
+     ns0:ProductionUnitNameAndAddress(ns0:ProductionUnitNameAndAddressType)
+     ns0:RequestBase(ns0:RequestBaseType)
+     ns0:SearchAddress(ns0:SearchAddressType)
+     ns0:SearchContactInformation(ns0:SearchContactInformationType)
+     ns0:SearchLegalUnitRequest(ns0:SearchLegalUnitRequestType)
+     ns0:SearchLegalUnitResponse(LegalUnitIdentifierCollection: ns0:LegalUnitIdentifierCollectionType,
+moreResultsExistIndicator: ns0:MoreResultsExistIndicatorType)
+     ns0:SearchLifecycleStartDateInterval(ns0:SearchLifecycleStartDateIntervalType)
+     ns0:SearchLifecycleStatus(ns0:SearchLifecycleStatusType)
+     ns0:SearchName(ns0:SearchNameType)
+     ns0:SearchNumberOfProductionUnitInterval(ns0:SearchNumberOfProductionUnitIntervalType)
+     ns0:SearchProductionUnitRequest(ns0:SearchProductionUnitRequestType)
+     ns0:SearchProductionUnitResponse(ProductionUnitIdentifierCollection: ns0:ProductionUnitIdentifierCollectionType moreResultsExistIndicator: ns0:MoreResultsExistIndicatorType)
+     ns11:FaxNumberIdentifier(ns11:TelephoneNumberIdentifierType)
+     ns11:TelephoneNumberIdentifier(ns11:TelephoneNumberIdentifierType)
+     ns4:CareOfName(ns4:CareOfNameType)
+     ns5:RegionCode(ns6:AuthorityCodeType)
+     ns7:AddressAccess(ns7:AddressAccessType)
+     ns7:EmailAddressIdentifier(ns7:EmailAddressIdentifierType)
+     ns8:AddressPostal(ns8:AddressPostalType)
+     ns1:AccountingInfo(ns1:AccountingInfoType)
+     ns1:CallersServiceCallIdentifier(ns1:CallersServiceCallIdentifierType)
+     ns1:InvocationContext(ns1:InvocationContextType)
+     ns1:OnBehalfOfUser(ns1:OnBehalfOfUserType)
+     ns1:ServiceAgreementUUID(ns1:ServiceAgreenentUUIDtype)
+     ns1:ServiceUUID(ns1:ServiceUUIDtype)
+     ns1:UserSystemUUID(ns1:UserSystemUUIDtype)
+     ns1:UserUUID(ns1:UserUUIDtype)
+     
+
+Global types:
+     
+     ns13:PersonCivilRegistrationIdentifierType
+     ns6:AuthorityCodeType
+     ns6:StreetCodeType
+     ns6:StreetNameForAddressingNameType
+     ns3:CountryIdentificationCodeType(ns3:_CountryIdentificationCodeType\n scheme: ns3:_CountryIdentificationSchemeType)
+     ns3:FloorIdentifierType
+     ns3:MailDeliverySublocationIdentifierType
+     ns3:StreetBuildingIdentifierType
+     ns3:SuiteIdentifierType
+     ns3:_CountryIdentificationCodeType
+     ns3:_CountryIdentificationSchemeType
+     ns9:DistrictNameType
+     ns9:DistrictSubdivisionIdentifierType
+     ns9:PostCodeIdentifierType
+     ns9:StreetNameType
+     ns10:PostOfficeBoxIdentifierType
+     ns2:ActivityCodeType
+     ns2:ActivityDescriptionType
+
+     ns2:ActivityInformationType(
+        ActivityResponsibilityCode: ns2:ActivityResponsibilityCodeType,
+        MainActivity: ns2:ActivityType,
+        SecondaryActivities: ns2:ActivityRankCollectionType)
+        ns2:ActivityRankCollectionType(ActivityRank: ns2:ActivityRankType[])
+        ns2:ActivityRankType(Activity: ns2:ActivityType,
+        rankNumber: ns2:RankType
+     )
+
+     ns2:ActivityResponsibilityCodeType
+
+     ns2:ActivityType(
+        ActivityCode: ns2:ActivityCodeType,
+        ActivityDescription: ns2:ActivityDescriptionType,
+        validFromDate: ns2:ValidDateType,
+        validToDate: ns2:ValidDateType
+     )
+
+     ns2:AddressDescriptionType(
+        AddressAccess: ns7:AddressAccessType,
+        AddressPostalExtended: ns2:AddressPostalExtendedType,
+        AddressLineText: ns2:AddressLineTextType,
+        CountryIdentificationCode: ns3:CountryIdentificationCodeType,
+        AddressProtectionIndicator: ns2:AddressProtectionIndicatorType,
+        validFromDate: ns2:ValidDateType,
+        validToDate: ns2:ValidDateType
+     )
+
+     ns2:AddressLineTextType
+
+     ns2:AddressLocationType(AddressAccess: ns7:AddressAccessType,
+AddressPostalExtended: ns2:AddressPostalExtendedType,
+AddressLineText: ns2:AddressLineTextType,
+CountryIdentificationCode: ns3:CountryIdentificationCodeType,
+AddressProtectionIndicator: ns2:AddressProtectionIndicatorType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType)
+     ns2:AddressOfficialType(AddressAccess: ns7:AddressAccessType,
+AddressPostalExtended: ns2:AddressPostalExtendedType,
+AddressLineText: ns2:AddressLineTextType,
+CountryIdentificationCode: ns3:CountryIdentificationCodeType,
+AddressProtectionIndicator: ns2:AddressProtectionIndicatorType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType)
+     ns2:AddressPOBoxType(AddressAccess: ns7:AddressAccessType,
+AddressPostalExtended: ns2:AddressPostalExtendedType,
+AddressLineText: ns2:AddressLineTextType,
+CountryIdentificationCode: ns3:CountryIdentificationCodeType,
+AddressProtectionIndicator: ns2:AddressProtectionIndicatorType,
+PostOfficeBoxIdentifier: ns10:PostOfficeBoxIdentifierType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType)
+     ns2:AddressPostalExtendedType(MailDeliverySublocationIdentifier: ns3:MailDeliverySublocationIdentifierType,
+StreetName: ns9:StreetNameType,
+StreetNameForAddressingName: ns6:StreetNameForAddressingNameType,
+StreetBuildingIdentifier: ns3:StreetBuildingIdentifierType,
+FloorIdentifier: ns3:FloorIdentifierType,
+SuiteIdentifier: ns3:SuiteIdentifierType,
+DistrictSubdivisionIdentifier: ns9:DistrictSubdivisionIdentifierType,
+PostOfficeBoxIdentifier: ns10:PostOfficeBoxIdentifierType,
+PostCodeIdentifier: ns9:PostCodeIdentifierType,
+DistrictName: ns9:DistrictNameType,
+CountryIdentificationCode: ns3:CountryIdentificationCodeType,
+CareOfName: ns4:CareOfNameType,
+StreetBuildingIdentifierTo: ns2:StreetBuildingIdentifierToType,
+RegionCode: ns6:AuthorityCodeType)
+     ns2:AddressProtectionIndicatorType
+     ns2:AdvertisingProtectionIndicatorType
+     ns2:AncillaryUnitIndicatorType
+     ns2:BusinessFormatCodeType
+     ns2:BusinessFormatType(BusinessFormatCode: ns2:BusinessFormatCodeType,
+DataSupplierIdentifier: ns2:DataSupplierIdentifierType,
+MunicipalCommunity: ns2:MunicipalCommunityType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType)
+     ns2:CessationDateType
+     ns2:ContactInformationType(Telephone: ns2:TelephoneType,
+Fax: ns2:FaxType,
+Email: ns2:EmailType,
+ForeignTelephone: ns2:TelephoneType,
+ForeignFax: ns2:FaxType)
+     ns2:CreditorInformationCollectionType(CreditorInformation: ns2:CreditorInformationType[])
+     ns2:CreditorInformationType(CreditorStatusCode: ns2:CreditorStatusCodeType,
+CreditorStatusInformationCode: ns2:CreditorStatusInformationCodeType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType)
+     ns2:CreditorStatusCodeType
+     ns2:CreditorStatusInformationCodeType
+     ns2:DataSupplierIdentifierType
+     ns2:EmailType(EmailAddressIdentifier: ns7:EmailAddressIdentifierType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType,
+protectionIndicator: ns2:ProtectionIndicatorType)
+     ns2:EmploymentIntervalCodeType
+     ns2:EmploymentIntervalType(MinimumNumberOfEmployees: ns2:NumberOfEmployeesType,
+MaximumNumberOfEmployees: ns2:NumberOfEmployeesType)
+     ns2:EmploymentQuarterType(NumberOfEmployees: ns2:NumberOfEmployeesType,
+EmploymentIntervalCode: ns2:EmploymentIntervalCodeType,
+EmploymentInterval: ns2:EmploymentIntervalType,
+referenceYear: ns2:ReferenceYearType,
+referenceQuarter: ns2:ReferenceQuarterCodeType)
+     ns2:EmploymentYearType(NumberOfEmployees: ns2:NumberOfEmployeesType,
+EmploymentIntervalCode: ns2:EmploymentIntervalCodeType,
+EmploymentInterval: ns2:EmploymentIntervalType,
+referenceYear: ns2:ReferenceYearType)
+     ns2:FaxType(FaxNumberIdentifier: ns11:TelephoneNumberIdentifierType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType,
+protectionIndicator: ns2:ProtectionIndicatorType)
+     ns2:LegalUnitAffiliationType(LegalUnitIdentifier: ns2:LegalUnitIdentifierType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType)
+     ns2:LegalUnitIdentifierType
+     ns2:LegalUnitNameBaseType
+     ns2:LegalUnitNameSequenceNumberType
+     ns2:LegalUnitNameType(name: ns2:LegalUnitNameBaseType,
+sequenceNumber: ns2:LegalUnitNameSequenceNumberType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType)
+     ns2:LegalUnitType(LegalUnitIdentifier: ns2:LegalUnitIdentifierType,
+LegalUnitName: ns2:LegalUnitNameType,
+AdvertisingProtectionIndicator: ns2:AdvertisingProtectionIndicatorType,
+ExporterIndicator: xsd:boolean,
+ImporterIndicator: xsd:boolean,
+Lifecycle: ns2:LifecycleType,
+AddressOfficial: ns2:AddressOfficialType,
+AddressPostal: ns2:AddressDescriptionType,
+AddressPOBox: ns2:AddressPOBoxType,
+ActivityInformation: ns2:ActivityInformationType,
+BusinessFormat: ns2:BusinessFormatType,
+EmploymentYear: ns2:EmploymentYearType,
+EmploymentQuarter: ns2:EmploymentQuarterType,
+ContactInformation: ns2:ContactInformationType,
+CreditorInformationCollection: ns2:CreditorInformationCollectionType,
+ObligationCollection: ns2:ObligationCollectionType,
+ParticipantCollection: ns2:ParticipantCollectionType,
+ProductionUnitAffiliationCollection: ns2:ProductionUnitAffiliationCollectionType,
+versionIdentifier: ns2:VersionIdentifierType)
+     ns2:LifecycleType(StartDate: ns2:StartDateType,
+CessationDate: ns2:CessationDateType)
+     ns2:MainDivisionIndicatorType
+     ns2:MunicipalCommunityType
+     ns2:NumberOfEmployeesType
+     ns2:ObligationCodeType
+     ns2:ObligationCollectionType(Obligation: ns2:ObligationType[])
+     ns2:ObligationType(ObligationCode: ns2:ObligationCodeType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType)
+     ns2:ParticipantCollectionType(Participant: ns2:ParticipantType[])
+     ns2:ParticipantDanishPersonType(ParticipantIdentifier: ns2:ParticipantIdentifierType,
+ParticipantName: ns2:ParticipantNameType,
+PersonCivilregistrationIdentifier: ns13:PersonCivilRegistrationIdentifierType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType)
+     ns2:ParticipantIdentifierType
+     ns2:ParticipantLegalUnitType(ParticipantIdentifier: ns2:ParticipantIdentifierType,
+ParticipantName: ns2:ParticipantNameType,
+LegalUnitIdentifier: ns2:LegalUnitIdentifierType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType)
+     ns2:ParticipantNameType
+     ns2:ParticipantOtherType(ParticipantIdentifier: ns2:ParticipantIdentifierType,
+ParticipantName: ns2:ParticipantNameType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType)
+     ns2:ParticipantType(ParticipantIdentifier: ns2:ParticipantIdentifierType,
+ParticipantName: ns2:ParticipantNameType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType)
+     ns2:ProductionUnitAffiliationCollectionType(ProductionUnitAffiliation: ns2:ProductionUnitAffiliationType[])
+     ns2:ProductionUnitAffiliationType(ProductionUnitIdentifier: ns2:ProductionUnitIdentifierType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType)
+     ns2:ProductionUnitIdentifierType
+     ns2:ProductionUnitNameBaseType
+     ns2:ProductionUnitNameSequenceNumberType
+     ns2:ProductionUnitNameType(name: ns2:ProductionUnitNameBaseType,
+sequenceNumber: ns2:ProductionUnitNameSequenceNumberType,
+validFromDate: ns2:ValidDateType,
+validToDate: ns2:ValidDateType)
+     ns2:ProductionUnitType(ProductionUnitIdentifier: ns2:ProductionUnitIdentifierType,
+ProductionUnitName: ns2:ProductionUnitNameType,
+AdvertisingProtectionIndicator: ns2:AdvertisingProtectionIndicatorType,
+AncillaryUnitIndicator: ns2:AncillaryUnitIndicatorType,
+MainDivisionIndicator: ns2:MainDivisionIndicatorType,
+Lifecycle: ns2:LifecycleType,
+AddressLocation: ns2:AddressLocationType,
+AddressPostal: ns2:AddressDescriptionType,
+AddressPOBox: ns2:AddressPOBoxType,
+LegalUnitAffiliation: ns2:LegalUnitAffiliationType,
+ActivityInformation: ns2:ActivityInformationType,
+EmploymentYear: ns2:EmploymentYearType,
+ContactInformation: ns2:ContactInformationType,
+versionIdentifier: ns2:VersionIdentifierType)
+
+     ns2:ProtectionIndicatorType
+     ns2:RankType
+     ns2:ReferenceQuarterCodeType
+     ns2:ReferenceYearType
+     ns2:StartDateType
+     ns2:StreetBuildingIdentifierToType
+     ns2:TelephoneType(TelephoneNumberIdentifier: ns11:TelephoneNumberIdentifierType,
+                       validFromDate: ns2:ValidDateType,
+                       validToDate: ns2:ValidDateType,
+                       protectionIndicator: ns2:ProtectionIndicatorType)
+     ns2:ValidDateType
+     ns2:VersionIdentifierType
+     ns0:AddressLocationType(AddressAccess: ns7:AddressAccessType,
+                             AddressPostalExtended: ns2:AddressPostalExtendedType,
+                             AddressLineText: ns2:AddressLineTextType,
+                             CountryIdentificationCode: ns3:CountryIdentificationCodeType,
+                             AddressProtectionIndicator: ns2:AddressProtectionIndicatorType,
+                             validFromDate: ns2:ValidDateType,
+                             validToDate: ns2:ValidDateType)
+     ns0:GetLegalUnitRequestType(InvocationContext: ns1:InvocationContextType,
+                                 LegalUnitIdentifier: ns2:LegalUnitIdentifierType,
+                                 level: ns0:LevelType)
+     ns0:GetProductionUnitRequestType(InvocationContext: ns1:InvocationContextType,
+                                      ProductionUnitIdentifier: ns2:ProductionUnitIdentifierType,
+                                      level: ns0:LevelType)
+     ns0:GetRelatedProductionUnitNameAndAddressRequestType(InvocationContext: ns1:InvocationContextType,
+                                                           LegalUnitIdentifier: ns2:LegalUnitIdentifierType)
+     ns0:LegalUnitIdentifierCollectionType(LegalUnitIdentifier: ns2:LegalUnitIdentifierType[])
+     ns0:LevelType
+     ns0:MaximumNumberOfResultsType
+     ns0:MoreResultsExistIndicatorType
+     ns0:PasswordType
+     ns0:ProductionUnitIdentifierCollectionType(ProductionUnitIdentifier: ns2:ProductionUnitIdentifierType[])
+     ns0:ProductionUnitNameAndAddressCollectionType(ProductionUnitNameAndAddress: ns0:ProductionUnitNameAndAddressType[])
+     ns0:ProductionUnitNameAndAddressType(ProductionUnitIdentifier: ns2:ProductionUnitIdentifierType,
+                                          ProductionUnitName: ns2:ProductionUnitNameType,
+                                          AddressLocation: ns0:AddressLocationType,
+                                          AdvertisingProtectionIndicator: ns2:AdvertisingProtectionIndicatorType)
+     ns0:RequestBaseType(InvocationContext: ns1:InvocationContextType)
+     ns0:SearchAddressType(StreetName: ns9:StreetNameType,
+                           StreetBuildingIdentifier: ns3:StreetBuildingIdentifierType,
+                           CareOfName: ns4:CareOfNameType,
+                           PostCodeIdentifier: ns9:PostCodeIdentifierType,
+                           MunicipalityCode: ns6:AuthorityCodeType,
+                           RegionCode: ns6:AuthorityCodeType)
+     ns0:SearchContactInformationType(term: ns0:SearchTermType)
+     ns0:SearchLegalUnitRequestType(InvocationContext: ns1:InvocationContextType,
+SearchName: ns0:SearchNameType,
+SearchAddress: ns0:SearchAddressType,
+SearchContactInformation: ns0:SearchContactInformationType,
+ActivityCode: ns2:ActivityCodeType,
+BusinessFormatCode: ns2:BusinessFormatCodeType,
+SearchLifecycleStartDateInterval: ns0:SearchLifecycleStartDateIntervalType,
+SearchLifecycleStatus: ns0:SearchLifecycleStatusType,
+CreditorStatusCode: ns2:CreditorStatusCodeType,
+EmploymentIntervalCode: ns2:EmploymentIntervalCodeType,
+SearchNumberOfProductionUnitInterval: ns0:SearchNumberOfProductionUnitIntervalType,
+PersonCivilregistrationIdentifier: ns13:PersonCivilRegistrationIdentifierType,
+AdvertisingProtectionIndicator: ns2:AdvertisingProtectionIndicatorType,
+maximumNumberOfResultsType: ns0:MaximumNumberOfResultsType)
+     ns0:SearchLifecycleStartDateIntervalType(StartDate: ns0:StartDateType,
+                                              EndDate: ns0:StartDateType)
+     ns0:SearchLifecycleStatusType
+     ns0:SearchNameType
+     ns0:SearchNumberOfProductionUnitIntervalType(StartNumber: ns0:SearchNumberType,
+EndNumber: ns0:SearchNumberType)
+     ns0:SearchNumberType
+     ns0:SearchProductionUnitRequestType(InvocationContext: ns1:InvocationContextType,
+SearchName: ns0:SearchNameType,
+SearchAddress: ns0:SearchAddressType,
+SearchContactInformation: ns0:SearchContactInformationType,
+ActivityCode: ns2:ActivityCodeType,
+SearchLifecycleStartDateInterval: ns0:SearchLifecycleStartDateIntervalType,
+SearchLifecycleStatus: ns0:SearchLifecycleStatusType,
+EmploymentIntervalCode: ns2:EmploymentIntervalCodeType,
+LegalUnitIdentifier: ns2:LegalUnitIdentifierType,
+AdvertisingProtectionIndicator: ns2:AdvertisingProtectionIndicatorType,
+maximumNumberOfResultsType: ns0:MaximumNumberOfResultsType)
+     ns0:SearchTermType
+     ns0:StartDateType
+     ns0:UserIdType
+     ns11:TelephoneNumberIdentifierType
+     ns4:CareOfNameType
+
+     ns7:AddressAccessType(
+        MunicipalityCode: ns6:AuthorityCodeType,
+        StreetCode: ns6:StreetCodeType,
+        StreetBuildingIdentifier: ns3:StreetBuildingIdentifierType
+     )
+
+     ns7:EmailAddressIdentifierType
+
+     ns8:AddressPostalType(
+        MailDeliverySublocationIdentifier: ns3:MailDeliverySublocationIdentifierType,
+        StreetName: ns9:StreetNameType,
+        StreetNameForAddressingName: ns6:StreetNameForAddressingNameType,
+        StreetBuildingIdentifier: ns3:StreetBuildingIdentifierType,
+        FloorIdentifier: ns3:FloorIdentifierType,
+        SuiteIdentifier: ns3:SuiteIdentifierType,
+        DistrictSubdivisionIdentifier: ns9:DistrictSubdivisionIdentifierType,
+        PostOfficeBoxIdentifier: ns10:PostOfficeBoxIdentifierType,
+        PostCodeIdentifier: ns9:PostCodeIdentifierType,
+        DistrictName: ns9:DistrictNameType,
+        CountryIdentificationCode: ns3:CountryIdentificationCodeType
+     )
+     ns1:AccountingInfoType
+     ns1:CallersServiceCallIdentifierType
+     ns1:InvocationContextType(ServiceAgreementUUID: ns1:ServiceAgreenentUUIDtype,
+UserSystemUUID: ns1:UserSystemUUIDtype,
+UserUUID: ns1:UserUUIDtype,
+OnBehalfOfUser: ns1:OnBehalfOfUserType,
+ServiceUUID: ns1:ServiceUUIDtype,
+CallersServiceCallIdentifier: ns1:CallersServiceCallIdentifierType,
+AccountingInfo: ns1:AccountingInfoType)
+     ns1:OnBehalfOfUserType
+     ns1:ServiceAgreenentUUIDtype
+     ns1:ServiceUUIDtype
+     ns1:UUIDtype
+     ns1:UserSystemUUIDtype
+     ns1:UserUUIDtype
+     xsd:ENTITIES
+     xsd:ENTITY
+     xsd:ID
+     xsd:IDREF
+     xsd:IDREFS
+     xsd:NCName
+     xsd:NMTOKEN
+     xsd:NMTOKENS
+     xsd:NOTATION
+     xsd:Name
+     xsd:QName
+     xsd:anySimpleType
+     xsd:anyURI
+     xsd:base64Binary
+     xsd:boolean
+     xsd:byte
+     xsd:date
+     xsd:dateTime
+     xsd:decimal
+     xsd:double
+     xsd:duration
+     xsd:float
+     xsd:gDay
+     xsd:gMonth
+     xsd:gMonthDay
+     xsd:gYear
+     xsd:gYearMonth
+     xsd:hexBinary
+     xsd:int
+     xsd:integer
+     xsd:language
+     xsd:long
+     xsd:negativeInteger
+     xsd:nonNegativeInteger
+     xsd:nonPositiveInteger
+     xsd:normalizedString
+     xsd:positiveInteger
+     xsd:short
+     xsd:string
+     xsd:time
+     xsd:token
+     xsd:unsignedByte
+     xsd:unsignedInt
+     xsd:unsignedLong
+     xsd:unsignedShort
+
+Bindings:
+     Soap11Binding: {http://rep.oio.dk/eogs/xml.wsdl/}CvrBinding
+
+Service: RelatedProductionUnitNameAndAddressGet
+     Port: CvrService (Soap11Binding: {http://rep.oio.dk/eogs/xml.wsdl/}CvrBinding)
+         Operations:
+            getLegalUnit(
+                InvocationContext: ns1:InvocationContextType,
+                LegalUnitIdentifier: ns2:LegalUnitIdentifierType,
+                level: ns0:LevelType
+            )
+            -> LegalUnit: ns2:LegalUnitType
+
+            getProductionUnit(
+                InvocationContext: ns1:InvocationContextType,
+                ProductionUnitIdentifier: ns2:ProductionUnitIdentifierType,
+                level: ns0:LevelType
+            )
+            -> ProductionUnit: ns2:ProductionUnitType
+
+            getRelatedProductionUnitNameAndAddress(
+                InvocationContext: ns1:InvocationContextType,
+                LegalUnitIdentifier: ns2:LegalUnitIdentifierType
+            )
+            -> ProductionUnitNameAndAddressCollection: ns0:ProductionUnitNameAndAddressCollectionType
+
+            searchLegalUnit(
+                InvocationContext: ns1:InvocationContextType,
+                SearchName: ns0:SearchNameType,
+                SearchAddress: ns0:SearchAddressType,
+                SearchContactInformation: ns0:SearchContactInformationType,
+                ActivityCode: ns2:ActivityCodeType,
+                BusinessFormatCode: ns2:BusinessFormatCodeType,
+                SearchLifecycleStartDateInterval: ns0:SearchLifecycleStartDateIntervalType,
+                SearchLifecycleStatus: ns0:SearchLifecycleStatusType,
+                CreditorStatusCode: ns2:CreditorStatusCodeType,
+                EmploymentIntervalCode: ns2:EmploymentIntervalCodeType,
+                SearchNumberOfProductionUnitInterval: ns0:SearchNumberOfProductionUnitIntervalType,
+                PersonCivilregistrationIdentifier: ns13:PersonCivilRegistrationIdentifierType,
+                AdvertisingProtectionIndicator: ns2:AdvertisingProtectionIndicatorType,
+                maximumNumberOfResultsType: ns0:MaximumNumberOfResultsType
+            ) -> LegalUnitIdentifierCollection: ns0:LegalUnitIdentifierCollectionType,
+                 moreResultsExistIndicator: ns0:MoreResultsExistIndicatorType
+
+            searchProductionUnit(
+                InvocationContext: ns1:InvocationContextType,
+                SearchName: ns0:SearchNameType,
+                SearchAddress: ns0:SearchAddressType,
+                SearchContactInformation: ns0:SearchContactInformationType,
+                ActivityCode: ns2:ActivityCodeType,
+                SearchLifecycleStartDateInterval: ns0:SearchLifecycleStartDateIntervalType,
+                SearchLifecycleStatus: ns0:SearchLifecycleStatusType,
+                EmploymentIntervalCode: ns2:EmploymentIntervalCodeType,
+                LegalUnitIdentifier: ns2:LegalUnitIdentifierType,
+                AdvertisingProtectionIndicator: ns2:AdvertisingProtectionIndicatorType,
+                maximumNumberOfResultsType: ns0:MaximumNumberOfResultsType
+            ) -> ProductionUnitIdentifierCollection: ns0:ProductionUnitIdentifierCollectionType,
+                 moreResultsExistIndicator: ns0:MoreResultsExistIndicatorType
+
