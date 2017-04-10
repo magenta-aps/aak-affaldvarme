@@ -1,5 +1,4 @@
 import paramiko
-import sys
 
 
 def fetch_files(username, key_file_name, key_file_password):

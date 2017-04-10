@@ -3,31 +3,20 @@ import zeep
 from requests import Session
 from zeep.transports import Transport
 
+from sandbox.sp_init import init_service
 
-def main(service_agreement_uuid, user_system_uuid, user_uuid, service_uuid):
+
+def main(endpoint_url, service_agreement_uuid, user_system_uuid, user_uuid, service_uuid, cert_filename):
 
     handler = logging.StreamHandler()
     logging.getLogger("zeep.wsdl.bindings.soap").addHandler(handler)
 
     wsdl_url = 'https://exttestwww.serviceplatformen.dk/administration/wsdl/CvrService.wsdl'
-    endpoint_url ='https://exttest.serviceplatformen.dk/service/CVROnline/CVROnline/1'
+    binding_name = '{http://rep.oio.dk/eogs/xml.wsdl/}CvrBinding'
 
-    session = Session()
-    session.cert = './magenta_ava_test_2017-03.crt'
-    transport = Transport(session=session)
-    client = zeep.Client(wsdl=wsdl_url, transport=transport)
-    service = client.create_service('{http://rep.oio.dk/eogs/xml.wsdl/}CvrBinding', endpoint_url)
-
-    service_agreement_uuid_obj = client.get_type('ns1:ServiceAgreenentUUIDtype')(service_agreement_uuid)
-    user_system_uuid_obj = client.get_type('ns1:UserSystemUUIDtype')(user_system_uuid)
-    user_uuid_obj = client.get_type('ns1:UserUUIDtype')(user_uuid)
-    service_uuid_obj = client.get_type('ns1:ServiceUUIDtype')(service_uuid)
-
-    InvContextType = client.get_type('ns1:InvocationContextType')
-    inv_context = InvContextType(ServiceAgreementUUID=service_agreement_uuid_obj,
-                                 UserSystemUUID=user_system_uuid_obj,
-                                 UserUUID=user_uuid_obj,
-                                 ServiceUUID=service_uuid_obj)
+    client, service, inv_context = init_service(endpoint_url, service_agreement_uuid, user_system_uuid,
+                     user_uuid, service_uuid, cert_filename, wsdl_url,
+                     binding_name)
 
     client.set_ns_prefix('ns_oio_auth_code', 'http://rep.oio.dk/cpr.dk/xml/schemas/core/2005/03/18/')
     client.set_ns_prefix('ns_oio_street_and_zip', 'http://rep.oio.dk/ebxml/xml/schemas/dkcc/2005/03/15/')
