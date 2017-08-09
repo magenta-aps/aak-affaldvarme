@@ -20,11 +20,12 @@ def connect(server, database, username, password):
     print "Connected"
     cursor = cnxn.cursor()
     # cursor.execute("select @@VERSION")
-    cursor.execute("""select count(*) from Forbrug""")
+    cursor.execute("""select * from Forbrug
+                      WHERE ForbrugsstedID=16456742""")
     row = cursor.fetchone()
     while row:
         # print str(row[0]) + " " + str(row[1]) + " " + str(row[2])
-        print " ".join(map(str, row))
+        print u" ".join(map(unicode, row))
         row = cursor.fetchone()
 
 
