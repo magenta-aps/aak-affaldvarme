@@ -1,4 +1,5 @@
-import pyodbc
+#encoding: utf-8
+# import pyodbc
 
 import pymssql
 
@@ -18,16 +19,19 @@ def connect(server, database, username, password):
         return
     print "Connected"
     cursor = cnxn.cursor()
-    cursor.execute("select @@VERSION")
+    # cursor.execute("select @@VERSION")
+    cursor.execute("""select * from Forbrug
+                      WHERE ForbrugsstedID=16456742""")
     row = cursor.fetchone()
     while row:
-        print str(row[0]) + " " + str(row[1]) + " " + str(row[2])
+        # print str(row[0]) + " " + str(row[1]) + " " + str(row[2])
+        print u" ".join(map(unicode, row))
         row = cursor.fetchone()
 
 
 if __name__ == '__main__':
-    server = ''
-    database = ''
-    username = ''
-    password = ''
+    server = u''
+    database = u''
+    username = u''
+    password = u''
     connect(server, database, username, password)
