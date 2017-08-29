@@ -31,16 +31,23 @@ herunder.
 =======================     =======================  
 CRM                         KMD EE
 =======================     =======================  
-CPR-nummer                  KundeCprNr
+CPR-nummer                  PersonnrSEnr
 <CPR-oplysninger>           (Mox SP)
-CVR-nummer                  KundeCprNr
+CVR-nummer                  PersonnrSEnr
 <CVR-oplysninger>           (Mox CVR)
 Telefon KMD EE              Telefon
 E-mail KMD EE               EmailKunde
+MobilTlf⁺                   MobilTlf
+Fax⁺                        Fax
 =======================     =======================  
 
 Det vil sige, at det kun er kontaktoplysningerne, som faktisk kopieres
 fra Kunde-tabellen i KMD EE til Aktøren i CRM-systemet.
+
+⁺ Felterne MobilTlf og Fax eksisterer p.t. ikke i CRM-systemet, men kan
+godt blive relevante - om ikke andet kan MobilTlf sandsynligvis. Det er
+aftalt med AVA, at de overføres til LoRa for det tilfældes skyld, at de
+senere skal føjes til CRM-systemet.
 
 
 Kunderolle
@@ -54,10 +61,69 @@ derfor skal oprettes samtidig med rollen. En anden måde at sige dette på
 er, at kunderollen ikke har nogen mening som selvstændigt objekt, den er
 alene et bindeled mellem kunden og kundeforholdet.
 
-Den eneste reelle oplysning fra KMD EE i dette objekt er derfor selve
-rollen. Den stammer ikke fra et enkelt felt, men udledes således:
+De kunder, der er opført i kunderecords i KMD EE, og hvis person- eller
+CVR-nummer er angivet i 
 
-* Hvis feltet ```Kunde.LigestPersonnr``` er udfyldt, er rollen
-  "Ligestillingsejer".
+TODO: **AFVENTER AFKLARING FRA AVA**
 
-* Hvis feltet ```Kunde.Perso
+
+Kundeforhold
+------------
+
+Mapppes som angivet i tabellen herunder.
+
+
+=======================     =======================  
+CRM                         KMD EE
+=======================     =======================  
+Kundeforhold                Vejnavn, Postdistrikt
+Kundenummer                 Kundenr
+Kundetype                   <Altid Varme>
+Kundeforholdstype           <Udfyldes ikke>
+=======================     =======================  
+
+
+Aftale
+------
+
+Mappes som angivet i tabellen herunder.
+
+
+=======================     =======================
+CRM                         KMD EE
+=======================     =======================
+Navn                        <aftales med AVA>
+Kundeforhold                <Relation til 
+                              Kundeforhold>
+Aftaletype                  <Altid Varme>
+Beskrivelse                 <Udfyldes ikke>
+Antal produkter             <Redundant?>
+Faktureringsadresse         <Der er ikke nogen på 
+                              Forbrugssted - skal
+                              den udfyldes?>
+Adresse                     Forbrugssted.Adresse
+Ejendom                     Forbrugssted.Ejendomsnr
+=======================     =======================
+
+
+Produkt
+-------
+
+Mappes som angivet i tabellen herunder.
+
+
+=======================     =======================
+CRM                         KMD EE
+=======================     =======================
+Navn                        <?>
+Identifikation              Trefinstallation.
+                              InstalNummer
+Aftale                      <Relation til Aftale>
+Adresse                     <Redundant = 
+                             Forbrugssted.Adresse>
+Installationstype           <Altid Varme>
+Afhentningstype             <Udfyldes ikke>
+Målernummer                 TrefMaaler.Målernr
+Beskrivelse                 
+Kundenummer                 <Redundant>
+=======================     =======================
