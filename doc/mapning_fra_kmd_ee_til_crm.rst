@@ -61,10 +61,23 @@ derfor skal oprettes samtidig med rollen. En anden måde at sige dette på
 er, at kunderollen ikke har nogen mening som selvstændigt objekt, den er
 alene et bindeled mellem kunden og kundeforholdet.
 
-De kunder, der er opført i kunderecords i KMD EE, og hvis person- eller
-CVR-nummer er angivet i 
+* De kunder, der er opført i Kunde-tabellen i KMD EE, og hvis person-
+  eller CVR-nummer er angivet i feltet ``PersonnrSEnr``, tildeles rollen
+  "Kunde".  
+  
+* De personer, hvis personnummer er angivet i
+  Kunde-tabellens ``LigestPersonnr``, oprettes og tildeles rollen
+  "Ligestillingskunde".
 
-TODO: **AFVENTER AFKLARING FRA AVA**
+* De personer, der er angivet som FasAdministrator i feltet
+  ``Kunde.FasadministratorID`` oprettes og tildeles rollen
+  "Administrator". Bemærk, at disse ikke har ``PersonnrSEnr`` udfyldt,
+  men de har ofte et CPR- eller CVR-nummer i feltet ``BemærkAdmin``.
+
+* De personer, der er angivet med ``Forbrugssted.ViceværtID``, oprettes
+  og tildeles rollen "Vicevært".
+
+
 
 
 Kundeforhold
