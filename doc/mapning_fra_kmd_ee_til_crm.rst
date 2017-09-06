@@ -53,8 +53,8 @@ senere skal føjes til CRM-systemet.
 Kunderolle
 ----------
 
-Kunderollens navn sammensættes af kundens adresse (vej + husnummer +
-postnummer + etage) samt rolleværdien. Dette blot for at få noget unikt. 
+Kunderollens navn er blot rolleværdien - dette for at det kan blive så
+informativt som muligt i brugerinterfacet.
 
 Kunderollen har to relationer, nemlig til Aktør og Kundeforhold, der
 derfor skal oprettes samtidig med rollen. En anden måde at sige dette på
@@ -75,7 +75,11 @@ alene et bindeled mellem kunden og kundeforholdet.
   men de har ofte et CPR- eller CVR-nummer i feltet ``BemærkAdmin``.
 
 * De personer, der er angivet med ``Forbrugssted.ViceværtID``, oprettes
-  og tildeles rollen "Vicevært".
+  og tildeles rollen "Vicevært". 
+  
+
+Bemærk, at vicevært-tabellen er *tom* i de databasedumps for KMD EE, som
+vi har adgang til, så den er måske ikke relevant.
 
 
 
@@ -89,7 +93,7 @@ Mapppes som angivet i tabellen herunder.
 =======================     =======================  
 CRM                         KMD EE
 =======================     =======================  
-Kundeforhold                Vejnavn, Postdistrikt
+Kundeforhold                <Varme + kundens adresse som i LoRa/CRM>
 Kundenummer                 Kundenr
 Kundetype                   <Altid Varme>
 Kundeforholdstype           <Udfyldes ikke>
@@ -112,11 +116,15 @@ Aftaletype                  <Altid Varme>
 Beskrivelse                 <Udfyldes ikke>
 Antal produkter             <Redundant?>
 Faktureringsadresse         <Der er ikke nogen på 
-                              Forbrugssted - skal
-                              den udfyldes?>
+                             Forbrugssted - skal
+                             den udfyldes? Hvor kommer
+                             den fra?>
 Adresse                     Forbrugssted.Adresse
-Ejendom                     Forbrugssted.Ejendomsnr
+Ejendom                     Forbrugssted.Ejendomsnr⁺
 =======================     =======================
+
+⁺: Ejendommen slås op i BBR og de relevante oplysninger overføres til
+CRM af CRM-agenten.
 
 
 Produkt
@@ -128,7 +136,9 @@ Mappes som angivet i tabellen herunder.
 =======================     =======================
 CRM                         KMD EE
 =======================     =======================
-Navn                        <?>
+Navn                        TrefMaaler.Målertypefab
+                            rikat + TrefMaaler.Maale
+                            rTypeBetegnel 
 Identifikation              Trefinstallation.
                               InstalNummer
 Aftale                      <Relation til Aftale>
