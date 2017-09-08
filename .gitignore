@@ -90,3 +90,7 @@ ENV/
 
 #Intellij IDEA
 .idea
+
+agents/mox_kmd_ee/mssql_config.py
+research/sandbox/mssql_config.py
+agents/mox_kmd_ee/python-env
