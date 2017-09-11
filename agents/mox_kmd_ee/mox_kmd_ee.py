@@ -77,7 +77,7 @@ def create_bruger(cpr_number, name, phone, email,
 
 
 KUNDE_SQL = """
-SELECT TOP(5) [PersonnrSEnr]
+SELECT TOP(1000) [PersonnrSEnr]
       ,[KundeCprnr]
       ,[LigestPersonnr]
       ,[Tilflytningsdato]
@@ -129,25 +129,38 @@ def import_all(connection):
         n += 1
         # TODO: Insert customer in Lora if it doesn't exist already.
 
-        print row[u'KundeNavn'] + u':'
+        # print row[u'KundeNavn'] + u':'
+        """
         print '+++'
         for k in row:
             v = row[k]
 	    if k == u'PersonnrSEnr':
 	        print u"{0}:<{1}>".format(k, cpr_cvr(v))
-        print '+++'
+        """
+        result = create_bruger(
+            row['PersonnrSEnr'],
+            row['Kundenr'],
+            row['KundeNavn'],
+            row['Telefonnr'],
+            row['EmailKunde'],
+            row['MobilTlf'])
+        # print result, result.json()
+
+        # print '+++'
     print "Fandt {0} kunder.".format(n)
 
 
 if __name__ == '__main__':
     from mssql_config import username, password, server, database
-    # connection = connect(server, database, username, password)
-    #import_all(connection)
+    
+    connection = connect(server, database, username, password)
+    import_all(connection)
 
     # Test creation of virkning
-    print create_virkning()
+    # print create_virkning()
     # Test creation of user
     # Mock data
+    """
     cpr_number = "2511641919"
     name = "Carsten Agger"
     phone = "20865010"
@@ -155,3 +168,4 @@ if __name__ == '__main__':
     note = "Test!"
     result = create_bruger(cpr_number, name, phone, email, note=note)
     print result, result.json()
+    """
