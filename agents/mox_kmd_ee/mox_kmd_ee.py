@@ -2,9 +2,80 @@
 # import pyodbc
 
 import pymssql
+import datetime
+import requests
 
 # This is the SQL to fetch all customers from the KMD EE database.
 # Only relevant fields (please).
+
+# TODO: Use authentication & real user UUID.
+SYSTEM_USER = "cb8122fe-96c6-11e7-8725-6bc18b080504"
+
+# AVA-Organisation
+AVA_ORGANISATION = "cb8122fe-96c6-11e7-8725-6bc18b080504"
+
+# API URL
+BASE_URL = "http://agger"
+
+
+def create_virkning(frm=datetime.datetime.now(),
+                    to="infinity",
+                    user=SYSTEM_USER,
+                    note=""):
+    virkning = {
+        "from": str(frm),
+        "to": str(to),
+        "aktoerref": user,
+        "aktoertypekode": "Bruger",
+        "notetekst": note
+    }
+
+    return virkning
+
+  
+def create_bruger(cpr_number, name, phone, email, 
+                  mobile="", fax="", note=""):
+    virkning = create_virkning()
+    bruger_dict = {
+        "note": note,
+        "attributter": {
+            "brugeregenskaber": [
+                {
+                    "brugervendtnoegle": name,
+                    "brugernavn": name,
+                    "virkning": virkning
+                }
+            ]
+        },
+        "tilstande": {
+            "brugergyldighed": [{
+                "gyldighed": "Aktiv",
+                "virkning": virkning
+            }]
+        },
+        "relationer": {
+            "tilhoerer": [
+                {
+                    "uuid": AVA_ORGANISATION,
+                    "virkning": virkning
+
+                },
+            ],
+            "tilknyttedepersoner": [
+                {
+                    "urn": cpr_number,
+                    "virkning": virkning
+                }
+            ]
+        }
+    }
+
+    url = "{0}/organisation/bruger".format(BASE_URL)
+    response = requests.post(url, json=bruger_dict)
+
+    return response
+
+
 KUNDE_SQL = """
 SELECT TOP(5) [PersonnrSEnr]
       ,[KundeCprnr]
@@ -70,5 +141,17 @@ def import_all(connection):
 
 if __name__ == '__main__':
     from mssql_config import username, password, server, database
-    connection = connect(server, database, username, password)
-    import_all(connection)
+    # connection = connect(server, database, username, password)
+    #import_all(connection)
+
+    # Test creation of virkning
+    print create_virkning()
+    # Test creation of user
+    # Mock data
+    cpr_number = "2511641919"
+    name = "Carsten Agger"
+    phone = "20865010"
+    email = "agger@modspil.dk"
+    note = "Test!"
+    result = create_bruger(cpr_number, name, phone, email, note=note)
+    print result, result.json()
