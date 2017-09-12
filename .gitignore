@@ -90,3 +90,10 @@ ENV/
 
 #Intellij IDEA
 .idea
+
+# Apple macOS attribute file
+.DS_Store
+
+agents/mox_kmd_ee/mssql_config.py
+research/sandbox/mssql_config.py
+agents/mox_kmd_ee/python-env
