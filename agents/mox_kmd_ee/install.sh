@@ -2,7 +2,7 @@
 
 if [ ! -e python-env ]
 then
-    virtualenv python-env
+    virtualenv -p $(which python3) python-env
 fi
 
 source python-env/bin/activate
