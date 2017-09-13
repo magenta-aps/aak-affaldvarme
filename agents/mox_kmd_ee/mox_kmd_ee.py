@@ -32,8 +32,51 @@ def create_virkning(frm=datetime.datetime.now(),
 
     return virkning
 
-  
-def create_bruger(cpr_number, name, phone, email, 
+
+def create_organisation(cvr_number, name, phone="", email="",
+                        mobile="", fax="", note=""):
+    virkning = create_virkning()
+    organisation_dict = {
+        "note": note,
+        "attributter": {
+            "organisationegenskaber": [
+                {
+                    "brugervendtnoegle": cvr_number,
+                    "organisationsnavn": name,
+                    "virkning": virkning
+                }
+            ]
+        },
+        "tilstande": {
+            "organisationgyldighed": [{
+                "gyldighed": "Aktiv",
+                "virkning": virkning
+            }]
+        },
+        "relationer": {
+            "tilhoerer": [
+                {
+                    "uuid": AVA_ORGANISATION,
+                    "virkning": virkning
+
+                },
+            ],
+            "virksomhed": [
+                {
+                    "urn": "urn:{0}".format(cvr_number),
+                    "virkning": virkning
+                }
+            ]
+        }
+    }
+
+    url = "{0}/organisation/organisation".format(BASE_URL)
+    response = requests.post(url, json=organisation_dict)
+
+    return response
+
+
+def create_bruger(cpr_number, name, phone="", email="",
                   mobile="", fax="", note=""):
     virkning = create_virkning()
     bruger_dict = {
@@ -63,7 +106,7 @@ def create_bruger(cpr_number, name, phone, email,
             ],
             "tilknyttedepersoner": [
                 {
-                    "urn": cpr_number,
+                    "urn": "urn:{0}".format(cpr_number),
                     "virkning": virkning
                 }
             ]
@@ -77,7 +120,7 @@ def create_bruger(cpr_number, name, phone, email,
 
 
 KUNDE_SQL = """
-SELECT TOP(1000) [PersonnrSEnr]
+SELECT [PersonnrSEnr]
       ,[KundeCprnr]
       ,[LigestPersonnr]
       ,[Tilflytningsdato]
@@ -99,22 +142,23 @@ SELECT TOP(1000) [PersonnrSEnr]
 
 def cpr_cvr(val):
     if type(val) == float:
-        val = unicode(int(val))
-        assert(8 <= len(val) <= 10)
+        val = str(int(val))
+        if not (8 <= len(val) <= 10):
+            pass
         if len(val) == 9:
             val = '0' + val
     return val
 
 
 def connect(server, database, username, password):
-    driver1= '{SQL Server}'
-    driver2= '{ODBC Driver 13 for SQL Server}'
+    driver1 = '{SQL Server}'
+    driver2 = '{ODBC Driver 13 for SQL Server}'
     cnxn = None
     try:
         cnxn = pymssql.connect(server=server, user=username,
                                password=password, database=database)
     except Exception as e:
-        print e
+        print(e)
         raise
     return cnxn
 
@@ -124,35 +168,67 @@ def import_all(connection):
     cursor.execute(KUNDE_SQL)
     rows = cursor.fetchall()
     n = 0
+    persons = 0
+    companies = 0
+    ligest_persons = 0
+    print("Importing {} rows...".format(len(rows)))
     for row in rows:
         # print str(row[0]) + " " + str(row[1]) + " " + str(row[2])
         n += 1
         # TODO: Insert customer in Lora if it doesn't exist already.
 
-        # print row[u'KundeNavn'] + u':'
-        """
-        print '+++'
-        for k in row:
-            v = row[k]
-	    if k == u'PersonnrSEnr':
-	        print u"{0}:<{1}>".format(k, cpr_cvr(v))
-        """
-        result = create_bruger(
-            row['PersonnrSEnr'],
-            row['Kundenr'],
-            row['KundeNavn'],
-            row['Telefonnr'],
-            row['EmailKunde'],
-            row['MobilTlf'])
-        # print result, result.json()
+        id_number = cpr_cvr(row['PersonnrSEnr'])
+        ligest_personnr = cpr_cvr(row['LigestPersonnr'])
 
-        # print '+++'
-    print "Fandt {0} kunder.".format(n)
+        if len(id_number) == 8:
+            # This is a CVR number
+            result = create_organisation(
+                id_number,
+                row['Kundenr'],
+                row['KundeNavn'],
+                row['Telefonnr'],
+                row['EmailKunde'],
+                row['MobilTlf']
+            )
+            companies += 1
+        elif len(id_number) == 10:
+            # This is a CPR number
+            result = create_bruger(
+                id_number,
+                row['Kundenr'],
+                row['KundeNavn'],
+                row['Telefonnr'],
+                row['EmailKunde'],
+                row['MobilTlf']
+            )
+            persons += 1
+        else:
+            print("Forkert CPR/SE-nr for {0}: {1}".format(
+                row['KundeNavn'], id_number)
+            )
+
+        if len(ligest_personnr) == 8:
+            # We expect this not to happen.
+            result = create_organisation(ligest_personnr, row['Kundenr'])
+            ligest_persons += 1
+            print(
+                "Found LigestPerson who is company for customer {}".format(
+                    row['KundeNavn']
+                )
+            )
+        elif len(ligest_personnr) == 10:
+            result = create_bruger(ligest_personnr, row['Kundenr'])
+            ligest_persons += 1
+
+    print("Fandt {0} primære kunder og {1} ligestillingskunder.".format(
+        n, ligest_persons)
+    )
+    print("{0} personer og {1} virksomheder".format(persons, companies))
 
 
 if __name__ == '__main__':
     from mssql_config import username, password, server, database
-    
+
     connection = connect(server, database, username, password)
     import_all(connection)
 
