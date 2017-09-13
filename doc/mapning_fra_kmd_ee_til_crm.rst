@@ -17,10 +17,9 @@ med data fra Serviceplatformen.
 
 Det samme gælder for CVR-oplysninger.
 
-En model
-kunne være, at Mox KMD EE
-CPR- og CVR-numrene ligger begge i feltet KundeCprNr og kan kendes fra
-hinanden ved at CPR-numre er ti-cifrede, hvor CVR-numre er otte-cifrede. 
+CPR- og CVR-numrene ligger begge i feltet KundeCprNr eller PersonnrSEnr
+(de to felter har samme indhold) og kan kendes fra hinanden ved at
+CPR-numre er ni- eller ti-cifrede, hvor CVR-numre er otte-cifrede. 
 
 Telefon og email gemmes som adresser jfr objektrepræsentationsdokumentet
 og hentes fra felterne EmailKunde, Telefon og  MobilTlf i KMD EE.
@@ -79,9 +78,14 @@ alene et bindeled mellem kunden og kundeforholdet.
   
 
 Bemærk, at vicevært-tabellen er *tom* i de databasedumps for KMD EE, som
-vi har adgang til, så den er måske ikke relevant.
+vi har adgang til, så den er formentlig ikke relevant.
 
+Med denned definition bliver kunderollens 
 
+* *Navn* lig med tekstrepræsentationen af rollen, f.eks. "Kunde"
+* *Kundeforhold* et opslag til det relevante Kundeforhold
+* *Rolle* en relation til klassifikation angivet som URN, altså f.eks.
+  ``915.240.000``.
 
 
 Kundeforhold
@@ -95,9 +99,13 @@ CRM                         KMD EE
 =======================     =======================  
 Kundeforhold                <Varme + kundens adresse som i LoRa/CRM>
 Kundenummer                 Kundenr
-Kundetype                   <Altid Varme>
+Kundetype                   Varme
 Kundeforholdstype           <Udfyldes ikke>
 =======================     =======================  
+
+Feltet "Kundeforhold" er det felt, der på de fleste andre elementer
+hedder Navn. Adressen i dette navnefelt forstås som kundens
+folkeregisteradresse, ikke Forbrugssted.Adresse.
 
 
 Aftale
@@ -109,18 +117,19 @@ Mappes som angivet i tabellen herunder.
 =======================     =======================
 CRM                         KMD EE
 =======================     =======================
-Navn                        <aftales med AVA>
+Navn                        Fjernvarmeaftale
 Kundeforhold                <Relation til 
                               Kundeforhold>
-Aftaletype                  <Altid Varme>
+Aftaletype                  Varme
 Beskrivelse                 <Udfyldes ikke>
-Antal produkter             <Redundant?>
-Faktureringsadresse         <Der er ikke nogen på 
-                             Forbrugssted - skal
-                             den udfyldes? Hvor kommer
-                             den fra?>
+Antal produkter             <Redundant>
+Faktureringsadresse         <DAR-adresse fundet fra
+                            Kunde.vejnavn +
+                            Kunde.postdistrikt>
 Adresse                     Forbrugssted.Adresse
 Ejendom                     Forbrugssted.Ejendomsnr⁺
+Startdato                   Kunde.Tilflytningsdato
+Slutdato                    Kunde.fraflytningsdato
 =======================     =======================
 
 ⁺: Ejendommen slås op i BBR og de relevante oplysninger overføres til
@@ -144,7 +153,7 @@ Identifikation              Trefinstallation.
 Aftale                      <Relation til Aftale>
 Adresse                     <Redundant = 
                              Forbrugssted.Adresse>
-Installationstype           <Altid Varme>
+Installationstype           Varme
 Afhentningstype             <Udfyldes ikke>
 Målernummer                 TrefMaaler.Målernr
 Beskrivelse                 
