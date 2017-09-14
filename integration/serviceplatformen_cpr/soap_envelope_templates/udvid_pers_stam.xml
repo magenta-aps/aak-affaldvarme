@@ -8,7 +8,7 @@
                 <ns2:UserUUID>{{ user }}</ns2:UserUUID>
                 <ns2:ServiceUUID>{{ service }}</ns2:ServiceUUID>
             </ns2:InvocationContext>
-            <ns3:PNR>{{ person_number }}</ns3:PNR>
+            <ns3:PNR>{{ cprnr }}</ns3:PNR>
         </ns:callCPRPersonLookupRequest>
     </soapenv:Body>
 </soapenv:Envelope>
