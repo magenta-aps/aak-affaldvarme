@@ -13,15 +13,21 @@ SP_CERTIFICATE_PATH = os.environ.get('SP_CERTIFICATE_PATH')
 SP_USER_SYSTEM_UUID_PROD = os.environ.get('SP_USER_SYSTEM_UUID_PROD')
 SP_USER_UUID_PROD = os.environ.get('SP_USER_UUID_PROD')
 
+# *** Service SF1520(Production) - Udvidet person stamdata (lokal) *** #
+
 # Specific invocation context UUIDS
-# Service SF6001 - ADRSOG1 CPR Opslag (lokal)
-SP_SERVICE_ENDPOINT_CPRLOOKUP_2 = os.environ.get(
-    'SP_SERVICE_ENDPOINT_CPRLOOKUP_2'
+SP_SERVICE_AGREEMENT_UUID_SF1520_PROD = os.environ.get(
+    'SP_SERVICE_AGREEMENT_UUID_SF1520_PROD'
 )
-SP_SERVICE_AGREEMENT_UUID_SF6001_PROD = os.environ.get(
-    'SP_SERVICE_AGREEMENT_UUID_SF6001_PROD'
+SP_SERVICE_SF1520_PROD = os.environ.get(
+    'SP_SERVICE_SF1520_PROD'
 )
-SP_SF6001_SOAP_ENVELOPE_TEMPLATE = os.environ.get(
-    'SP_SF6001_SOAP_ENVELOPE_TEMPLATE'
+
+# Endpoint for service SF1520
+SP_SERVICE_ENDPOINT_CPR_INFORMATION_1 = os.environ.get(
+    'SP_SERVICE_ENDPOINT_CPR_INFORMATION_1'
 )
-SP_SERVICE_SF6001_PROD = os.environ.get('SP_SERVICE_SF6001_PROD')
+# Path to specific soap envelope template
+SP_SF1520_SOAP_ENVELOPE_TEMPLATE = os.environ.get(
+    'SP_SF1520_SOAP_ENVELOPE_TEMPLATE'
+)
