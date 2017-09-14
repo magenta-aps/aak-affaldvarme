@@ -5,8 +5,7 @@ import pymssql
 import datetime
 import requests
 
-# This is the SQL to fetch all customers from the KMD EE database.
-# Only relevant fields (please).
+from sqllib import CUSTOMER_SQL
 
 # TODO: Use authentication & real user UUID.
 SYSTEM_USER = "cb8122fe-96c6-11e7-8725-6bc18b080504"
@@ -33,7 +32,56 @@ def create_virkning(frm=datetime.datetime.now(),
     return virkning
 
 
-def create_organisation(cvr_number, name, phone="", email="",
+def create_customer(id_number, key, name, phone="", email="",
+                    mobile="", fax="", note=""):
+        if is_cvr(id_number):
+            result = create_organisation(
+                id_number, key, name, phone, email, mobile, fax, note
+            )
+        elif is_cpr(id_number):
+            # This is a CPR number
+            result = create_bruger(
+                id_number, key, name, phone, email, mobile, fax, note
+            )
+        else:
+            print("Forkert CPR/SE-nr for {0}: {1}".format(
+                name, id_number)
+            )
+            # Invalid customer
+            return None
+
+        if result:
+            return result.json()['uuid']
+
+
+def create_customer_role(customer_uuid, customer_relation_uuid, role):
+    # TODO Create an OrgFunktion from this info and return UUID
+    pass
+
+
+def create_customer_relation(customer_number, customer_relation_name,
+                             customer_relation_type):
+    # TODO Create an Interessefællesskab from this info and return UUID
+    pass
+
+
+def create_agreement(name, agreement_type, no_of_products, invoice_adress,
+                     address, start_date, end_date, property):
+    # TODO Create an Indsats from this info and return UUID
+    pass
+
+
+def get_locations(customer_id):
+    # TODO Get locations for this customer ID from the Forbrugssted table
+    return []
+
+
+def create_product(name, identification, agreement, address,
+                   installation_type, meter_number):
+    pass
+
+
+def create_organisation(cvr_number, key, name, phone="", email="",
                         mobile="", fax="", note=""):
     virkning = create_virkning()
     organisation_dict = {
@@ -41,7 +89,7 @@ def create_organisation(cvr_number, name, phone="", email="",
         "attributter": {
             "organisationegenskaber": [
                 {
-                    "brugervendtnoegle": cvr_number,
+                    "brugervendtnoegle": key,
                     "organisationsnavn": name,
                     "virkning": virkning
                 }
@@ -76,7 +124,7 @@ def create_organisation(cvr_number, name, phone="", email="",
     return response
 
 
-def create_bruger(cpr_number, name, phone="", email="",
+def create_bruger(cpr_number, key, name, phone="", email="",
                   mobile="", fax="", note=""):
     virkning = create_virkning()
     bruger_dict = {
@@ -84,7 +132,7 @@ def create_bruger(cpr_number, name, phone="", email="",
         "attributter": {
             "brugeregenskaber": [
                 {
-                    "brugervendtnoegle": name,
+                    "brugervendtnoegle": key,
                     "brugernavn": name,
                     "virkning": virkning
                 }
@@ -119,24 +167,6 @@ def create_bruger(cpr_number, name, phone="", email="",
     return response
 
 
-KUNDE_SQL = """
-SELECT [PersonnrSEnr]
-      ,[KundeCprnr]
-      ,[LigestPersonnr]
-      ,[Tilflytningsdato]
-      ,[Fraflytningsdato]
-      ,[EmailKunde]
-      ,[MobilTlf]
-      ,[KundeID]
-      ,[Kundenr]
-      ,[Status]
-      ,[Telefonnr]
-      ,[FasadministratorID]
-      ,[BoligadminID]
-      ,[KundeNavn]
-  FROM [KMD_EE].[dbo].[Kunde]
-"""
-
 # CPR/CVR helper function
 
 
@@ -148,6 +178,14 @@ def cpr_cvr(val):
         if len(val) == 9:
             val = '0' + val
     return val
+
+
+def is_cpr(val):
+    return len(val) == 10 and val.isdigit()
+
+
+def is_cvr(val):
+    return len(val) == 8 and val.isdigit()
 
 
 def connect(server, database, username, password):
@@ -165,65 +203,87 @@ def connect(server, database, username, password):
 
 def import_all(connection):
     cursor = connection.cursor(as_dict=True)
-    cursor.execute(KUNDE_SQL)
+    cursor.execute(CUSTOMER_SQL)
     rows = cursor.fetchall()
     n = 0
-    persons = 0
-    companies = 0
     ligest_persons = 0
     print("Importing {} rows...".format(len(rows)))
     for row in rows:
-        # print str(row[0]) + " " + str(row[1]) + " " + str(row[2])
-        n += 1
         # TODO: Insert customer in Lora if it doesn't exist already.
 
         id_number = cpr_cvr(row['PersonnrSEnr'])
         ligest_personnr = cpr_cvr(row['LigestPersonnr'])
+        customer_number = str(int(row['Kundenr']))
 
-        if len(id_number) == 8:
-            # This is a CVR number
-            result = create_organisation(
-                id_number,
-                row['Kundenr'],
-                row['KundeNavn'],
-                row['Telefonnr'],
-                row['EmailKunde'],
-                row['MobilTlf']
-            )
-            companies += 1
-        elif len(id_number) == 10:
-            # This is a CPR number
-            result = create_bruger(
-                id_number,
-                row['Kundenr'],
-                row['KundeNavn'],
-                row['Telefonnr'],
-                row['EmailKunde'],
-                row['MobilTlf']
-            )
-            persons += 1
+        customer_uuid = create_customer(
+            id_number,
+            customer_number,
+            row['KundeNavn'],
+            row['Telefonnr'],
+            row['EmailKunde'],
+            row['MobilTlf']
+        )
+
+        if customer_uuid:
+            # New customer created
+            n += 1
         else:
-            print("Forkert CPR/SE-nr for {0}: {1}".format(
-                row['KundeNavn'], id_number)
-            )
+            # No cake, no eating
+            continue
 
-        if len(ligest_personnr) == 8:
-            # We expect this not to happen.
-            result = create_organisation(ligest_personnr, row['Kundenr'])
-            ligest_persons += 1
-            print(
-                "Found LigestPerson who is company for customer {}".format(
-                    row['KundeNavn']
-                )
+        # TODO: create customer relation
+        cr_name = "<Varme + adresse fra SP>"
+        cr_type = "Varme"  # Always for KMD EE
+        cr_uuid = create_customer_relation(customer_number, cr_name, cr_type)
+
+        # TODO: This done, create customer roles & link customer and relation
+        create_customer_role(customer_uuid, cr_uuid, "Kunde")
+
+        # Now handle partner/roommate, ignore empty CPR numbers
+        if len(ligest_personnr) > 1:
+            ligest_uuid = create_customer(
+                ligest_personnr, customer_number, row['KundeNavn']
             )
-        elif len(ligest_personnr) == 10:
-            result = create_bruger(ligest_personnr, row['Kundenr'])
-            ligest_persons += 1
+            if ligest_uuid:
+                ligest_persons += 1
+                create_customer_role(
+                    ligest_uuid, cr_uuid, "Ligestillingskunde"
+                )
+
+        # TODO: Create agreement
+        name = 'Fjernvarmeaftale'
+        agreement_type = 'Varme'
+        invoice_address = "TODO: Lookup in CRM?"
+        address = "TODO: Get from forbrugssted"
+        start_date = row['Tilflytningsdato']
+        end_date = row['Fraflytningsdato']
+
+        # For now, assume one agreement for each property (Forbrugssted)
+
+        customer_id = row['KundeID']
+
+        for l in get_locations(customer_id):
+            products = get_products_for_location(l)
+            no_of_products = len(products)
+
+            agreement_uuid = create_agreement(
+                name, agreement_type, no_of_products, invoice_adress, address,
+                start_date, end_date, l)
+
+            for p in products:
+                name = "TODO: Fabrikat + Betegnel"
+                identification = "TODO: Instalnummer"
+                agreement = agreement_uuid
+                address = "TODO: Get from forbrugssted"
+                installation_type = "Varme"
+                meter_number = "TODO: Maalernr"
+
+                create_product(name, identification, agreement, address,
+                               installation_type, meter_number)
 
     print("Fandt {0} primære kunder og {1} ligestillingskunder.".format(
         n, ligest_persons)
     )
-    print("{0} personer og {1} virksomheder".format(persons, companies))
 
 
 if __name__ == '__main__':
