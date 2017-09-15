@@ -9,23 +9,15 @@ from jinja2 import Template
 
 __author__ = "Heini Leander Ovason"
 
-# TODO:
-# facade function
-# regex validate cprnr - OK
-# regex validate UUIDS
-# build SOAP envelope template - OK
-# call SP web service
-# parse SOAP xml response to dict
-
 
 def get_citizen(service_uuids, certificate, cprnr):
     """The function returnes a citizen dict from the
     'SF1520 - Udvidet person stamdata (lokal)' service.
     It serves as a facade to simplify input validation, and interaction
-    with the SOAP service, and parsing the response to a dict.
+    with the SOAP service, parsing and filtering the response.
     :param cprnr: Danish cprnr
     :type cpr: String of 10 digits / r'^\d{10}$'
-    :return: Dictionary representation citizen object.
+    :return: Dictionary representation of a citizen.
     :rtype: dict"""
 
     is_cprnr_valid = validate_cprnr(cprnr)
