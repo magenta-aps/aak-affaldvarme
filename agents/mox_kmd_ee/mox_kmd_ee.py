@@ -5,7 +5,7 @@ import pymssql
 import datetime
 import requests
 
-from sqllib import CUSTOMER_SQL
+from ee_sql import CUSTOMER_SQL
 
 # TODO: Use authentication & real user UUID.
 SYSTEM_USER = "cb8122fe-96c6-11e7-8725-6bc18b080504"
@@ -15,6 +15,12 @@ AVA_ORGANISATION = "cb8122fe-96c6-11e7-8725-6bc18b080504"
 
 # API URL
 BASE_URL = "http://agger"
+
+# Definition of strings used for Klassifikation URNs
+
+VARME = "Varme"
+KUNDE = "Kunde"
+LIGESTILLINGSKUNDE = "Ligestillingskunde"
 
 
 def create_virkning(frm=datetime.datetime.now(),
@@ -54,15 +60,28 @@ def create_customer(id_number, key, name, phone="", email="",
             return result.json()['uuid']
 
 
-def create_customer_role(customer_uuid, customer_relation_uuid, role):
-    # TODO Create an OrgFunktion from this info and return UUID
-    pass
+def create_customer_role(customer_number, customer_uuid,
+                         customer_relation_uuid, role):
+    "Create an OrgFunktion from this info and return UUID"
+    result = create_organisationfunktion(
+        customer_number,
+        customer_uuid,
+        customer_relation_uuid,
+        role
+    )
+        
+    if result:
+        return result.json()['uuid']
 
 
 def create_customer_relation(customer_number, customer_relation_name,
-                             customer_relation_type):
-    # TODO Create an Interessefællesskab from this info and return UUID
-    pass
+                             customer_type):
+    "Create an Interessefællesskab from this info and return UUID"
+    result = create_interessefaellesskab(customer_number,
+                                         customer_relation_name,
+                                         customer_type)
+    if result:
+        return result.json()['uuid']
 
 
 def create_agreement(name, agreement_type, no_of_products, invoice_adress,
@@ -124,6 +143,93 @@ def create_organisation(cvr_number, key, name, phone="", email="",
     return response
 
 
+def create_interessefaellesskab(customer_number, customer_relation_name,
+                                customer_type, note=""):
+    virkning = create_virkning()
+    interessefaellesskab_dict = {
+        "note": note,
+        "attributter": {
+            "interessefaellesskabegenskaber": [
+                {
+                    "brugervendtnoegle": customer_number,
+                    "interessefaellesskabsnavn": customer_relation_name,
+                    "interessefaellesskabstype": customer_type,
+                    "virkning": virkning
+                }
+            ]
+        },
+        "tilstande": {
+            "interessefaellesskabgyldighed": [{
+                "gyldighed": "Aktiv",
+                "virkning": virkning
+            }]
+        },
+        "relationer": {
+            "tilhoerer": [
+                {
+                    "uuid": AVA_ORGANISATION,
+                    "virkning": virkning
+
+                },
+            ],
+        }
+    }
+
+    url = "{0}/organisation/interessefaellesskab".format(BASE_URL)
+    response = requests.post(url, json=interessefaellesskab_dict)
+
+    return response
+
+def create_organisationfunktion(customer_number, 
+                                customer_uuid,
+                                customer_relation_uuid,
+                                role, note=""):
+    virkning = create_virkning()
+    organisationfunktion_dict = {
+        "note": note,
+        "attributter": {
+            "organisationfunktionegenskaber": [
+                {
+                    "brugervendtnoegle": " ".join([role, customer_number]),
+                    "funktionsnavn": role,
+                    "virkning": virkning
+                }
+            ]
+        },
+        "tilstande": {
+            "organisationfunktiongyldighed": [{
+                "gyldighed": "Aktiv",
+                "virkning": virkning
+            }]
+        },
+        "relationer": {
+            "organisatoriskfunktionstype": [
+                {
+                    "urn": "urn:{0}".format(role),
+                    "virkning": virkning
+                }
+            ],
+            "tilknyttedeinteressefaellesskaber": [
+                {
+                    "uuid": customer_relation_uuid,
+                    "virkning": virkning
+                },
+            ],
+            "tilknyttedebrugere": [
+                {
+                    "uuid": customer_uuid,
+                    "virkning": virkning
+                },
+            ]
+        }
+    }
+    
+    url = "{0}/organisation/organisationfunktion".format(BASE_URL)
+    response = requests.post(url, json=organisationfunktion_dict)
+
+    return response
+    
+    
 def create_bruger(cpr_number, key, name, phone="", email="",
                   mobile="", fax="", note=""):
     virkning = create_virkning()
@@ -233,11 +339,12 @@ def import_all(connection):
 
         # TODO: create customer relation
         cr_name = "<Varme + adresse fra SP>"
-        cr_type = "Varme"  # Always for KMD EE
+        cr_type = VARME  # Always for KMD EE
         cr_uuid = create_customer_relation(customer_number, cr_name, cr_type)
 
         # TODO: This done, create customer roles & link customer and relation
-        create_customer_role(customer_uuid, cr_uuid, "Kunde")
+        role_uuid = create_customer_role(customer_number, customer_uuid, cr_uuid, "Kunde")
+        assert(role_uuid)
 
         # Now handle partner/roommate, ignore empty CPR numbers
         if len(ligest_personnr) > 1:
@@ -247,12 +354,12 @@ def import_all(connection):
             if ligest_uuid:
                 ligest_persons += 1
                 create_customer_role(
-                    ligest_uuid, cr_uuid, "Ligestillingskunde"
+                    customer_number, ligest_uuid, cr_uuid, "Ligestillingskunde"
                 )
 
         # TODO: Create agreement
         name = 'Fjernvarmeaftale'
-        agreement_type = 'Varme'
+        agreement_type = VARME
         invoice_address = "TODO: Lookup in CRM?"
         address = "TODO: Get from forbrugssted"
         start_date = row['Tilflytningsdato']
@@ -275,7 +382,7 @@ def import_all(connection):
                 identification = "TODO: Instalnummer"
                 agreement = agreement_uuid
                 address = "TODO: Get from forbrugssted"
-                installation_type = "Varme"
+                installation_type = VARME
                 meter_number = "TODO: Maalernr"
 
                 create_product(name, identification, agreement, address,
