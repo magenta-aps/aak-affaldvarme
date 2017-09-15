@@ -45,7 +45,7 @@ def create_customer_role(customer_number, customer_uuid,
         customer_relation_uuid,
         role
     )
-        
+
     if result:
         return result.json()['uuid']
 
@@ -145,7 +145,8 @@ def import_all(connection):
         cr_uuid = create_customer_relation(customer_number, cr_name, cr_type)
 
         # TODO: This done, create customer roles & link customer and relation
-        role_uuid = create_customer_role(customer_number, customer_uuid, cr_uuid, "Kunde")
+        role_uuid = create_customer_role(customer_number, customer_uuid,
+                                         cr_uuid, "Kunde")
         assert(role_uuid)
 
         # Now handle partner/roommate, ignore empty CPR numbers

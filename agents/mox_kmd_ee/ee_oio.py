@@ -10,6 +10,7 @@ AVA_ORGANISATION = "cb8122fe-96c6-11e7-8725-6bc18b080504"
 # API URL
 BASE_URL = "http://agger"
 
+
 def create_virkning(frm=datetime.datetime.now(),
                     to="infinity",
                     user=SYSTEM_USER,
@@ -105,7 +106,8 @@ def create_interessefaellesskab(customer_number, customer_relation_name,
 
     return response
 
-def create_organisationfunktion(customer_number, 
+
+def create_organisationfunktion(customer_number,
                                 customer_uuid,
                                 customer_relation_uuid,
                                 role, note=""):
@@ -148,13 +150,13 @@ def create_organisationfunktion(customer_number,
             ]
         }
     }
-    
+
     url = "{0}/organisation/organisationfunktion".format(BASE_URL)
     response = requests.post(url, json=organisationfunktion_dict)
 
     return response
-    
-    
+
+
 def create_bruger(cpr_number, key, name, phone="", email="",
                   mobile="", fax="", note=""):
     virkning = create_virkning()
@@ -196,5 +198,3 @@ def create_bruger(cpr_number, key, name, phone="", email="",
     response = requests.post(url, json=bruger_dict)
 
     return response
-
-
