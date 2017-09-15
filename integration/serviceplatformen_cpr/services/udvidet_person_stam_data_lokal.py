@@ -1,10 +1,10 @@
 # -- coding: utf-8 --
-import re
 import requests
 import settings
 import xmltodict
 
-from jinja2 import Template
+from helpers.soap import build_soap_envelope
+from helpers.validation import validate_cprnr
 
 
 __author__ = "Heini Leander Ovason"
@@ -24,10 +24,16 @@ def get_citizen(service_uuids, certificate, cprnr):
 
     if is_cprnr_valid:
 
-        payload = build_soap_envelope(service_uuids, cprnr)
+        soap_envelope_template = settings.SP_SF1520_SOAP_ENVELOPE_TEMPLATE
+
+        soap_envelope = build_soap_envelope(
+            soap_envelope_template=soap_envelope_template,
+            service_uuids=service_uuids,
+            cprnr=cprnr
+        )
 
         response = call_cpr_person_lookup_request(
-            soap_envelope=payload,
+            soap_envelope=soap_envelope,
             certificate=certificate
         )
 
@@ -38,49 +44,6 @@ def get_citizen(service_uuids, certificate, cprnr):
             )
 
             return citizen_dict
-
-
-def validate_cprnr(cprnr):
-    # TODO: This function can be more generic and moved into a utilities module
-
-    if cprnr is not None:
-
-        check = re.match(r'^\d{10}$', cprnr)
-
-        if check:
-
-            return True
-
-        else:
-
-            raise ValueError('"{}" is not a valid Danish cprnr.'.format(cprnr))
-    else:
-
-        raise TypeError('"{}" is not a valid type.'.format(cprnr))
-
-
-def build_soap_envelope(service_uuids, cprnr):
-    # TODO: This function can be more generic and moved into a utilities module
-
-    envelope_template = settings.SP_SF1520_SOAP_ENVELOPE_TEMPLATE
-
-    with open(envelope_template, "r") as filestream:
-        template_string = filestream.read()
-
-    xml_template = Template(template_string)
-
-    populated_template = xml_template.render(
-        cprnr=cprnr,
-        service_agreement=service_uuids['service_agreement'],
-        user_system=service_uuids['user_system'],
-        user=service_uuids['user'],
-        service=service_uuids['service']
-    )
-
-    # requests response will throw UnicodeEncodeError otherwise.
-    latin_1_encoded_soap_envelope = populated_template.encode('latin-1')
-
-    return latin_1_encoded_soap_envelope
 
 
 def call_cpr_person_lookup_request(soap_envelope, certificate):

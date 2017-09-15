@@ -2,8 +2,11 @@ import unittest
 
 from services.udvidet_person_stam_data_lokal import (
     get_citizen,
-    validate_cprnr,
     call_cpr_person_lookup_request
+)
+
+from helpers.validation import (
+    validate_cprnr
 )
 
 __author__ = 'Heini Leander Ovason'
@@ -57,12 +60,6 @@ class TestUdvidetPersonStamDataLokal(unittest.TestCase):
     # ##### END TEST - validate_cprnr() #####
 
     # ##### BEGIN TEST - __call_cpr_person_lookup_request() #####
-
-    def test_call_cpr_person_lookup_request(self):
-        self.assertEqual(
-            'test',
-            call_cpr_person_lookup_request('0123456789')
-        )
 
     # ##### END TEST - __call_cpr_person_lookup_request() #####
 
