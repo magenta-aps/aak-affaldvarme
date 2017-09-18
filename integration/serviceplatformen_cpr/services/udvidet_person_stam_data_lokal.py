@@ -2,7 +2,7 @@
 import settings
 import xmltodict
 
-from helpers.soap import build_soap_envelope
+from helpers.soap import construct_envelope_SF1520
 from helpers.validation import validate_cprnr
 from helpers.http_requester import http_post
 
@@ -26,8 +26,8 @@ def get_citizen(service_uuids, certificate, cprnr):
 
         soap_envelope_template = settings.SP_SF1520_SOAP_ENVELOPE_TEMPLATE
 
-        soap_envelope = build_soap_envelope(
-            soap_envelope_template=soap_envelope_template,
+        soap_envelope = construct_envelope_SF1520(
+            template=soap_envelope_template,
             service_uuids=service_uuids,
             cprnr=cprnr
         )
