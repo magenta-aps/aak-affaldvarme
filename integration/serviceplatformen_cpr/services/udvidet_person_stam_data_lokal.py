@@ -1,10 +1,10 @@
 # -- coding: utf-8 --
-import requests
 import settings
 import xmltodict
 
 from helpers.soap import build_soap_envelope
 from helpers.validation import validate_cprnr
+from helpers.http_requester import http_post
 
 
 __author__ = "Heini Leander Ovason"
@@ -57,18 +57,13 @@ def call_cpr_person_lookup_request(soap_envelope, certificate):
 
     service_url = settings.SP_SERVICE_ENDPOINT_CPR_INFORMATION_1
 
-    try:
+    response = http_post(
+        endpoint=service_url,
+        soap_envelope=soap_envelope,
+        certificate=certificate
+    )
 
-        response = requests.post(
-            url=service_url,
-            data=soap_envelope,
-            cert=certificate
-        )
-
-        return response
-
-    except requests.exceptions.RequestException as e:
-        print(e)
+    return response
 
 
 def parse_cpr_person_lookup_xml_to_dict(soap_response_xml):
