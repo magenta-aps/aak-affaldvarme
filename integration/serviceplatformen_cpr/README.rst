@@ -29,7 +29,7 @@ get_citizen()
         'service': '9883c483-d42f-424a-9a2a-94d1d200d294'
     }
 
-    certificate = ''./sp_certidicate.crt'
+    certificate = './sp_certidicate.crt'
 
     cprnr = '0123456789'
 
