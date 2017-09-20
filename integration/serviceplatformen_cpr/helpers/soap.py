@@ -27,7 +27,13 @@ def construct_envelope_SF1520(template, service_uuids, cprnr):
     return latin_1_encoded_soap_envelope
 
 
-def construct_envelope_SF6002(template, service_uuids, cprnr, operation):
+def construct_envelope_SF6002(
+    template,
+    service_uuids,
+    cprnr,
+    operation,
+    parameter_type
+):
     """The function returnes a envelope for the service
     'SF6002 - CPR Abonnement'."""
 
@@ -42,7 +48,8 @@ def construct_envelope_SF6002(template, service_uuids, cprnr, operation):
         user_system=service_uuids['user_system'],
         user=service_uuids['user'],
         service=service_uuids['service'],
-        operation=operation
+        operation=operation,
+        parameter_type=parameter_type
     )
 
     # service platform requirement.
