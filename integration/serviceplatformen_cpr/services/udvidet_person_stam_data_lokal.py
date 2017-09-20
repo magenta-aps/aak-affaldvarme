@@ -15,8 +15,8 @@ def get_citizen(service_uuids, certificate, cprnr):
     'SF1520 - Udvidet person stamdata (lokal)' service.
     It serves as a facade to simplify input validation, and interaction
     with the SOAP service, parsing and filtering the response.
-    :param cprnr: Danish cprnr
-    :type cpr: String of 10 digits / r'^\d{10}$'
+    :param cprnr:  String of 10 digits -> r'^\d{10}$'
+    :type cpr: str
     :return: Dictionary representation of a citizen
     :rtype: dict"""
 
