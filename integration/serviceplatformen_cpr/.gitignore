@@ -1,2 +1,3 @@
 *.crt
-example.py
+example_udvidet_person_stam_data.py
+example_cpr_abonnement.py
