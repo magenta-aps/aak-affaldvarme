@@ -3,10 +3,10 @@
 
 import pymssql
 
-from ee_sql import CUSTOMER_SQL
+from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
-from ee_oio import lookup_bruger, lookup_organisation
+from ee_oio import create_klasse, lookup_bruger, lookup_organisation
 
 # Definition of strings used for Klassifikation URNs
 
@@ -79,14 +79,23 @@ def create_agreement(name, agreement_type, no_of_products, invoice_address,
         return result.json()['uuid']
 
 
-def get_products_for_location(location):
-    # TODO Get locations for this customer ID from the Forbrugssted table
-    return []
+def get_products_for_location(connection, forbrugssted):
+    "Get locations for this customer ID from the Forbrugssted table" 
+    cursor = connection.cursor(as_dict=True)
+    cursor.execute(TREFINSTALLATION_SQL.format(forbrugssted))
+    rows = cursor.fetchall()
+    return rows
 
 
-def create_product(name, identification, agreement, address,
-                   installation_type, meter_number):
-    pass
+
+def create_product(name, identification, agreement,
+                   installation_type, meter_number, start_date, end_date):
+    "Create a Klasse from this info and return UUID"
+    result = create_klasse(name, identification, agreement, installation_type,
+                           meter_number, start_date, end_date)
+    if result:
+        return result.json()['uuid']
+
 
 # CPR/CVR helper function
 
@@ -123,12 +132,12 @@ def connect(server, database, username, password):
 
 
 def import_all(connection):
-    # cursor = connection.cursor(as_dict=True)
-    # cursor.execute(CUSTOMER_SQL)
-    # rows = cursor.fetchall()
-    import csv
-    reader = csv.DictReader(open('Kunde.csv', 'r'))
-    rows = [r for r in reader]
+    cursor = connection.cursor(as_dict=True)
+    cursor.execute(CUSTOMER_SQL)
+    rows = cursor.fetchall()
+    # import csv
+    # reader = csv.DictReader(open('Kunde.csv', 'r'))
+    # rows = [r for r in reader]
     n = 0
     ligest_persons = 0
     print("Importing {} rows...".format(len(rows)))
@@ -204,26 +213,28 @@ def import_all(connection):
 
         customer_id = row['KundeID']
 
-        location = row['ForbrugsstedID']  # TODO: Get BBR ID from Forbrugssted
-        products = get_products_for_location(location)
+        forbrugssted = row['ForbrugsstedID']
+        products = get_products_for_location(connection, forbrugssted)
 
         no_of_products = len(products)
+        if no_of_products > 1:
+            print(no_of_products, "found")
 
         agreement_uuid = create_agreement(
             name, agreement_type, no_of_products, invoice_address, address,
-            start_date, end_date, location, cr_uuid
+            start_date, end_date, forbrugssted, cr_uuid
         )
         assert(agreement_uuid)
         for p in products:
-            name = "TODO: Fabrikat + Betegnel"
-            identification = "TODO: Instalnummer"
+            name = p['Målertypefabrikat'] + ' ' + p['MaalerTypeBetegnel']
+            identification = p['InstalNummer']
             agreement = agreement_uuid
-            address = "TODO: Get from forbrugssted"
             installation_type = VARME
-            meter_number = "TODO: Maalernr"
-
-            create_product(name, identification, agreement, address,
-                           installation_type, meter_number)
+            meter_number = p['Målernr']
+            start_date = p['DatoFra']
+            end_date = p['DatoTil']
+            create_product(name, identification, agreement, installation_type,
+                           meter_number, start_date, end_date)
 
     print("Fandt {0} primære kunder og {1} ligestillingskunder.".format(
         n, ligest_persons)
@@ -231,11 +242,15 @@ def import_all(connection):
 
 
 if __name__ == '__main__':
-    # from mssql_config import username, password, server, database
+    from mssql_config import username, password, server, database
 
-    connection = None  # connect(server, database, username, password)
+    connection = connect(server, database, username, password)
     import_all(connection)
 
+    #cursor = connection.cursor(as_dict=True)
+    #cursor.execute(TREFINSTALLATION_SQL)
+    #rows = cursor.fetchall()
+    # print(rows)
     # Test creation of virkning
     # print create_virkning()
     # Test creation of user

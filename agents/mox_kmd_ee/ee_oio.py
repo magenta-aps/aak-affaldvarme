@@ -10,7 +10,7 @@ SYSTEM_USER = "cb8122fe-96c6-11e7-8725-6bc18b080504"
 AVA_ORGANISATION = "cb8122fe-96c6-11e7-8725-6bc18b080504"
 
 # API URL
-BASE_URL = "http://mox"
+BASE_URL = "http://agger"
 
 
 def create_virkning(frm=datetime.datetime.now(),
@@ -275,8 +275,12 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
                    customer_role_uuid, note=""):
     virkning = create_virkning()
     tz = pytz.timezone('Europe/Copenhagen')
-    starttidspunkt = tz.localize(parser.parse(start_date))
-    sluttidspunkt = tz.localize(parser.parse(end_date))
+    starttidspunkt = tz.localize(start_date)
+    try:
+        sluttidspunkt = timezone.localize(end_date)
+    except:
+        # This is only for Max date - which is 9999-12-31 =~ infinity
+        sluttidspunkt = pytz.utc.localize(end_date)
     indsats_dict = {
         "note": note,
         "attributter": {
@@ -319,4 +323,40 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
     url = "{0}/indsats/indsats".format(BASE_URL)
     response = requests.post(url, json=indsats_dict)
 
+    return response
+    
+
+@request
+def create_klasse(name, identification, agreement, installation_type,
+                          meter_number, start_date, end_date, note=""):
+    virkning = create_virkning(start_date, end_date)
+    klasse_dict = {
+        "note": note,
+        "attributter": {
+            "klasseegenskaber": [
+                {
+                    "brugervendtnoegle": identification,
+                    "titel": name,
+                    "eksempel": meter_number,
+                    "virkning": virkning
+                }
+            ]
+        },
+        "tilstande": {
+            "klassepubliceret": [{
+                "publiceret": "Publiceret",
+                "virkning": virkning
+            }]
+        },
+        "relationer": {
+            "ejer": [{
+                "uuid": AVA_ORGANISATION,
+                "virkning": virkning,
+                "objekttype": "Organisation",
+            }]
+        }
+    }
+
+    url = "{0}/klassifikation/klasse".format(BASE_URL)
+    response = requests.post(url, json=klasse_dict)
     return response
