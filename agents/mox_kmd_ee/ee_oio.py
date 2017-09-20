@@ -1,5 +1,7 @@
 import datetime
+import pytz
 import requests
+from dateutil import parser
 
 # TODO: Use authentication & real user UUID.
 SYSTEM_USER = "cb8122fe-96c6-11e7-8725-6bc18b080504"
@@ -8,7 +10,7 @@ SYSTEM_USER = "cb8122fe-96c6-11e7-8725-6bc18b080504"
 AVA_ORGANISATION = "cb8122fe-96c6-11e7-8725-6bc18b080504"
 
 # API URL
-BASE_URL = "http://agger"
+BASE_URL = "http://mox"
 
 
 def create_virkning(frm=datetime.datetime.now(),
@@ -26,8 +28,24 @@ def create_virkning(frm=datetime.datetime.now(),
     return virkning
 
 
+def request(func):
+    def call_and_raise(*args, **kwargs):
+        result = func(*args, **kwargs)
+        if not result:
+            result.raise_for_status()
+        return result
+    return call_and_raise
+
+
+@request
 def create_organisation(cvr_number, key, name, phone="", email="",
                         mobile="", fax="", note=""):
+
+    # Sanity check
+    uuid = lookup_organisation(cvr_number)
+    if uuid:
+        print("{0} already exists with UUID {1}".format(cvr_number, uuid))
+
     virkning = create_virkning()
     organisation_dict = {
         "note": note,
@@ -67,6 +85,100 @@ def create_organisation(cvr_number, key, name, phone="", email="",
     response = requests.post(url, json=organisation_dict)
 
     return response
+
+
+def lookup_organisation(id_number):
+    request_string = (
+        "{0}/organisation/organisation?virksomhed=urn:{1}".format(
+            BASE_URL, id_number
+        )
+    )
+
+    result = requests.get(request_string)
+
+    if result:
+        search_results = result.json()['results'][0]
+
+    if len(search_results) > 0:
+        # There should only be one
+        assert(len(search_results) == 1)
+        return search_results[0]
+
+
+@request
+def create_bruger(cpr_number, key, name, phone="", email="",
+                  mobile="", fax="", note=""):
+
+    # Sanity check
+    uuid = lookup_bruger(cpr_number)
+    if uuid:
+        print("{0} already exists with UUID {1}".format(cpr_number, uuid))
+
+    virkning = create_virkning()
+    bruger_dict = {
+        "note": note,
+        "attributter": {
+            "brugeregenskaber": [
+                {
+                    "brugervendtnoegle": key,
+                    "brugernavn": name,
+                    "virkning": virkning
+                }
+            ]
+        },
+        "tilstande": {
+            "brugergyldighed": [{
+                "gyldighed": "Aktiv",
+                "virkning": virkning
+            }]
+        },
+        "relationer": {
+            "tilhoerer": [
+                {
+                    "uuid": AVA_ORGANISATION,
+                    "virkning": virkning
+
+                },
+            ],
+            "tilknyttedepersoner": [
+                {
+                    "urn": "urn:{0}".format(cpr_number),
+                    "virkning": virkning
+                }
+            ]
+        }
+    }
+
+    url = "{0}/organisation/bruger".format(BASE_URL)
+    response = requests.post(url, json=bruger_dict)
+
+    return response
+
+
+def lookup_bruger(id_number):
+    request_string = (
+        "{0}/organisation/bruger?tilknyttedepersoner=urn:{1}".format(
+            BASE_URL, id_number
+        )
+    )
+
+    result = requests.get(request_string)
+
+    if result:
+        search_results = result.json()['results'][0]
+    else:
+        # TODO: What to do? Network error. Ignore and assume it will work next
+        # time.
+        return None
+
+    if len(search_results) > 0:
+        # There should only be one
+        if len(search_results) > 1:
+            print("Denne bruger findes {0} gange: {1}".format(
+                len(search_results), id_number)
+            )
+            print(search_results)
+        return search_results[0]
 
 
 def create_interessefaellesskab(customer_number, customer_relation_name,
@@ -157,44 +269,54 @@ def create_organisationfunktion(customer_number,
     return response
 
 
-def create_bruger(cpr_number, key, name, phone="", email="",
-                  mobile="", fax="", note=""):
+@request
+def create_indsats(name, agreement_type, no_of_products, invoice_address,
+                   address, start_date, end_date, location,
+                   customer_role_uuid, note=""):
     virkning = create_virkning()
-    bruger_dict = {
+    tz = pytz.timezone('Europe/Copenhagen')
+    starttidspunkt = tz.localize(parser.parse(start_date))
+    sluttidspunkt = tz.localize(parser.parse(end_date))
+    indsats_dict = {
         "note": note,
         "attributter": {
-            "brugeregenskaber": [
+            "indsatsegenskaber": [
                 {
-                    "brugervendtnoegle": key,
-                    "brugernavn": name,
+                    "brugervendt_noegle": name,
+                    "beskrivelse": no_of_products,
+                    "starttidspunkt": str(starttidspunkt),
+                    "sluttidspunkt": str(sluttidspunkt),
                     "virkning": virkning
                 }
             ]
         },
         "tilstande": {
-            "brugergyldighed": [{
-                "gyldighed": "Aktiv",
+            "indsatsfremdrift": [{
+                "fremdrift": "Disponeret",
+                "virkning": virkning
+            }],
+            "indsatspubliceret": [{
+                "publiceret": "IkkePubliceret",
                 "virkning": virkning
             }]
         },
         "relationer": {
-            "tilhoerer": [
+            "indsatstype": [
                 {
-                    "uuid": AVA_ORGANISATION,
+                    "urn": "urn:{0}".format(agreement_type),
                     "virkning": virkning
-
-                },
+                }
             ],
-            "tilknyttedepersoner": [
+            "indsatsmodtager": [
                 {
-                    "urn": "urn:{0}".format(cpr_number),
+                    "uuid": customer_role_uuid,
                     "virkning": virkning
                 }
             ]
         }
     }
 
-    url = "{0}/organisation/bruger".format(BASE_URL)
-    response = requests.post(url, json=bruger_dict)
+    url = "{0}/indsats/indsats".format(BASE_URL)
+    response = requests.post(url, json=indsats_dict)
 
     return response
