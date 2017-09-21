@@ -6,7 +6,9 @@ __author__ = "Heini Leander Ovason"
 
 def http_post(endpoint, soap_envelope, certificate):
 
-    try:
+    response = None
+
+    if endpoint and soap_envelope and certificate:
 
         response = requests.post(
             url=endpoint,
@@ -14,8 +16,6 @@ def http_post(endpoint, soap_envelope, certificate):
             cert=certificate
         )
 
+    else:
+
         return response
-
-    except requests.exceptions.RequestException as e:
-
-        print(e)
