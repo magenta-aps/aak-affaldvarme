@@ -16,7 +16,7 @@ get_citizen()
 
 .. code-block:: python
 
-    -- coding: utf-8 --
+    # -- coding: utf-8 --
     import json
 
     from services.udvidet_person_stam_data_lokal import get_citizen
