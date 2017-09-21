@@ -6,7 +6,7 @@ __author__ = "Heini Leander Ovason"
 
 def validate_cprnr(cprnr):
 
-    if cprnr is not None:
+    if cprnr:
 
         check = re.match(r'^\d{10}$', cprnr)
 
@@ -16,7 +16,10 @@ def validate_cprnr(cprnr):
 
         else:
 
-            raise ValueError('"{}" is not a valid Danish cprnr.'.format(cprnr))
+            # Log e.g. 'Not a valid cprnr'
+            return False
+
     else:
 
-        raise TypeError('"{}" is not a valid type.'.format(cprnr))
+        # Log e.g. 'Type error occured: input'
+        return False
