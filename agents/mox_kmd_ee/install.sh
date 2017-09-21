@@ -8,3 +8,14 @@ fi
 source python-env/bin/activate
 
 pip install -r requirements.txt
+
+if [ ! -f mssql_config.py ]
+then
+    cat << EOF > mssql_config.py
+#encoding: utf-8
+server=''
+database=''
+username=''
+password=''
+EOF
+fi
