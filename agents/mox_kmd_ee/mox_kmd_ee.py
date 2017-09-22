@@ -2,160 +2,255 @@
 # import pyodbc
 
 import pymssql
-import datetime
-import requests
 
-# This is the SQL to fetch all customers from the KMD EE database.
-# Only relevant fields (please).
+from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL
+from ee_oio import create_organisation, create_bruger, create_indsats
+from ee_oio import create_interessefaellesskab, create_organisationfunktion
+from ee_oio import create_klasse, lookup_bruger, lookup_organisation
 
-# TODO: Use authentication & real user UUID.
-SYSTEM_USER = "cb8122fe-96c6-11e7-8725-6bc18b080504"
+# Definition of strings used for Klassifikation URNs
 
-# AVA-Organisation
-AVA_ORGANISATION = "cb8122fe-96c6-11e7-8725-6bc18b080504"
-
-# API URL
-BASE_URL = "http://agger"
+VARME = "Varme"
+KUNDE = "Kunde"
+LIGESTILLINGSKUNDE = "Ligestillingskunde"
 
 
-def create_virkning(frm=datetime.datetime.now(),
-                    to="infinity",
-                    user=SYSTEM_USER,
-                    note=""):
-    virkning = {
-        "from": str(frm),
-        "to": str(to),
-        "aktoerref": user,
-        "aktoertypekode": "Bruger",
-        "notetekst": note
-    }
+def create_customer(id_number, key, name, phone="", email="",
+                    mobile="", fax="", note=""):
+        if is_cvr(id_number):
+            result = create_organisation(
+                id_number, key, name, phone, email, mobile, fax, note
+            )
+        elif is_cpr(id_number):
+            # This is a CPR number
+            result = create_bruger(
+                id_number, key, name, phone, email, mobile, fax, note
+            )
+        else:
+            print("Forkert CPR/SE-nr for {0}: {1}".format(
+                name, id_number)
+            )
+            # Invalid customer
+            return None
 
-    return virkning
-
-  
-def create_bruger(cpr_number, name, phone, email, 
-                  mobile="", fax="", note=""):
-    virkning = create_virkning()
-    bruger_dict = {
-        "note": note,
-        "attributter": {
-            "brugeregenskaber": [
-                {
-                    "brugervendtnoegle": name,
-                    "brugernavn": name,
-                    "virkning": virkning
-                }
-            ]
-        },
-        "tilstande": {
-            "brugergyldighed": [{
-                "gyldighed": "Aktiv",
-                "virkning": virkning
-            }]
-        },
-        "relationer": {
-            "tilhoerer": [
-                {
-                    "uuid": AVA_ORGANISATION,
-                    "virkning": virkning
-
-                },
-            ],
-            "tilknyttedepersoner": [
-                {
-                    "urn": cpr_number,
-                    "virkning": virkning
-                }
-            ]
-        }
-    }
-
-    url = "{0}/organisation/bruger".format(BASE_URL)
-    response = requests.post(url, json=bruger_dict)
-
-    return response
+        if result:
+            return result.json()['uuid']
 
 
-KUNDE_SQL = """
-SELECT TOP(1000) [PersonnrSEnr]
-      ,[KundeCprnr]
-      ,[LigestPersonnr]
-      ,[Tilflytningsdato]
-      ,[Fraflytningsdato]
-      ,[EmailKunde]
-      ,[MobilTlf]
-      ,[KundeID]
-      ,[Kundenr]
-      ,[Status]
-      ,[Telefonnr]
-      ,[FasadministratorID]
-      ,[BoligadminID]
-      ,[KundeNavn]
-  FROM [KMD_EE].[dbo].[Kunde]
-"""
+def lookup_customer(id_number):
+    if is_cpr(id_number):
+        return lookup_bruger(id_number)
+    elif is_cvr(id_number):
+        return lookup_organisation(id_number)
+
+
+def create_customer_role(customer_number, customer_uuid,
+                         customer_relation_uuid, role):
+    "Create an OrgFunktion from this info and return UUID"
+    result = create_organisationfunktion(
+        customer_number,
+        customer_uuid,
+        customer_relation_uuid,
+        role
+    )
+
+    if result:
+        return result.json()['uuid']
+
+
+def create_customer_relation(customer_number, customer_relation_name,
+                             customer_type):
+    "Create an Interessefællesskab from this info and return UUID"
+    result = create_interessefaellesskab(customer_number,
+                                         customer_relation_name,
+                                         customer_type)
+    if result:
+        return result.json()['uuid']
+
+
+def create_agreement(name, agreement_type, no_of_products, invoice_address,
+                     address, start_date, end_date, location,
+                     customer_role_uuid):
+    "Create an Indsats from this info and return UUID"
+    result = create_indsats(name, agreement_type, no_of_products,
+                            invoice_address, address, start_date, end_date,
+                            location, customer_role_uuid)
+    if result:
+        return result.json()['uuid']
+
+
+def get_products_for_location(connection, forbrugssted):
+    "Get locations for this customer ID from the Forbrugssted table" 
+    cursor = connection.cursor(as_dict=True)
+    cursor.execute(TREFINSTALLATION_SQL.format(forbrugssted))
+    rows = cursor.fetchall()
+    return rows
+
+
+
+def create_product(name, identification, agreement,
+                   installation_type, meter_number, start_date, end_date):
+    "Create a Klasse from this info and return UUID"
+    result = create_klasse(name, identification, agreement, installation_type,
+                           meter_number, start_date, end_date)
+    if result:
+        return result.json()['uuid']
+
 
 # CPR/CVR helper function
 
 
 def cpr_cvr(val):
     if type(val) == float:
-        val = unicode(int(val))
-        assert(8 <= len(val) <= 10)
+        val = str(int(val))
+        if not (8 <= len(val) <= 10):
+            pass
         if len(val) == 9:
             val = '0' + val
     return val
 
 
+def is_cpr(val):
+    return len(val) == 10 and val.isdigit()
+
+
+def is_cvr(val):
+    return len(val) == 8 and val.isdigit()
+
+
 def connect(server, database, username, password):
-    driver1= '{SQL Server}'
-    driver2= '{ODBC Driver 13 for SQL Server}'
+    driver1 = '{SQL Server}'
+    driver2 = '{ODBC Driver 13 for SQL Server}'
     cnxn = None
     try:
         cnxn = pymssql.connect(server=server, user=username,
                                password=password, database=database)
     except Exception as e:
-        print e
+        print(e)
         raise
     return cnxn
 
 
 def import_all(connection):
     cursor = connection.cursor(as_dict=True)
-    cursor.execute(KUNDE_SQL)
+    cursor.execute(CUSTOMER_SQL)
     rows = cursor.fetchall()
+    # import csv
+    # reader = csv.DictReader(open('Kunde.csv', 'r'))
+    # rows = [r for r in reader]
     n = 0
+    ligest_persons = 0
+    print("Importing {} rows...".format(len(rows)))
     for row in rows:
-        # print str(row[0]) + " " + str(row[1]) + " " + str(row[2])
-        n += 1
-        # TODO: Insert customer in Lora if it doesn't exist already.
+        # Lookup customer in LoRa - insert if it doesn't exist already.
 
-        # print row[u'KundeNavn'] + u':'
-        """
-        print '+++'
-        for k in row:
-            v = row[k]
-	    if k == u'PersonnrSEnr':
-	        print u"{0}:<{1}>".format(k, cpr_cvr(v))
-        """
-        result = create_bruger(
-            row['PersonnrSEnr'],
-            row['Kundenr'],
-            row['KundeNavn'],
-            row['Telefonnr'],
-            row['EmailKunde'],
-            row['MobilTlf'])
-        # print result, result.json()
+        id_number = cpr_cvr(float(row['PersonnrSEnr']))
+        ligest_personnr = cpr_cvr(float(row['LigestPersonnr']))
+        customer_number = str(int(float(row['Kundenr'])))
 
-        # print '+++'
-    print "Fandt {0} kunder.".format(n)
+        customer_uuid = lookup_customer(id_number)
+
+        if not customer_uuid:
+            new_customer_uuid = create_customer(
+                id_number,
+                customer_number,
+                row['KundeNavn'],
+                row['Telefonnr'],
+                row['EmailKunde'],
+                row['MobilTlf']
+            )
+
+            if new_customer_uuid:
+                # New customer created
+                customer_uuid = new_customer_uuid
+                n += 1
+            else:
+                # No customer created or found.
+                continue
+
+        # Create customer relation
+        # NOTE: In KMD EE, there's always one customer relation for each row in
+        # the Kunde table.
+        cr_name = "<Varme + adresse fra SP>"
+        cr_type = VARME  # Always for KMD EE
+        cr_uuid = create_customer_relation(customer_number, cr_name, cr_type)
+
+        assert(cr_uuid)
+
+        # This done, create customer roles & link customer and relation
+        role_uuid = create_customer_role(customer_number, customer_uuid,
+                                         cr_uuid, "Kunde")
+        assert(role_uuid)
+
+        # Now handle partner/roommate, ignore empty CPR numbers
+        if len(ligest_personnr) > 1:
+
+            ligest_uuid = lookup_customer(ligest_personnr)
+
+            if not ligest_uuid:
+                new_ligest_uuid = create_customer(
+                    ligest_personnr, customer_number, row['KundeNavn']
+                )
+                if new_ligest_uuid:
+                    ligest_uuid = new_ligest_uuid
+                    ligest_persons += 1
+
+            if ligest_uuid:
+                create_customer_role(
+                    customer_number, ligest_uuid, cr_uuid, "Ligestillingskunde"
+                )
+
+        # TODO: Create agreement
+        name = 'Fjernvarmeaftale'
+        agreement_type = VARME
+        invoice_address = "TODO: Lookup in CRM?"
+        address = "TODO: Get from forbrugssted"
+        start_date = row['Tilflytningsdato']
+        end_date = row['Fraflytningsdato']
+
+        # There is always one agreement for each location (Forbrugssted)
+        # AND only one location for each customer record.
+
+        customer_id = row['KundeID']
+
+        forbrugssted = row['ForbrugsstedID']
+        products = get_products_for_location(connection, forbrugssted)
+
+        no_of_products = len(products)
+        if no_of_products > 1:
+            print(no_of_products, "found")
+
+        agreement_uuid = create_agreement(
+            name, agreement_type, no_of_products, invoice_address, address,
+            start_date, end_date, forbrugssted, cr_uuid
+        )
+        assert(agreement_uuid)
+        for p in products:
+            name = p['Målertypefabrikat'] + ' ' + p['MaalerTypeBetegnel']
+            identification = p['InstalNummer']
+            agreement = agreement_uuid
+            installation_type = VARME
+            meter_number = p['Målernr']
+            start_date = p['DatoFra']
+            end_date = p['DatoTil']
+            create_product(name, identification, agreement, installation_type,
+                           meter_number, start_date, end_date)
+
+    print("Fandt {0} primære kunder og {1} ligestillingskunder.".format(
+        n, ligest_persons)
+    )
 
 
 if __name__ == '__main__':
     from mssql_config import username, password, server, database
-    
+
     connection = connect(server, database, username, password)
     import_all(connection)
 
+    #cursor = connection.cursor(as_dict=True)
+    #cursor.execute(TREFINSTALLATION_SQL)
+    #rows = cursor.fetchall()
+    # print(rows)
     # Test creation of virkning
     # print create_virkning()
     # Test creation of user
