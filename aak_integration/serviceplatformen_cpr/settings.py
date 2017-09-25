@@ -52,4 +52,6 @@ SP_SERVICE_ENDPOINT_CPR_SUBSCRIPTION_1 = os.environ.get(
 )
 # Path to specific soap envelope template for SF6002
 
-SP_SF6002_SOAP_ENVELOPE_TEMPLATE = os.environ.get('SP_SF6002_SOAP_ENVELOPE_TEMPLATE')
+SP_SF6002_SOAP_ENVELOPE_TEMPLATE = os.environ.get(
+    'SP_SF6002_SOAP_ENVELOPE_TEMPLATE'
+)
