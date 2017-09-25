@@ -7,7 +7,11 @@ from os.path import join, dirname
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
-SP_CERTIFICATE_PATH = os.environ.get('SP_CERTIFICATE_PATH')
+install_path = os.path.abspath(dirname(__file__))
+
+SP_CERTIFICATE_PATH = join(
+    dirname(__file__), (os.environ.get('SP_CERTIFICATE_PATH'))
+)
 
 # Generic invocation context UUIDS for production environment
 SP_USER_SYSTEM_UUID_PROD = os.environ.get('SP_USER_SYSTEM_UUID_PROD')
@@ -47,6 +51,5 @@ SP_SERVICE_ENDPOINT_CPR_SUBSCRIPTION_1 = os.environ.get(
     'SP_SERVICE_ENDPOINT_CPR_SUBSCRIPTION_1'
 )
 # Path to specific soap envelope template for SF6002
-SP_SF6002_SOAP_ENVELOPE_TEMPLATE = os.environ.get(
-    'SP_SF6002_SOAP_ENVELOPE_TEMPLATE'
-)
+
+SP_SF6002_SOAP_ENVELOPE_TEMPLATE = os.environ.get('SP_SF6002_SOAP_ENVELOPE_TEMPLATE')
