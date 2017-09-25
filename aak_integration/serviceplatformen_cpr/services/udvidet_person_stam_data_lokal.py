@@ -1,10 +1,12 @@
 # -- coding: utf-8 --
-import settings
+import os
 import xmltodict
 
-from helpers.soap import construct_envelope_SF1520
-from helpers.validation import validate_cprnr
-from helpers.http_requester import http_post
+import serviceplatformen_cpr.settings as settings
+
+from serviceplatformen_cpr.helpers.soap import construct_envelope_SF1520
+from serviceplatformen_cpr.helpers.validation import validate_cprnr
+from serviceplatformen_cpr.helpers.http_requester import http_post
 
 
 __author__ = "Heini Leander Ovason"
@@ -24,25 +26,26 @@ def get_citizen(service_uuids, certificate, cprnr):
 
     if is_cprnr_valid:
 
-        soap_envelope_template = settings.SP_SF1520_SOAP_ENVELOPE_TEMPLATE
+        soap_envelope_template = os.path.join(
+            settings.install_path, settings.SP_SF1520_SOAP_ENVELOPE_TEMPLATE
+        )
 
         soap_envelope = construct_envelope_SF1520(
             template=soap_envelope_template,
             service_uuids=service_uuids,
             cprnr=cprnr
         )
-
         response = call_cpr_person_lookup_request(
             soap_envelope=soap_envelope,
             certificate=certificate
         )
-
         if response.status_code == 200:
             citizen_dict = parse_cpr_person_lookup_xml_to_dict(
                 soap_response_xml=response.text
             )
             return citizen_dict
         else:
+            response.raise_for_status()
             return {'Error': 'Something went wrong'}
 
 
