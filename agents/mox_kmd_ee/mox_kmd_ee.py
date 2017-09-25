@@ -3,6 +3,8 @@
 
 import pymssql
 
+from serviceplatformen_cpr import get_cpr_data
+
 from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
@@ -23,6 +25,16 @@ def create_customer(id_number, key, name, phone="", email="",
             )
         elif is_cpr(id_number):
             # This is a CPR number
+
+            # Collect info from SP and include in call creating user.
+            person_dir = get_cpr_data(id_number)
+
+            first_name = person_dir['fornavn']
+            middle_name = person_dir.get('mellemnavn', '')
+            last_name = person_dir['efternavn']
+
+            print (first_name, middle_name, last_name)
+ 
             result = create_bruger(
                 id_number, key, name, phone, email, mobile, fax, note
             )
