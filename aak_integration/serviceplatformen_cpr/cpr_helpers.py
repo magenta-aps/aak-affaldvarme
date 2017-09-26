@@ -26,6 +26,6 @@ def get_cpr_data(cprnr):
 
 if __name__ == '__main__':
 
-    cprnr = '2511640019'
+    cprnr = '0123456789'
     result = get_cpr_data(cprnr)
     print(json.dumps(result))
