@@ -2,4 +2,4 @@ pymssql
 requests
 python-dateutil
 pytz
--e /home/agger/aak-affaldvarme/aak_integration
+-e ../../aak_integration
