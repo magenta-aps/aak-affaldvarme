@@ -13,9 +13,9 @@ if [ ! -f mssql_config.py ]
 then
     cat << EOF > mssql_config.py
 #encoding: utf-8
-server=''
-database=''
-username=''
-password=''
+server = ''
+database = ''
+username = ''
+password = ''
 EOF
 fi
