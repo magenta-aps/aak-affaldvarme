@@ -11,7 +11,8 @@ from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_oio import create_klasse, lookup_bruger, lookup_organisation
-from ee_oio import get_address_uuid
+
+from service_clients import get_address_uuid, get_cvr_data
 
 # Definition of strings used for Klassifikation URNs
 
@@ -22,9 +23,30 @@ LIGESTILLINGSKUNDE = "Ligestillingskunde"
 
 def create_customer(id_number, key, name, phone="", email="",
                     mobile="", fax="", note=""):
+
         if is_cvr(id_number):
+
+            # Collect info from SP and include in call creating user.
+            # Avoid getting throttled by SP
+            try:
+                company_dir = get_cvr_data(id_number)
+            except Exception as e:
+                # Retry *once* after sleeping
+                time.sleep(40)
+                try:
+                    company_dir = get_cvr_data(id_number)
+                except Exception as e:
+                    print("CVR number not found", id_number)
+                    return None
+
+            name = company_dir['organisationsnavn']
+            address_uuid = company_dir['dawa_uuid']
+            company_type = company_dir['virksomhedsform']
+            industry_code = company_dir['branchekode']
+
             result = create_organisation(
-                id_number, key, name, phone, email, mobile, fax, note
+                id_number, key, name, phone, email, mobile, fax, address_uuid,
+                company_type, industry_code, note
             )
         elif is_cpr(id_number):
             # This is a CPR number
@@ -34,8 +56,6 @@ def create_customer(id_number, key, name, phone="", email="",
             try:
                 person_dir = get_cpr_data(id_number)
             except Exception as e:
-                print("sleeping", str(e))
-                print("Failing CPR number", id_number)
                 # Retry *once* after sleeping
                 time.sleep(40)
                 try:
@@ -51,15 +71,19 @@ def create_customer(id_number, key, name, phone="", email="",
             # Address related stuff
             address = {
                 "vejnavn": person_dir["vejnavn"],
-                "husnr": person_dir["husnummer"],
-                "etage": person_dir.get("etage", ""),
-                "dør": person_dir.get("doer", ""),
                 "postnr": person_dir["postnummer"]
             }
+            if "etage" in person_dir:
+                address["etage"] = person_dir["etage"].lstrip('0')
+            if "sidedoer" in person_dir:
+                address["dør"] = person_dir["sidedoer"].lstrip('0')
+            if "husnummer" in person_dir:
+                address["husnr"] = person_dir["husnummer"]
+
             try:
                 address_uuid = get_address_uuid(address)
             except Exception as e:
-                print(e)
+                print(e, person_dir)
                 # pass
                 address_uuid = None
 
@@ -211,6 +235,8 @@ def import_all(connection):
                 n += 1
             else:
                 # No customer created or found.
+                print("No customer created:", row['KundeNavn'],
+                      row['PersonnrSEnr'])
                 continue
 
         # Create customer relation

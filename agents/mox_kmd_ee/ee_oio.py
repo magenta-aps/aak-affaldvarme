@@ -28,28 +28,6 @@ def create_virkning(frm=datetime.datetime.now(),
     return virkning
 
 
-def get_address_uuid(address):
-
-    DAWA_SERVICE_URL = 'https://dawa.aws.dk/adresser'
-
-    address['struktur'] = 'mini'
-
-    response = requests.get(
-        url=DAWA_SERVICE_URL,
-        params=address
-    )
-    js = response.json()
-
-    if len(js) == 1:
-        return js[0]['id']
-    elif len(js) > 1:
-        print(js)
-        raise RuntimeError('Non-unique address: {0}'.format(address))
-    else:
-        # len(js) == 0
-        raise RuntimeError('Address not found: {0}'.format(address))
-
-
 def request(func):
     def call_and_raise(*args, **kwargs):
         result = func(*args, **kwargs)
@@ -61,8 +39,8 @@ def request(func):
 
 @request
 def create_organisation(cvr_number, key, name, phone="", email="",
-                        mobile="", fax="", note=""):
-
+                        mobile="", fax="", address_uuid="", company_type="",
+                        industry_code="", note=""):
     # Sanity check
     uuid = lookup_organisation(cvr_number)
     if uuid:
@@ -91,7 +69,6 @@ def create_organisation(cvr_number, key, name, phone="", email="",
                 {
                     "uuid": AVA_ORGANISATION,
                     "virkning": virkning
-
                 },
             ],
             "virksomhed": [
@@ -99,10 +76,46 @@ def create_organisation(cvr_number, key, name, phone="", email="",
                     "urn": "urn:{0}".format(cvr_number),
                     "virkning": virkning
                 }
+            ],
+            "adresser": [
+
             ]
         }
     }
 
+    if company_type:
+        organisation_dict['relationer']['virksomhedstype'] = [{
+            "urn": "urn:{0}".format(company_type),
+            "virkning": virkning
+        }]
+
+    if industry_code:
+        organisation_dict['relationer']['branche'] = [{
+            "urn": "urn:{0}".format(industry_code),
+            "virkning": virkning
+        }]
+
+    if phone:
+        organisation_dict['relationer']['adresser'].append(
+            {
+                "urn": "urn:tel:{0}".format(phone),
+                "virkning": virkning
+            }
+        )
+    if email:
+        organisation_dict['relationer']['adresser'].append(
+            {
+                "urn": "urn:email:{0}".format(email),
+                "virkning": virkning
+            }
+        )
+    if address_uuid:
+        organisation_dict['relationer']['adresser'].append(
+            {
+                "uuid": address_uuid,
+                "virkning": virkning
+            }
+        )
     url = "{0}/organisation/organisation".format(BASE_URL)
     response = requests.post(url, json=organisation_dict)
 
