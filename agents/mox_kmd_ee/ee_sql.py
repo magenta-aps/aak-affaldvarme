@@ -4,7 +4,7 @@
 # Only relevant fields (please).
 
 CUSTOMER_SQL = """
-SELECT  [PersonnrSEnr]
+SELECT [PersonnrSEnr]
       ,[KundeCprnr]
       ,[LigestPersonnr]
       ,[Tilflytningsdato]
@@ -22,7 +22,7 @@ SELECT  [PersonnrSEnr]
   FROM [KMD_EE].[dbo].[Kunde]
   WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
 """
-    
+
 
 TREFINSTALLATION_SQL = """SELECT *
     FROM TrefInstallation a, TrefMaaler b

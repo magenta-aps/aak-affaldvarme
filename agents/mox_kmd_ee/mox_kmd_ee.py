@@ -1,6 +1,8 @@
 # encoding: utf-8
 # import pyodbc
 
+import time
+
 import pymssql
 
 from serviceplatformen_cpr import get_cpr_data
@@ -9,6 +11,7 @@ from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_oio import create_klasse, lookup_bruger, lookup_organisation
+from ee_oio import get_address_uuid
 
 # Definition of strings used for Klassifikation URNs
 
@@ -27,16 +30,47 @@ def create_customer(id_number, key, name, phone="", email="",
             # This is a CPR number
 
             # Collect info from SP and include in call creating user.
-            person_dir = get_cpr_data(id_number)
+            # Avoid getting throttled by SP
+            try:
+                person_dir = get_cpr_data(id_number)
+            except Exception as e:
+                print("sleeping", str(e))
+                print("Failing CPR number", id_number)
+                # Retry *once* after sleeping
+                time.sleep(40)
+                try:
+                    person_dir = get_cpr_data(id_number)
+                except Exception as e:
+                    print("CPR number not found", id_number)
+                    return None
 
             first_name = person_dir['fornavn']
             middle_name = person_dir.get('mellemnavn', '')
             last_name = person_dir['efternavn']
 
-            print (first_name, middle_name, last_name)
- 
+            # Address related stuff
+            address = {
+                "vejnavn": person_dir["vejnavn"],
+                "husnr": person_dir["husnummer"],
+                "etage": person_dir.get("etage", ""),
+                "dør": person_dir.get("doer", ""),
+                "postnr": person_dir["postnummer"]
+            }
+            try:
+                address_uuid = get_address_uuid(address)
+            except Exception as e:
+                print(e)
+                # pass
+                address_uuid = None
+
+            gender = person_dir['koen']
+            marital_status = person_dir['civilstand']
+            address_protection = person_dir['adressebeskyttelse']
+
             result = create_bruger(
-                id_number, key, name, phone, email, mobile, fax, note
+                id_number, key, name, phone, email, mobile, fax, first_name,
+                middle_name, last_name, address_uuid, gender, marital_status,
+                address_protection, note
             )
         else:
             print("Forkert CPR/SE-nr for {0}: {1}".format(
@@ -92,12 +126,11 @@ def create_agreement(name, agreement_type, no_of_products, invoice_address,
 
 
 def get_products_for_location(connection, forbrugssted):
-    "Get locations for this customer ID from the Forbrugssted table" 
+    "Get locations for this customer ID from the Forbrugssted table"
     cursor = connection.cursor(as_dict=True)
     cursor.execute(TREFINSTALLATION_SQL.format(forbrugssted))
     rows = cursor.fetchall()
     return rows
-
 
 
 def create_product(name, identification, agreement,
@@ -258,21 +291,3 @@ if __name__ == '__main__':
 
     connection = connect(server, database, username, password)
     import_all(connection)
-
-    #cursor = connection.cursor(as_dict=True)
-    #cursor.execute(TREFINSTALLATION_SQL)
-    #rows = cursor.fetchall()
-    # print(rows)
-    # Test creation of virkning
-    # print create_virkning()
-    # Test creation of user
-    # Mock data
-    """
-    cpr_number = "2511641919"
-    name = "Carsten Agger"
-    phone = "20865010"
-    email = "agger@modspil.dk"
-    note = "Test!"
-    result = create_bruger(cpr_number, name, phone, email, note=note)
-    print result, result.json()
-    """

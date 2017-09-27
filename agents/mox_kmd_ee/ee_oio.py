@@ -28,6 +28,28 @@ def create_virkning(frm=datetime.datetime.now(),
     return virkning
 
 
+def get_address_uuid(address):
+
+    DAWA_SERVICE_URL = 'https://dawa.aws.dk/adresser'
+
+    address['struktur'] = 'mini'
+
+    response = requests.get(
+        url=DAWA_SERVICE_URL,
+        params=address
+    )
+    js = response.json()
+
+    if len(js) == 1:
+        return js[0]['id']
+    elif len(js) > 1:
+        print(js)
+        raise RuntimeError('Non-unique address: {0}'.format(address))
+    else:
+        # len(js) == 0
+        raise RuntimeError('Address not found: {0}'.format(address))
+
+
 def request(func):
     def call_and_raise(*args, **kwargs):
         result = func(*args, **kwargs)
@@ -107,7 +129,9 @@ def lookup_organisation(id_number):
 
 @request
 def create_bruger(cpr_number, key, name, phone="", email="",
-                  mobile="", fax="", note=""):
+                  mobile="", fax="", first_name="", middle_name="",
+                  last_name="", address_uuid="", gender="", marital_status="",
+                  address_protection="", note=""):
 
     # Sanity check
     uuid = lookup_bruger(cpr_number)
@@ -122,6 +146,12 @@ def create_bruger(cpr_number, key, name, phone="", email="",
                 {
                     "brugervendtnoegle": key,
                     "brugernavn": name,
+                    "ava_fornavn": first_name,
+                    "ava_mellemnavn": middle_name,
+                    "ava_efternavn": last_name,
+                    "ava_civilstand": marital_status,
+                    "ava_koen": gender,
+                    "ava_adressebeskyttelse": address_protection,
                     "virkning": virkning
                 }
             ]
@@ -145,9 +175,34 @@ def create_bruger(cpr_number, key, name, phone="", email="",
                     "urn": "urn:{0}".format(cpr_number),
                     "virkning": virkning
                 }
+            ],
+            "adresser": [
+
             ]
         }
     }
+
+    if phone:
+        bruger_dict['relationer']['adresser'].append(
+            {
+                "urn": "urn:tel:{0}".format(phone),
+                "virkning": virkning
+            }
+        )
+    if email:
+        bruger_dict['relationer']['adresser'].append(
+            {
+                "urn": "urn:email:{0}".format(email),
+                "virkning": virkning
+            }
+        )
+    if address_uuid:
+        bruger_dict['relationer']['adresser'].append(
+            {
+                "uuid": address_uuid,
+                "virkning": virkning
+            }
+        )
 
     url = "{0}/organisation/bruger".format(BASE_URL)
     response = requests.post(url, json=bruger_dict)
@@ -324,11 +379,11 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
     response = requests.post(url, json=indsats_dict)
 
     return response
-    
+
 
 @request
 def create_klasse(name, identification, agreement, installation_type,
-                          meter_number, start_date, end_date, note=""):
+                  meter_number, start_date, end_date, note=""):
     virkning = create_virkning(start_date, end_date)
     klasse_dict = {
         "note": note,
