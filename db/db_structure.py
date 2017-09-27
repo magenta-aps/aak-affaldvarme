@@ -45,7 +45,8 @@ DATABASE_STRUCTURE = {
             "publiceret": ["Publiceret", "IkkePubliceret"]
         },
         "relationer_nul_til_en": [
-            "ejer", "ansvarlig", "overordnetklasse", "facet"
+            "ejer", "ansvarlig", "overordnetklasse", "facet",
+            "ava_opstillingsadresse", "ava_afhentningstype"
         ],
         "relationer_nul_til_mange": [
             "redaktoerer", "sideordnede", "mapninger", "tilfoejelser",
@@ -92,7 +93,8 @@ DATABASE_STRUCTURE = {
             "gyldighed": ["Aktiv", "Inaktiv"]
         },
         "relationer_nul_til_en": [
-            "branche", "interessefaellesskabstype", "overordnet", "tilhoerer"
+            "branche", "interessefaellesskabstype", "overordnet", "tilhoerer",
+            "ava_ejendom"
         ],
         "relationer_nul_til_mange": [
             "adresser", "opgaver", "tilknyttedebrugere", "tilknyttedeenheder",
@@ -129,7 +131,8 @@ DATABASE_STRUCTURE = {
 
     "organisation": {
         "attributter": {
-            "egenskaber": ["brugervendtnoegle", "organisationsnavn"]
+            "egenskaber": ["brugervendtnoegle", "organisationsnavn",
+                           "ava_sms_notifikation", "ava_kreditstatus"]
         },
         "tilstande": {
             "gyldighed": ["Aktiv", "Inaktiv"]
@@ -309,7 +312,8 @@ DATABASE_STRUCTURE = {
             ],
             "publiceret": ["Publiceret", "IkkePubliceret", "Normal"]
         },
-        "relationer_nul_til_en": ["indsatsmodtager", "indsatstype"],
+        "relationer_nul_til_en": ["indsatsmodtager", "indsatstype",
+                                  "ava_faktureringsadresse"],
         "relationer_nul_til_mange": [
             "indsatskvalitet", "indsatsaktoer", "samtykke", "indsatssag",
             "indsatsdokument"
