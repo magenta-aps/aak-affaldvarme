@@ -27,18 +27,6 @@ def get_cvr_data(cvr_id, service_uuids, service_certificate):
     zeep_data = cvr_adapter.getLegalUnit(cvr_id)
     extracted = _extract_zeep_data(zeep_data)
 
-    {
-        "organisationsnavn": "MAGENTA ApS",
-        "vejnavn": "Pilestræde",
-        "vejkode": "5520",
-        "husnummer": "43",
-        "etage": "3",
-        "doer": "",
-        "postnummer": "1112",
-        "kommunekode": "0101",
-        "postboks": ""
-    }
-
     address = {}
     address["vejnavn"] = extracted["vejnavn"]
     address["husnr"] = extracted["husnummer"]
@@ -58,6 +46,8 @@ def _extract_zeep_data(data):
     organisation = data["LegalUnitName"]
     lifecycle = data["Lifecycle"]
     address = data["AddressOfficial"]
+    activity = data["ActivityInformation"]["MainActivity"]
+    businessformat = data["BusinessFormat"]
 
     # Country code not included
     # There may be a need for an identifier for countries outside Denmark
@@ -78,7 +68,13 @@ def _extract_zeep_data(data):
         "kommunekode":
             address["AddressAccess"]["MunicipalityCode"],
         "postboks":
-            address["AddressPostalExtended"]["PostOfficeBoxIdentifier"]
+            address["AddressPostalExtended"]["PostOfficeBoxIdentifier"],
+        "branchekode":
+            activity["ActivityCode"],
+        "branchebeskrivelse":
+            activity["ActivityDescription"],
+        "virksomhedsform":
+            businessformat["BusinessFormatCode"]
     }
 
     # Some parameter values are None and must be replaced with an empty string
