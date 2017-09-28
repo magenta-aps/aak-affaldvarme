@@ -4,7 +4,7 @@ from serviceplatformen_cvr import get_cvr_data as _get_cvr_data
 
 
 def get_address_uuid(address):
-
+    "Get DAWA UUID from dictionary with correct fields."
     DAWA_SERVICE_URL = 'https://dawa.aws.dk/adresser'
 
     address['struktur'] = 'mini'
@@ -18,11 +18,30 @@ def get_address_uuid(address):
     if len(js) == 1:
         return js[0]['id']
     elif len(js) > 1:
-        print(js)
         raise RuntimeError('Non-unique address: {0}'.format(address))
     else:
         # len(js) == 0
         raise RuntimeError('Address not found: {0}'.format(address))
+
+
+def fuzzy_address_uuid(addr_str):
+    "Get DAWA UUID from string using the 'datavask' API."
+
+    DAWA_DATAVASK_URL = "https://dawa.aws.dk/datavask/adresser"
+
+    params = {'betegnelse': addr_str}
+
+    result = requests.get(url=DAWA_DATAVASK_URL, params=params)
+
+    if result:
+        addrs = result.json()['resultater']
+        if len(addrs) == 1:
+            return addrs[0]['adresse']['id']
+        else:
+            # print("Fundne adresser:", len(addrs), ", ", addr_str)
+            return None
+    else:
+        return None
 
 
 CERTIFICATE_FILE = 'certificates/magenta_ava_test_2017-03.crt'
@@ -37,3 +56,7 @@ SP_UUIDS = {
 
 def get_cvr_data(cvr_number):
     return _get_cvr_data(cvr_number, SP_UUIDS, CERTIFICATE_FILE)
+
+if __name__ == '__main__':
+
+    print(fuzzy_address_uuid('Parkvej 56, 8920 Randers NV'))

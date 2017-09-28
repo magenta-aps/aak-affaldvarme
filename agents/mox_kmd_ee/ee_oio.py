@@ -245,7 +245,6 @@ def lookup_bruger(id_number):
             print("Denne bruger findes {0} gange: {1}".format(
                 len(search_results), id_number)
             )
-            print(search_results)
         return search_results[0]
 
 
@@ -384,10 +383,26 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
                     "uuid": customer_role_uuid,
                     "virkning": virkning
                 }
-            ]
+            ],
         }
     }
 
+    if invoice_address:
+        indsats_dict['relationer']['indsatsdokument'] = [
+            {
+                "uuid": invoice_address,
+                "virkning": virkning
+            }
+        ]
+    """
+    if address:
+        indsats_dict['relationer']['indsatsdokument'] = [
+            {
+                "uuid": address,
+                "virkning": virkning
+            }
+        ]
+    """
     url = "{0}/indsats/indsats".format(BASE_URL)
     response = requests.post(url, json=indsats_dict)
 

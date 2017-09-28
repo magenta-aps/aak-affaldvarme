@@ -7,18 +7,24 @@ import pymssql
 
 from serviceplatformen_cpr import get_cpr_data
 
-from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL
+from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL, FORBRUGSSTED_ADRESSE_SQL
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_oio import create_klasse, lookup_bruger, lookup_organisation
 
-from service_clients import get_address_uuid, get_cvr_data
+from service_clients import get_address_uuid, fuzzy_address_uuid, get_cvr_data
 
 # Definition of strings used for Klassifikation URNs
 
 VARME = "Varme"
 KUNDE = "Kunde"
 LIGESTILLINGSKUNDE = "Ligestillingskunde"
+
+
+# This is used to cache customer's addresses from SP for use when creating
+# names for customer roles.
+
+SP_ADDRESS_CACHE = {}
 
 
 def create_customer(id_number, key, name, phone="", email="",
@@ -43,6 +49,10 @@ def create_customer(id_number, key, name, phone="", email="",
             address_uuid = company_dir['dawa_uuid']
             company_type = company_dir['virksomhedsform']
             industry_code = company_dir['branchekode']
+            address_string = "{0} {1}, {2}".format(
+                company_dir['vejnavn'], company_dir['husnummer'],
+                company_dir['postnummer']
+            )
 
             result = create_organisation(
                 id_number, key, name, phone, email, mobile, fax, address_uuid,
@@ -84,9 +94,12 @@ def create_customer(id_number, key, name, phone="", email="",
                 address_uuid = get_address_uuid(address)
             except Exception as e:
                 print(e, person_dir)
-                # pass
                 address_uuid = None
 
+            # Cache address for customer relation
+            address_string = "{0}, {1}".format(
+                person_dir['standardadresse'], person_dir['postnummer']
+            )
             gender = person_dir['koen']
             marital_status = person_dir['civilstand']
             address_protection = person_dir['adressebeskyttelse']
@@ -104,6 +117,8 @@ def create_customer(id_number, key, name, phone="", email="",
             return None
 
         if result:
+
+            SP_ADDRESS_CACHE[id_number] = address_string
             return result.json()['uuid']
 
 
@@ -155,6 +170,40 @@ def get_products_for_location(connection, forbrugssted):
     cursor.execute(TREFINSTALLATION_SQL.format(forbrugssted))
     rows = cursor.fetchall()
     return rows
+
+
+def get_agreement_address_uuid(connection, forbrugssted):
+    "Get UUID of the address for this Forbrugssted"
+    cursor = connection.cursor(as_dict=True)
+    cursor.execute(FORBRUGSSTED_ADRESSE_SQL.format(forbrugssted))
+    rows = cursor.fetchall()
+    assert(len(rows) == 1)
+    frbrst_addr = rows[0]
+    # Lookup addres
+    vejnavn = frbrst_addr['ForbrStVejnavn']
+    postnr = frbrst_addr['Postnr']
+    husnummer = str(frbrst_addr['Husnr'])
+    if frbrst_addr['Bogstav']:
+        husnummer += frbrst_addr['Bogstav']
+    etage = frbrst_addr['Etage']
+    doer = frbrst_addr['Sidedørnr']
+
+    address = {
+        "vejnavn": vejnavn,
+        "postnr": postnr
+    }
+    if etage:
+        address["etage"] = etage
+    if doer:
+        address["dør"] = doer
+    if husnummer:
+        address["husnr"] = husnummer
+
+    try:
+        address_uuid = get_address_uuid(address)
+    except Exception as e:
+        print("Forbrugsadresse fejler:", e)
+        address_uuid = None
 
 
 def create_product(name, identification, agreement,
@@ -242,7 +291,12 @@ def import_all(connection):
         # Create customer relation
         # NOTE: In KMD EE, there's always one customer relation for each row in
         # the Kunde table.
-        cr_name = "<Varme + adresse fra SP>"
+        try:
+            name_address = SP_ADDRESS_CACHE[id_number]
+        except:
+            name_address = "KOMMER!"
+            print("SP_CACHE mangler for ", id_number)
+        cr_name = "{0} {1}".format(VARME, name_address)
         cr_type = VARME  # Always for KMD EE
         cr_uuid = create_customer_relation(customer_number, cr_name, cr_type)
 
@@ -271,11 +325,11 @@ def import_all(connection):
                     customer_number, ligest_uuid, cr_uuid, "Ligestillingskunde"
                 )
 
-        # TODO: Create agreement
+        # Create agreement
         name = 'Fjernvarmeaftale'
         agreement_type = VARME
-        invoice_address = "TODO: Lookup in CRM?"
-        address = "TODO: Get from forbrugssted"
+        invoice_address = row['VejNavn'] + ', ' + row['Postdistrikt']
+        invoice_address_uuid = fuzzy_address_uuid(invoice_address)
         start_date = row['Tilflytningsdato']
         end_date = row['Fraflytningsdato']
 
@@ -285,6 +339,11 @@ def import_all(connection):
         customer_id = row['KundeID']
 
         forbrugssted = row['ForbrugsstedID']
+
+        agreement_address_uuid = get_agreement_address_uuid(
+            connection,
+            forbrugssted
+        )
         products = get_products_for_location(connection, forbrugssted)
 
         no_of_products = len(products)
@@ -292,8 +351,8 @@ def import_all(connection):
             print(no_of_products, "found")
 
         agreement_uuid = create_agreement(
-            name, agreement_type, no_of_products, invoice_address, address,
-            start_date, end_date, forbrugssted, cr_uuid
+            name, agreement_type, no_of_products, invoice_address_uuid,
+            agreement_address_uuid, start_date, end_date, forbrugssted, cr_uuid
         )
         assert(agreement_uuid)
         for p in products:

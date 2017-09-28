@@ -4,7 +4,7 @@
 # Only relevant fields (please).
 
 CUSTOMER_SQL = """
-SELECT top(100) [PersonnrSEnr]
+SELECT  [PersonnrSEnr]
       ,[KundeCprnr]
       ,[LigestPersonnr]
       ,[Tilflytningsdato]
@@ -19,6 +19,8 @@ SELECT top(100) [PersonnrSEnr]
       ,[BoligadminID]
       ,[KundeNavn]
       ,[ForbrugsstedID]
+      ,[VejNavn]
+      ,[Postdistrikt]
   FROM [KMD_EE].[dbo].[Kunde]
   WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
 """
@@ -30,3 +32,13 @@ TREFINSTALLATION_SQL = """SELECT *
     AND a.InstallationID = b.InstallationID
     AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
     """
+FORBRUGSSTED_ADRESSE_SQL = """SELECT [Husnr],
+                                     [ForbrStVejnavn],
+                                     [Postdistrikt],
+                                     [Postnr],
+                                     [Bogstav],
+                                     [Etage],
+                                     [Sidedørnr]
+                            FROM Forbrugssted
+                            WHERE ForbrugsstedID = {0}
+                            """
