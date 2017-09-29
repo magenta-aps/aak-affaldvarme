@@ -11,14 +11,7 @@ import pytz
 import requests
 from dateutil import parser
 
-# TODO: Use authentication & real user UUID.
-SYSTEM_USER = "cb8122fe-96c6-11e7-8725-6bc18b080504"
-
-# AVA-Organisation
-AVA_ORGANISATION = "cb8122fe-96c6-11e7-8725-6bc18b080504"
-
-# API URL
-BASE_URL = "http://agger"
+from settings import SYSTEM_USER, AVA_ORGANISATION, BASE_URL
 
 
 def create_virkning(frm=datetime.datetime.now(),
@@ -347,7 +340,7 @@ def create_organisationfunktion(customer_number,
 @request
 def create_indsats(name, agreement_type, no_of_products, invoice_address,
                    address, start_date, end_date, location,
-                   customer_role_uuid, note=""):
+                   customer_role_uuid, product_uuids, note=""):
     virkning = create_virkning()
     tz = pytz.timezone('Europe/Copenhagen')
     starttidspunkt = tz.localize(start_date)
@@ -392,6 +385,13 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
                     "virkning": virkning
                 }
             ],
+            "indsatskvalitet": [
+                {
+                    "uuid": p,
+                    "virkning": virkning
+                }
+                for p in product_uuids
+            ]
         }
     }
 
@@ -418,7 +418,7 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
 
 
 @request
-def create_klasse(name, identification, agreement, installation_type,
+def create_klasse(name, identification, installation_type,
                   meter_number, start_date, end_date, note=""):
     virkning = create_virkning(start_date, end_date)
     klasse_dict = {
@@ -444,6 +444,10 @@ def create_klasse(name, identification, agreement, installation_type,
                 "uuid": AVA_ORGANISATION,
                 "virkning": virkning,
                 "objekttype": "Organisation",
+            }],
+            "overordnetklasse": [{
+                "urn": "urn:{0}".format(installation_type),
+                "virkning": virkning
             }]
         }
     }

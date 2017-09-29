@@ -19,3 +19,28 @@ username = ''
 password = ''
 EOF
 fi
+
+if [ ! -f settings.py ]
+then
+    cat << EOF > settings.py
+
+# TODO: Use authentication & real user UUID.
+SYSTEM_USER = ""
+
+# AVA-Organisation
+AVA_ORGANISATION = ""
+
+# API URL
+BASE_URL = ""
+
+
+CERTIFICATE_FILE = ''
+
+SP_UUIDS = {
+    "service_agreement": "",
+    "user_system": "",
+    "user": "",
+    "service": ""
+}
+EOF
+fi

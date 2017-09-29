@@ -19,6 +19,7 @@ from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_oio import create_klasse, lookup_bruger, lookup_organisation
 
 from service_clients import get_address_uuid, fuzzy_address_uuid, get_cvr_data
+from service_clients import report_error
 
 # Definition of strings used for Klassifikation URNs
 
@@ -48,7 +49,9 @@ def create_customer(id_number, key, name, phone="", email="",
                 try:
                     company_dir = get_cvr_data(id_number)
                 except Exception as e:
-                    print("CVR number not found", id_number)
+                    report_error(
+                        "CVR number not found: {0}".format(id_number)
+                    )
                     return None
 
             name = company_dir['organisationsnavn']
@@ -77,7 +80,9 @@ def create_customer(id_number, key, name, phone="", email="",
                 try:
                     person_dir = get_cpr_data(id_number)
                 except Exception as e:
-                    print("CPR number not found", id_number)
+                    report_error(
+                        "CPR number not found: {0}".format(id_number)
+                    )
                     return None
 
             first_name = person_dir['fornavn']
@@ -99,7 +104,11 @@ def create_customer(id_number, key, name, phone="", email="",
             try:
                 address_uuid = get_address_uuid(address)
             except Exception as e:
-                print(e, person_dir)
+                report_error(
+                    "Unable to lookup address for customer: {0}".format(
+                        id_number
+                    ), error_stack=None, error_object=address
+                )
                 address_uuid = None
 
             # Cache address for customer relation
@@ -116,7 +125,7 @@ def create_customer(id_number, key, name, phone="", email="",
                 address_protection, note
             )
         else:
-            print("Forkert CPR/SE-nr for {0}: {1}".format(
+            report_error("Forkert CPR/SE-nr for {0}: {1}".format(
                 name, id_number)
             )
             # Invalid customer
@@ -161,11 +170,11 @@ def create_customer_relation(customer_number, customer_relation_name,
 
 def create_agreement(name, agreement_type, no_of_products, invoice_address,
                      address, start_date, end_date, location,
-                     customer_role_uuid):
+                     customer_role_uuid, product_uuids):
     "Create an Indsats from this info and return UUID"
     result = create_indsats(name, agreement_type, no_of_products,
                             invoice_address, address, start_date, end_date,
-                            location, customer_role_uuid)
+                            location, customer_role_uuid, product_uuids)
     if result:
         return result.json()['uuid']
 
@@ -178,7 +187,7 @@ def get_products_for_location(connection, forbrugssted):
     return rows
 
 
-def get_agreement_address_uuid(connection, forbrugssted):
+def get_agreement_address_uuid(connection, forbrugssted, id_number):
     "Get UUID of the address for this Forbrugssted"
     cursor = connection.cursor(as_dict=True)
     cursor.execute(FORBRUGSSTED_ADRESSE_SQL.format(forbrugssted))
@@ -208,14 +217,20 @@ def get_agreement_address_uuid(connection, forbrugssted):
     try:
         address_uuid = get_address_uuid(address)
     except Exception as e:
-        print("Forbrugsadresse fejler:", e)
+        report_error(
+            "Forbrugsadresse fejler for kunde {0}: {1}".format(
+                id_number, address
+            ), error_stack=None, error_object=address
+        )
         address_uuid = None
 
+    return address_uuid
 
-def create_product(name, identification, agreement,
-                   installation_type, meter_number, start_date, end_date):
+
+def create_product(name, identification, installation_type, meter_number,
+                   start_date, end_date):
     "Create a Klasse from this info and return UUID"
-    result = create_klasse(name, identification, agreement, installation_type,
+    result = create_klasse(name, identification, installation_type,
                            meter_number, start_date, end_date)
     if result:
         return result.json()['uuid']
@@ -251,6 +266,7 @@ def connect(server, database, username, password):
                                password=password, database=database)
     except Exception as e:
         print(e)
+        report_error(str(e))
         raise
     return cnxn
 
@@ -290,8 +306,9 @@ def import_all(connection):
                 n += 1
             else:
                 # No customer created or found.
-                print("No customer created:", row['KundeNavn'],
-                      row['PersonnrSEnr'])
+                report_error("No customer created:" +
+                             row['KundeNavn'] +
+                             str(row['PersonnrSEnr']))
                 continue
 
         # Create customer relation
@@ -335,7 +352,14 @@ def import_all(connection):
         name = 'Fjernvarmeaftale'
         agreement_type = VARME
         invoice_address = row['VejNavn'] + ', ' + row['Postdistrikt']
-        invoice_address_uuid = fuzzy_address_uuid(invoice_address)
+        try:
+            invoice_address_uuid = fuzzy_address_uuid(invoice_address)
+        except Exception as e:
+            report_error(
+                "Customer {1}: Unable to lookup invoicing address: {0}".format(
+                    str(e), id_number
+                )
+            )
         start_date = row['Tilflytningsdato']
         end_date = row['Fraflytningsdato']
 
@@ -348,30 +372,35 @@ def import_all(connection):
 
         agreement_address_uuid = get_agreement_address_uuid(
             connection,
-            forbrugssted
+            forbrugssted,
+            id_number
         )
         products = get_products_for_location(connection, forbrugssted)
 
         no_of_products = len(products)
-        if no_of_products > 1:
-            print(no_of_products, "found")
 
-        agreement_uuid = create_agreement(
-            name, agreement_type, no_of_products, invoice_address_uuid,
-            agreement_address_uuid, start_date, end_date, forbrugssted, cr_uuid
-        )
-        assert(agreement_uuid)
+        product_uuids = []
+
         for p in products:
             name = p['Målertypefabrikat'] + ' ' + p['MaalerTypeBetegnel']
             identification = p['InstalNummer']
-            agreement = agreement_uuid
             installation_type = VARME
             meter_number = p['Målernr']
             start_date = p['DatoFra']
             end_date = p['DatoTil']
-            create_product(name, identification, agreement, installation_type,
-                           meter_number, start_date, end_date)
+            product_uuid = create_product(
+                name, identification, installation_type, meter_number,
+                start_date, end_date
+            )
+            if product_uuid:
+                product_uuids.append(product_uuid)
 
+        agreement_uuid = create_agreement(
+            name, agreement_type, no_of_products, invoice_address_uuid,
+            agreement_address_uuid, start_date, end_date, forbrugssted,
+            cr_uuid, product_uuids
+        )
+        assert(agreement_uuid)
     print("Fandt {0} primære kunder og {1} ligestillingskunder.".format(
         n, ligest_persons)
     )

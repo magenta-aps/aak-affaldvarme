@@ -6,9 +6,15 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
+import json
+import datetime
+
 import requests
+import pika
 
 from serviceplatformen_cvr import get_cvr_data as _get_cvr_data
+
+from settings import SP_UUIDS, CERTIFICATE_FILE, ERROR_MQ_QUEUE, ERROR_MQ_HOST
 
 
 def get_address_uuid(address):
@@ -45,25 +51,47 @@ def fuzzy_address_uuid(addr_str):
         addrs = result.json()['resultater']
         if len(addrs) == 1:
             return addrs[0]['adresse']['id']
+        elif len(addrs) > 1:
+            raise RuntimeError(
+                'Non-unique (datavask) address: {0}'.format(addr_str)
+            )
         else:
-            # print("Fundne adresser:", len(addrs), ", ", addr_str)
-            return None
+            # len(addrs) == 0
+            raise RuntimeError(
+                '(datavask) address not found: {0}'.format(addr_str)
+            )
     else:
         return None
 
 
-CERTIFICATE_FILE = 'certificates/magenta_ava_test_2017-03.crt'
-
-SP_UUIDS = {
-    "service_agreement": "c97434a1-382f-45c1-8d40-a93e3c3942e8",
-    "user_system": "09bf6252-4f71-46f1-b793-eb3cb035f6fa",
-    "user": "bfc04260-858c-11e2-9e96-0800200c9a66",
-    "service": "93a48b42-3945-11e2-9724-d4bed98c63db"
-}
-
-
 def get_cvr_data(cvr_number):
     return _get_cvr_data(cvr_number, SP_UUIDS, CERTIFICATE_FILE)
+
+
+def report_error(error_message, error_stack=None, error_object=None):
+    source = "MOX KMD EE"
+    error_msg = {
+        "source": source,
+        "error_mesage": error_message,
+        "error_stack": error_stack,
+        "error_object": error_object
+    }
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(host=ERROR_MQ_HOST)
+    )
+    channel = connection.channel()
+    channel.queue_declare(queue=ERROR_MQ_QUEUE, durable=True)
+
+    channel.basic_publish(
+        exchange='', routing_key=ERROR_MQ_QUEUE, body=json.dumps(error_msg)
+    )
+    connection.close()
+
+    # Print error to the error file
+    todaystr = str(datetime.datetime.today().date())
+    with open("mox_kmd_ee_{0}.log".format(todaystr), "a") as f:
+        f.write(error_message + '\n\n')
+
 
 if __name__ == '__main__':
 

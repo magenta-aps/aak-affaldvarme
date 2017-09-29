@@ -94,8 +94,5 @@ ENV/
 # Apple macOS attribute file
 .DS_Store
 
-agents/mox_kmd_ee/mssql_config.py
-agents/mox_kmd_ee/python-env
-agents/mox_kmd_ee/certificates
 research/sandbox/mssql_config.py
 aak_integration/python-env
