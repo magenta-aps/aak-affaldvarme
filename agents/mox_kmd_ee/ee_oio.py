@@ -217,6 +217,13 @@ def create_bruger(cpr_number, key, name, phone="", email="",
                 "virkning": virkning
             }
         )
+    if mobile:
+        bruger_dict['relationer']['adresser'].append(
+            {
+                "urn": "urn:mobile:{0}".format(mobile),
+                "virkning": virkning
+            }
+        )
 
     url = "{0}/organisation/bruger".format(BASE_URL)
     response = requests.post(url, json=bruger_dict)
@@ -340,7 +347,7 @@ def create_organisationfunktion(customer_number,
 @request
 def create_indsats(name, agreement_type, no_of_products, invoice_address,
                    address, start_date, end_date, location,
-                   customer_role_uuid, product_uuids, note=""):
+                   customer_relation_uuid, product_uuids, note=""):
     virkning = create_virkning()
     tz = pytz.timezone('Europe/Copenhagen')
     starttidspunkt = tz.localize(start_date)
@@ -381,7 +388,7 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
             ],
             "indsatsmodtager": [
                 {
-                    "uuid": customer_role_uuid,
+                    "uuid": customer_relation_uuid,
                     "virkning": virkning
                 }
             ],
@@ -404,7 +411,7 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
         ]
     """
     if address:
-        indsats_dict['relationer']['indsatsdokument'] = [
+        indsats_dict['relationer']['indsatssag'] = [
             {
                 "uuid": address,
                 "virkning": virkning

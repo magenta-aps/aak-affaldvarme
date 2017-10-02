@@ -8,14 +8,9 @@ Aktør/Bruger/Kunde
 Navn og folkeregisteradresse hentes af KMD-agenten ved opslag ud fra
 CPR-nummer eller CVR-nummer fra feltet KundeCPRNr for privatkunder.
 
-Den eksakte arkitektur af denne løsning er endnu ikke fastlagt. En
-mulighed er, at KMD EE-agenten (Mox KMD EE) ved ændringer i
-CPR-oplysninger sender en notifikation (via AMQP) til SP-agenten (Mox
-SP), som vil sørge for at opdatere oplysningerne i LoRa. På denne måde
-vil Mox KMD EE aldrig skulle opdatere oplysninger, der vedligeholdes
-med data fra Serviceplatformen.
-
-Det samme gælder for CVR-oplysninger.
+Disse oplysninger lægges ved oprettelse af nye kunder i LoRa sammen med
+oplysningerne fra KMD EE. Opdatering af oplysningerne i
+Serviceplatformen vil derimod blive håndteret af Mox SP-agenten.
 
 CPR- og CVR-numrene ligger begge i feltet KundeCprNr eller PersonnrSEnr
 (de to felter har samme indhold) og kan kendes fra hinanden ved at
@@ -27,26 +22,65 @@ og hentes fra felterne EmailKunde, Telefon og  MobilTlf i KMD EE.
 Mapningen af CRM-systemets *aktør* bliver dermed som angivet i tabellen
 herunder.
 
-=======================     =======================  
-CRM                         KMD EE
-=======================     =======================  
-CPR-nummer                  PersonnrSEnr
-<CPR-oplysninger>           (Mox SP)
-CVR-nummer                  PersonnrSEnr
-<CVR-oplysninger>           (Mox CVR)
-Telefon KMD EE              Telefon
-E-mail KMD EE               EmailKunde
-MobilTlf⁺                   MobilTlf
-Fax⁺                        Fax
-=======================     =======================  
 
-Det vil sige, at det kun er kontaktoplysningerne, som faktisk kopieres
-fra Kunde-tabellen i KMD EE til Aktøren i CRM-systemet.
+
+=======================     =======================    =================       
+CRM                         KMD EE                     LoRa
+=======================     =======================    =================       
+CPR-nummer                  PersonnrSEnr               tilknyttede-
+                                                       personer
+<CPR-oplysninger>           (Mox SP)
+CVR-nummer                  PersonnrSEnr               virksomhed
+<CVR-oplysninger>           (Mox CVR)
+Telefon KMD EE              Telefon                    adresser
+E-mail KMD EE                 
+MobilTlf⁺                   MobilTlf                   adresser
+Fax⁺                        Fax                        overføres ikke
+=======================     =======================    =================         
+
 
 ⁺ Felterne MobilTlf og Fax eksisterer p.t. ikke i CRM-systemet, men kan
 godt blive relevante - om ikke andet kan MobilTlf sandsynligvis. Det er
 aftalt med AVA, at de overføres til LoRa for det tilfældes skyld, at de
 senere skal føjes til CRM-systemet.
+
+Det vil sige, at det kun er kontaktoplysningerne, som faktisk kopieres
+fra Kunde-tabellen i KMD EE til Aktøren i CRM-systemet.
+
+Personoplysningerne fra Serviceplatformen repræsenteres ved lokale
+udvidelser til objektet Bruger. 
+
+Disse oplysninger er som følger:
+
+=============    ================
+Person (CPR)     LoRa
+=============    ================
+Fornavn          ava_fornavn
+Mellemnavn       ava_mellemnavn
+Efternavn        ava_efternavn
+Civilstand       ava_civilstand
+Køn              ava_koen
+Adresse-         ava_adresse-
+beskyttelse      beskyttelse
+=============    ================
+
+Derudover hentes borgerens *adresse* fra Serviceplatformen og slås op i
+DAWA, hvorefter addresse-UUID'en gemmes i brugerens relation "adresser"
+ligesom email og telefonnummer.
+
+For virksomheder hentes, som det fremgår af tabellen herunder,
+virksomhedens navn, adresse-UUID (CVR-registret på Serviceplatformen
+indeholder DAWA-UUID, så det er ikke nødvendigt at slå op),
+virksomhedsform og branchekode.
+
+================     =================  
+Virksomhed (CVR)     LoRa
+================     =================
+Navn                 organisationsnavn
+Adresse-UUID         adresse
+Virksomhedsform      virksomhedstype
+Branchekode          branche
+================     =================
 
 
 Kunderolle
@@ -93,15 +127,20 @@ Kundeforhold
 
 Mapppes som angivet i tabellen herunder.
 
+Repræsenteres i LoRa af klassen Interessefællesskab. I tabellen herunder
+repræsenterer forkortelsen "ifnavn" det rigtige, som er
+"interessefaellesskabsnavn".
 
-=======================     =======================  
-CRM                         KMD EE
-=======================     =======================  
-Kundeforhold                <Varme + kundens adresse som i LoRa/CRM>
-Kundenummer                 Kundenr
-Kundetype                   Varme
-Kundeforholdstype           <Udfyldes ikke>
-=======================     =======================  
+
+=======================    =======================    =================     
+CRM                        KMD EE                     LoRa
+=======================    =======================    =================     
+Kundeforhold               <Varme + kundens adres-    ifnavn
+                           se som i LoRa/CRM>
+Kundenummer                Kundenr                    brugervendtnoegle
+Kundetype                  Varme                      iftype
+Kundeforholdstype          <Udfyldes ikke>
+=======================    =======================    =================       
 
 Feltet "Kundeforhold" er det felt, der på de fleste andre elementer
 hedder Navn. Adressen i dette navnefelt forstås som kundens
@@ -113,27 +152,46 @@ Aftale
 
 Mappes som angivet i tabellen herunder.
 
+I LoRa repræsenteres en aftale som en Indsats.
 
-=======================     =======================
-CRM                         KMD EE
-=======================     =======================
-Navn                        Fjernvarmeaftale
-Kundeforhold                <Relation til 
+NB: For at kunne repræsentere antal produkter samt de to adresser burde
+der - som vi allerede har set for aktørernes vedkommende - indføres to
+relationer og et egenskabsfelt til de to adresser og feltet "antal
+produkter". 
+
+Dette er imidlertid ikke muligt p.t., da klassen Indsats i LoRa er
+patchet på en måde, der gør det vanskeligt at tilføje nye felter. Dette
+kan der først rettes op på, når Magenta får tid til at ændre
+implementationen af LoRas databaselag.
+
+
+
+=======================     =======================    =================     
+CRM                         KMD EE                     LoRa
+=======================     =======================    =================
+Navn                        Fjernvarmeaftale           brugervendtnoegle
+Kundeforhold                <Relation til              indsatsmodtager 
                               Kundeforhold>
-Aftaletype                  Varme
+Aftaletype                  Varme                      indsatstype
 Beskrivelse                 <Udfyldes ikke>
-Antal produkter             <Redundant>
-Faktureringsadresse         <DAR-adresse fundet fra
+Antal produkter             <Redundant>                beskrivelse⁺⁺
+Produkter                   <Målere fra TrefMaaler>    indsatskvalitet
+Faktureringsadresse         <DAR-adresse fundet fra    indsatsdokument⁺⁺
                             Kunde.vejnavn +
                             Kunde.postdistrikt>
-Adresse                     Forbrugssted.Adresse
-Ejendom                     Forbrugssted.Ejendomsnr⁺
-Startdato                   Kunde.Tilflytningsdato
-Slutdato                    Kunde.fraflytningsdato
-=======================     =======================
+Adresse                     Forbrugssted.Adresse       indsatssag⁺⁺
+Ejendom                     Forbrugsted.Ejendomsnr⁺
+Startdato                   Kunde.Tilflytningsdato     starttidspunkt
+Slutdato                    Kunde.fraflytningsdato     sluttidspunkt
+=======================     =======================    =================
 
-⁺: Ejendommen slås op i BBR og de relevante oplysninger overføres til
-CRM af CRM-agenten.
+⁺: Ejendom er ikke omfattet af de OIO-standarder, som LoRa implementerer
+og er i første omgang ikke med i dette projekt. I en senere fase kan de
+relevante oplysninger evt. slås op i BBR og overføres til CRM af
+CRM-agenten.
+
+⁺⁺: Her er der som sagt tale om at bøje modellen, fordi det p.t. ikke er
+muligt at tilføje den relevante lokale udvidelse.
 
 
 Produkt
@@ -141,21 +199,31 @@ Produkt
 
 Mappes som angivet i tabellen herunder.
 
+Produkt er i LoRa repræsenteret af klassen Klasse for hierarkiet
+Klassifikation.
 
-=======================     =======================
-CRM                         KMD EE
-=======================     =======================
-Navn                        TrefMaaler.Målertypefab
-                            rikat + TrefMaaler.Maale
-                            rTypeBetegnel 
-Identifikation              Trefinstallation.
+=======================     =======================    =================
+CRM                         KMD EE                     LoRa
+=======================     =======================    =================
+Navn                        TrefMaaler.Målertypefab    titel
+                            rikat + TrefMaaler.Maal
+                            erTypeBetegnel 
+Identifikation              Trefinstallation.          brugervendtnoegle
                               InstalNummer
-Aftale                      <Relation til Aftale>
-Adresse                     <Redundant = 
+Aftale                      <Relation til Aftale>      (findes på
+                                                       Aftale/Indsats)
+Adresse                     <Redundant =               (findes på
+                                                       Aftale/indsats)
                              Forbrugssted.Adresse>
-Installationstype           Varme
+Installationstype           Varme                      overordnet_klasse
 Afhentningstype             <Udfyldes ikke>
-Målernummer                 TrefMaaler.Målernr
-Beskrivelse                 
-Kundenummer                 <Redundant>
-=======================     =======================
+Målernummer                 TrefMaaler.Målernr         eksempel⁺
+Beskrivelse                 <Udfyldes ikke>
+Kundenummer                 <Redundant>                (findes på kunde-
+                                                       forhold)
+=======================     =======================    =================
+
+
+⁺Her burde der igen have været tilføjet et nyt felt, som vi kunne have
+kaldt "ava_maalernummer", men det afventer en afklaring af vores
+tekniske gæld vedr. databasen.
