@@ -8,8 +8,6 @@ from settings import ORG_UUID
 from compare import COMPARISONS
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
-
 
 def extract_cvr_from_org(org_data):
     registreringer = org_data['registreringer']

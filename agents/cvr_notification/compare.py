@@ -60,7 +60,7 @@ def extract_organisationsnavn_from_org(org_data, uuid):
         report_error(
             'We expect one active organisationsnavn for {}'.format(uuid),
             error_object=org_data)
-        return False
+        return
 
     org_egenskab = organisationegenskaber[0]
     return org_egenskab['organisationsnavn']
@@ -129,7 +129,7 @@ def extract_virksomhedstype_from_org(org_data, uuid):
         report_error(
             'We expect one active virksomhedstype for {}'.format(uuid),
             error_object=org_data)
-        return False
+        return
 
     virksomhedstype = virksomhedstype_list[0]
 

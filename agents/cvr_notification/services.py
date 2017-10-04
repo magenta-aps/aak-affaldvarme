@@ -14,7 +14,6 @@ def report_error(error_message, error_stack=None, error_object=None):
         "error_stack": error_stack,
         "error_object": error_object
     }
-    print(error_msg)
 
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(host=ERROR_MQ_HOST)
