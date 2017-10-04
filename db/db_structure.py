@@ -320,8 +320,8 @@ DATABASE_STRUCTURE = {
             ],
             "publiceret": ["Publiceret", "IkkePubliceret", "Normal"]
         },
-        "relationer_nul_til_en": ["indsatsmodtager", "indsatstype",
-                                  "ava_faktureringsadresse"],
+        "relationer_nul_til_en": ["indsatsmodtager", "indsatstype"],
+                     
         "relationer_nul_til_mange": [
             "indsatskvalitet", "indsatsaktoer", "samtykke", "indsatssag",
             "indsatsdokument"
