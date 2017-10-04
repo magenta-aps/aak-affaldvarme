@@ -1,3 +1,5 @@
+import json
+
 import pika
 import requests
 from serviceplatformen_cvr import get_cvr_data
