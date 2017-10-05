@@ -3,6 +3,8 @@
 import argparse
 import os
 import sys
+import tempfile
+
 from installutils import Config, Service, VirtualEnv
 
 DIR = os.path.dirname(os.path.realpath(sys.argv[0]))
@@ -23,3 +25,28 @@ config.save()
 
 service = Service('mox_kmd_ee.sh', user='mox_kmd_ee')
 service.install()
+
+settings_path = os.path.join(DIR, 'settings.py')
+
+if not os.path.exists(settings_path):
+    with open(settings_path, 'wt') as fp:
+        fp.write('''
+# TODO: Use authentication & real user UUID.
+SYSTEM_USER = ""
+
+# AVA-Organisation
+AVA_ORGANISATION = ""
+
+# API URL
+BASE_URL = ""
+
+
+CERTIFICATE_FILE = ''
+
+SP_UUIDS = {
+    "service_agreement": "",
+    "user_system": "",
+    "user": "",
+    "service": ""
+}
+        '''.lstrip())
