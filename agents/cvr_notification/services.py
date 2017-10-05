@@ -9,6 +9,8 @@ from settings import ERROR_MQ_HOST, ERROR_MQ_QUEUE, LORA_URL, \
 
 
 def report_error(error_message, error_stack=None, error_object=None):
+    """Reports an error to the AMQP error queue"""
+
     source = "CVR notification"
     error_msg = {
         "source": source,
@@ -30,6 +32,10 @@ def report_error(error_message, error_stack=None, error_object=None):
 
 
 def update_organisation_in_lora(update_json, uuid):
+    """
+    Updates the organisation in LoRa with the given uuid,
+    with the given object
+    """
     url = '{0}/organisation/organisation/{1}'.format(LORA_URL, uuid)
     headers = {'Content-Type': 'application/json'}
     response = requests.put(url, json=update_json, headers=headers)
@@ -41,6 +47,10 @@ def update_organisation_in_lora(update_json, uuid):
 
 
 def fetch_associated_orgs_from_lora(uuid):
+    """
+    Fetches every organisation from LoRa that is associated with
+    the given uuid through the 'tilhoerer' relation
+    """
     params = {
         'tilhoerer': uuid
     }
@@ -56,6 +66,13 @@ def fetch_associated_orgs_from_lora(uuid):
 
 
 def fetch_org_data_from_lora(org_uuids):
+    """
+    A generator function for fetching batches of organisation data from LoRa,
+    given a list of organisation UUIDs
+
+    The number of items fetched in each batch is configured
+    using LORA_ORG_BATCH_SIZE
+    """
     url = LORA_URL + '/organisation/organisation'
 
     remainder = org_uuids
@@ -77,6 +94,7 @@ def fetch_org_data_from_lora(org_uuids):
 
 
 def get_cvr_data_from_serviceplatform(cvr):
+    """Fetches data from serviceplatformen for a given cvr"""
     cvr_data = get_cvr_data(cvr, UUIDS, SERVICE_CERTIFICATE)
 
     return cvr_data

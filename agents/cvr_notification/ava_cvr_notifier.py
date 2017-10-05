@@ -10,6 +10,7 @@ from compare import COMPARISONS
 logger = logging.getLogger(__name__)
 
 def extract_cvr_from_org(org_data):
+    """Extracts a CVR number from a AVA LoRa organisation object"""
     registreringer = org_data['registreringer']
     relationer = registreringer[0]['relationer']
     virksomhed = relationer['virksomhed']
@@ -25,6 +26,11 @@ def extract_cvr_from_org(org_data):
 
 
 def compare_cvr_and_lora(cvr_data, org_data):
+    """
+    Compares the values of data from Serviceplatformen against data
+    from LoRa, and performs an update against LoRa in case of
+    inconsistencies
+    """
     update_json = {}
 
     uuid = org_data.get('id')
@@ -46,13 +52,12 @@ def compare_cvr_and_lora(cvr_data, org_data):
 
 
 def fetch_and_compare():
-    # Fetch all orgs associated with ORG_UUID from LoRa
+    """Main entry point"""
     org_virksomheder = fetch_associated_orgs_from_lora(ORG_UUID)
     if not org_virksomheder:
         report_error('No organisationer found for uuid {}'.format(ORG_UUID))
         return
 
-    # For each, fetch info from LoRa and serviceplatform and compare
     for org_data in fetch_org_data_from_lora(org_virksomheder):
 
         cvrnr = extract_cvr_from_org(org_data)

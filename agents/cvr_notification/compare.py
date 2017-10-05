@@ -4,6 +4,7 @@ from services import report_error
 
 
 def generate_virkning():
+    """Generates a 'virkning' object spanning from 'today' to 'infinity'"""
     return {
         'from': datetime.now().strftime('%Y-%m-%d'),
         'to': 'infinity'
@@ -155,6 +156,16 @@ def generate_and_add_virksomhedstype_update(virksomhedstype, update_json):
     virksomhedstype_dict.setdefault('virkning', generate_virkning())
 
 
+"""
+Tuples representing the comparisons and updates to be made
+
+First element should be a function extracting a value from a LoRa organisation
+
+Second element should be a function extracting a value from CVR data
+
+Third element should be a function extending an existing 'update' object 
+with updated values, in case an update should be performed.
+"""
 COMPARISONS = [
     (
         extract_dawa_uuid_from_org,
