@@ -1,0 +1,4 @@
+[submodule "mox"]
+	path = mox
+	url = ../mox
+	branch = master
