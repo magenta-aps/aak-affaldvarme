@@ -361,7 +361,7 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
         "attributter": {
             "indsatsegenskaber": [
                 {
-                    "brugervendt_noegle": name,
+                    "brugervendtnoegle": name,
                     "beskrivelse": no_of_products,
                     "starttidspunkt": str(starttidspunkt),
                     "sluttidspunkt": str(sluttidspunkt),
