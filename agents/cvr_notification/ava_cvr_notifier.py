@@ -1,13 +1,13 @@
 import logging
 
-from services import report_error, fetch_associated_orgs_from_lora, \
-    update_organisation_in_lora, fetch_org_data_from_lora, \
-    get_cvr_data_from_serviceplatform
+from compare import COMPARISONS
+from services import get_cvr_data_from_serviceplatform
+from services import report_error, fetch_associated_orgs_from_lora
+from services import update_organisation_in_lora, fetch_org_data_from_lora
 from settings import ORG_UUID
 
-from compare import COMPARISONS
-
 logger = logging.getLogger(__name__)
+
 
 def extract_cvr_from_org(org_data):
     """Extracts a CVR number from a AVA LoRa organisation object"""
@@ -25,7 +25,7 @@ def extract_cvr_from_org(org_data):
     return split_urn[1]
 
 
-def compare_cvr_and_lora(cvr_data, org_data):
+def update_lora_if_needed(cvr_data, org_data):
     """
     Compares the values of data from Serviceplatformen against data
     from LoRa, and performs an update against LoRa in case of
@@ -72,7 +72,7 @@ def fetch_and_compare():
             report_error("No CVR data found for {}".format(cvrnr))
             continue
 
-        compare_cvr_and_lora(cvr_data, org_data)
+        update_lora_if_needed(cvr_data, org_data)
 
 
 if __name__ == "__main__":

@@ -70,6 +70,11 @@ def fetch_org_data_from_lora(org_uuids):
     A generator function for fetching batches of organisation data from LoRa,
     given a list of organisation UUIDs
 
+    The organisation query omits the virkningfra/virkningtil parameters,
+    ensuring that the returned organisations only contain the properties
+    with a currently valid 'virkning' - i.e. the currently active values for
+    each property
+
     The number of items fetched in each batch is configured
     using LORA_ORG_BATCH_SIZE
     """
