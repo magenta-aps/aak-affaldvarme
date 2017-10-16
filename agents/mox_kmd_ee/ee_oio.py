@@ -353,7 +353,7 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
     starttidspunkt = tz.localize(start_date)
     try:
         sluttidspunkt = timezone.localize(end_date)
-    except:
+    except:  # noqa
         # This is only for Max date - which is 9999-12-31 =~ infinity
         sluttidspunkt = pytz.utc.localize(end_date)
     indsats_dict = {

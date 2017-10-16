@@ -17,6 +17,7 @@ from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL, FORBRUGSSTED_ADRESSE_SQL
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_oio import create_klasse, lookup_bruger, lookup_organisation
+from ee_utils import cpr_cvr, is_cpr, is_cvr, connect
 
 from service_clients import get_address_uuid, fuzzy_address_uuid, get_cvr_data
 from service_clients import report_error
@@ -234,41 +235,6 @@ def create_product(name, identification, installation_type, meter_number,
                            meter_number, start_date, end_date)
     if result:
         return result.json()['uuid']
-
-
-# CPR/CVR helper function
-
-
-def cpr_cvr(val):
-    if type(val) == float:
-        val = str(int(val))
-        if not (8 <= len(val) <= 10):
-            pass
-        if len(val) == 9:
-            val = '0' + val
-    return val
-
-
-def is_cpr(val):
-    return len(val) == 10 and val.isdigit()
-
-
-def is_cvr(val):
-    return len(val) == 8 and val.isdigit()
-
-
-def connect(server, database, username, password):
-    driver1 = '{SQL Server}'
-    driver2 = '{ODBC Driver 13 for SQL Server}'
-    cnxn = None
-    try:
-        cnxn = pymssql.connect(server=server, user=username,
-                               password=password, database=database)
-    except Exception as e:
-        print(e)
-        report_error(str(e))
-        raise
-    return cnxn
 
 
 def import_all(connection):
