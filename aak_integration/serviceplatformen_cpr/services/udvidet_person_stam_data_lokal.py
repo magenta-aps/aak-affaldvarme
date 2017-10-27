@@ -10,11 +10,11 @@
 import os
 import xmltodict
 
-import settings as settings
+import serviceplatformen_cpr.settings as settings
 
-from helpers.soap import construct_envelope_SF1520
-from helpers.validation import validate_cprnr
-from helpers.http_requester import http_post
+from serviceplatformen_cpr.helpers.soap import construct_envelope_SF1520
+from serviceplatformen_cpr.helpers.validation import validate_cprnr
+from serviceplatformen_cpr.helpers.http_requester import http_post
 
 
 __author__ = "Heini Leander Ovason"
