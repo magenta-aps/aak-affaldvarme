@@ -10,11 +10,11 @@
 import os
 import xmltodict
 
-import serviceplatformen_cpr.settings as settings
+import settings as settings
 
-from serviceplatformen_cpr.helpers.soap import construct_envelope_SF1520
-from serviceplatformen_cpr.helpers.validation import validate_cprnr
-from serviceplatformen_cpr.helpers.http_requester import http_post
+from helpers.soap import construct_envelope_SF1520
+from helpers.validation import validate_cprnr
+from helpers.http_requester import http_post
 
 
 __author__ = "Heini Leander Ovason"
@@ -105,6 +105,12 @@ def parse_cpr_person_lookup_xml_to_dict(soap_response_xml):
     for k, v in address.items():
         key = k[4:]
         citizen_dict[key] = v
+
+    try:
+        not_living_in_dk = root['ns4:adresse']['ns4:udrejseoplysninger']
+        citizen_dict['udrejst'] = True
+    except KeyError as key_error:
+        citizen_dict['udrejst'] = False
 
     relations = root['ns4:relationer']
     citizen_dict['relationer'] = []
