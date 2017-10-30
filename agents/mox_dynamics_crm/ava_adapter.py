@@ -105,10 +105,10 @@ def ava_bruger(entity):
         "ava_emailkmdee": kmd_ee.get("email"),
 
 
-        # Arosia
-        "telephone1": None,
-        "arosia_telephone": None,
-        "ava_arosiaid": None
+        # Currently commented out Arosia fields (Not supported by CRM)
+        # "telephone1": None,
+        # "arosia_telephone": None,
+        # "ava_arosiaid": None
     }
 
     return payload
