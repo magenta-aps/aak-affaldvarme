@@ -93,6 +93,9 @@ def run_import_all():
     All contacts that belongs to parent organisation (See settings)
     """
 
+    # Init logger
+    log = logging.getLogger()
+
     # Use switch to determine resource path
     bruger = resources["bruger"]
 
@@ -102,14 +105,16 @@ def run_import_all():
     }
 
     # Generate list of contacts (uuid)
+    log.info("Attempting to import all contacts of parent organisation")
     list_of_contacts = oio.get_request(bruger, params)
 
     # Debug:
     total = len(list_of_contacts)
-    print("{0} contacts found".format(total))
+    log.debug("{0} contacts found".format(total))
 
     # TODO: Log error when nothing is returned
     if not list_of_contacts:
+        log.error("No contacts found")
         return None
 
     # Batch generate fetches n amount of entities
@@ -251,16 +256,13 @@ def process_entity(entity):
 
     # Create address in CRM if it does not exist
     if not crm_address_guid:
-        log.info("Address does not exist in CRM - Creating")
+        log.info("Address does not exist in CRM")
 
-        log.info("Fetching address entity: {0}".format(address_uuid))
         # GET ADDRESS ENTITY HERE
         address_entity = dawa.get_address(address_uuid)
-        log.info("Found entity: {0}".format(address_entity))
 
         # Store in CRM
         crm_address_guid = crm.store_address(address_entity)
-        log.info("CRM returns: {0}".format(crm_address_guid))
 
     # Update lookup reference
     lookup_crm_address = "/ava_adresses({0})".format(crm_address_guid)
@@ -284,11 +286,12 @@ def process_entity(entity):
 
     # Create contact in CRM if it does not exist
     if not crm_contact_guid:
-        log.info("Contact does not exist in CRM - Creating")
+        log.info("Contact does not exist in CRM")
         crm_contact_guid = crm.store_contact(entity)
 
     # Update lookup reference
     lookup_crm_contact = "/contacts({0})".format(crm_contact_guid)
+    log.info("Lookup for contact created: {0}".format(lookup_crm_contact))
 
     # Kundeforhold (Account)
     # NOTE: Will depend on "Ejendom" in the future
@@ -302,10 +305,12 @@ def process_entity(entity):
         crm_account_guid = crm.get_account(ava_kundenummer)
 
         if not crm_account_guid:
+            log.info("Account does not exist in CRM")
             crm_account_guid = crm.store_account(kundeforhold)
 
         # Update lookup reference
         lookup_crm_account = "/accounts({0})".format(crm_account_guid)
+        log.info("Lookup for account created: {0}".format(lookup_crm_account))
 
     # Kunderolle
     # Depends on: Contact, Account
@@ -326,10 +331,13 @@ def process_entity(entity):
         crm_kunderolle_guid = crm.get_kunderolle(lookup_crm_contact)
 
         if not crm_kunderolle_guid:
+            log.info("Kunderolle does not exist in CRM")
             crm_kunderolle_guid = crm.store_kunderolle(kunderolle)
 
         # Update lookup reference
         lookup_crm_kunderolle = "/ava_kunde({0})".format(crm_kunderolle_guid)
+        log.info("Lookup for kunderolle created: {0}".format(
+            lookup_crm_kunderolle))
 
     # Aftale
     # Depends on: Account, Address (Fakturering)
@@ -342,6 +350,8 @@ def process_entity(entity):
         crm_aftale_guid = crm.get_aftale(lookup_crm_account)
 
         if not crm_aftale_guid:
+            log.info("Aftale does not exist in CRM")
+
             # Resolve dependencies for Aftale
             aftale["ava_kundeforhold@odata.bind"] = lookup_crm_account
             aftale["ava_faktureringsgrad@odata.bind"] = lookup_crm_address
@@ -354,6 +364,7 @@ def process_entity(entity):
 
         # Update lookup reference
         lookup_crm_aftale = "/ava_aftale({0})".format(crm_aftale_guid)
+        log.info("Lookup for aftale created: {0}".format(lookup_crm_aftale))
 
     # Product
     # Depends on: Aftale, Address
@@ -367,6 +378,9 @@ def process_entity(entity):
         crm_produkt_guid = crm.get_produkt(produkt_identifier)
 
         if not crm_produkt_guid:
+            log.info("Produkt does not exist in CRM")
+
+            log.info("Resolving dependencies for produkt")
             # Insert dependencies
             produkt["ava_aftaled@odata.bind"] = lookup_crm_aftale
             produkt["ava_adresses@odata.bind"] = lookup_crm_address
