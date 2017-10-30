@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import adal
+import logging
 import requests
 
 # Local settings
@@ -73,6 +74,12 @@ def request_token():
 
 
 def get_request(resource, params):
+    """
+    Generic GET Request function
+    """
+
+    # Init logger
+    log = logging.getLogger()
 
     headers = {
         "Authorization": get_token(),
@@ -112,11 +119,18 @@ def get_request(resource, params):
 
     # TODO: implement method to stop the application,
     # if 401 has not been resolved.
-
+    log.debug("GET Request: ")
+    log.debug(response.text)
     return response
 
 
 def post_request(resource, payload):
+    """
+    Generic POST request function
+    """
+
+    # Init logger
+    log = logging.getLogger()
 
     headers = {
         "Authorization": get_token(),
@@ -152,6 +166,8 @@ def post_request(resource, payload):
             json=payload
         )
 
+    log.debug("POST Request: ")
+    log.debug(response.text)
     return response
 
 
@@ -164,6 +180,9 @@ def delete_request(service_url):
 
 
 def get_contact(lora_uuid):
+
+    # Init logger
+    log = logging.getLogger()
 
     # REST resource
     resource = "contact"
@@ -178,6 +197,7 @@ def get_contact(lora_uuid):
     exist_in_crm = query.json()["value"]
 
     if not exist_in_crm:
+        log.info("Contact does not exist in CRM")
         return False
 
     # If object exists return identifier
@@ -186,6 +206,9 @@ def get_contact(lora_uuid):
 
 
 def get_ava_address(dawa_uuid):
+
+    # Init logger
+    log = logging.getLogger()
 
     # REST resource
     resource = "ava_adresses"
@@ -211,6 +234,9 @@ def get_ava_address(dawa_uuid):
 def store_address(payload):
     """Address retrieved from DAWA"""
 
+    # Init logger
+    log = logging.getLogger()
+
     # REST resource
     resource = "ava_adresses"
 
@@ -218,11 +244,16 @@ def store_address(payload):
     if not payload:
         return None
 
+    log.info("Creating address in CRM")
+    log.debug(payload)
     response = post_request(resource, payload)
 
     crm_guid = response.json()["ava_adresseid"]
 
     if not crm_guid:
+        log.error("No address GUID returned from CRM")
+        log.error("Status code: {0}".format(response.status_code))
+        log.error(response.text)
         return False
 
     return crm_guid
@@ -234,6 +265,9 @@ def get_contact(cpr_id):
     Returns GUID
     Missing: Logging on events
     """
+
+    # Init logger
+    log = logging.getLogger()
 
     # REST resource
     resource = "contacts"
@@ -261,6 +295,9 @@ def store_contact(payload):
     Missing: Logging on events
     """
 
+    # Init logger
+    log = logging.getLogger()
+
     # REST resource
     resource = "contacts"
 
@@ -269,14 +306,22 @@ def store_contact(payload):
         return None
 
     # Attempt to store
+    log.info("Creating contact in CRM")
+    log.debug(payload)
     response = post_request(resource, payload)
 
     # Return False if not created
     if response.status_code != 201:
-        # TODO: Log to error and status code to file
+        log.error("Error when attempting to store contact")
+        log.error(response.text)
         return False
 
     crm_guid = response.json()["contactid"]
+
+    if not crm_guid:
+        log.error("No contact GUID returned from CRM")
+        return False
+
     return crm_guid
 
 
@@ -291,6 +336,9 @@ def get_kunderolle(identifier):
 def store_kunderolle(payload):
     """Organisationsfunktion"""
 
+    # Init logger
+    log = logging.getLogger()
+
     # REST resource
     resource = "ava_kunderolles"
 
@@ -299,14 +347,22 @@ def store_kunderolle(payload):
         return None
 
     # Attempt to store
+    log.info("Creating kunderolle in CRM")
+    log.debug(payload)
     response = post_request(resource, payload)
 
     # Return False if not created
     if response.status_code != 201:
-        # TODO: Log to error and status code to file
+        log.error("Error creating kunderolle in CRM")
+        log.error(response.text)
         return False
 
     crm_guid = response.json()["ava_kunderolleid"]
+
+    if not crm_guid:
+        log.error("No kunderolle GUID returned from CRM")
+        return False
+
     return crm_guid
 
 
@@ -326,6 +382,9 @@ def store_account(payload):
     Missing: Logging on events
     """
 
+    # Init logger
+    log = logging.getLogger()
+
     # REST resource
     resource = "accounts"
     service_url = "{api}/{resource}".format(
@@ -335,16 +394,25 @@ def store_account(payload):
 
     # Check if payload exists
     if not payload:
+        log.error("No payload supplied")
         return None
 
+    log.info("Creating account in CRM")
+    log.debug(payload)
     response = post_request(service_url, payload)
 
     # Return False if not created
     if response.status_code != 201:
-        # TODO: Log to error and status code to file
+        log.error("Error creating account in CRM")
+        log.error(response.text)
         return False
 
     crm_guid = response.json()["accountid"]
+
+    if not crm_guid:
+        log.error("No account GUID returned from CRM")
+        return False
+
     return crm_guid
 
 
@@ -359,6 +427,9 @@ def get_aftale(identifier):
 def store_aftale(payload):
     """Indsats"""
 
+    # Init logger
+    log = logging.getLogger()
+
     # REST resource
     resource = "ava_aftales"
     service_url = "{api}/{resource}".format(
@@ -370,19 +441,37 @@ def store_aftale(payload):
     if not payload:
         return None
 
+    log.info("Creating aftale in CRM")
+    log.debug(payload)
     response = post_request(service_url, payload)
 
     # Return False if not created
     if response.status_code != 201:
-        # TODO: Log to error and status code to file
+        log.error("Error creating aftale in CRM")
+        log.error(response.text)
         return False
 
     crm_guid = response.json()["ava_aftaleid"]
+    if not crm_guid:
+        log.error("No aftale GUID returned from CRM")
+        return False
+
     return crm_guid
+
+
+def get_produkt(identifier):
+    """
+    MISSING: We have no reference for the CRM entity
+    TODO: May be resolved by creating CRM meta fields
+    """
+    return False
 
 
 def store_produkt(payload):
     """Klasse"""
+
+    # Init logger
+    log = logging.getLogger()
 
     # REST resource
     resource = "ava_installations"
@@ -395,14 +484,21 @@ def store_produkt(payload):
     if not payload:
         return None
 
+    log.info("Creating produkt in CRM")
+    log.debug(payload)
     response = post_request(service_url, payload)
 
     # Return False if not created
     if response.status_code != 201:
-        # TODO: Log to error and status code to file
+        log.error("Error creating produkt in CRM")
+        log.error(response.text)
         return False
 
     crm_guid = response.json()["ava_installationid"]
+    if not crm_guid:
+        log.error("No produkt GUID returned from CRM")
+        return False
+
     return crm_guid
 
 
