@@ -101,7 +101,7 @@ def ava_bruger(entity):
         # KMD EE
         "ava_masterid": egenskaber.get("brugervendtnoegle"),
         "ava_telefonkmdee": kmd_ee.get("phone"),
-        "ava_emailmkdee": kmd_ee.get("email"),
+        "ava_emailkmdee": kmd_ee.get("email"),
 
 
         # Arosia
