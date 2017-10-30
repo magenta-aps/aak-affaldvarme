@@ -54,7 +54,7 @@ DATABASE_STRUCTURE = {
         },
         "relationer_nul_til_en": [
             "ejer", "ansvarlig", "overordnetklasse", "facet",
-            "ava_opstillingsadresse", "ava_afhentningstype"
+            "ava_opstillingsadresse", "ava_afhentningstype", "ava_arosia_id"
         ],
         "relationer_nul_til_mange": [
             "redaktoerer", "sideordnede", "mapninger", "tilfoejelser",
