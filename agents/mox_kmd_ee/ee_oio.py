@@ -13,6 +13,9 @@ from dateutil import parser
 
 from settings import SYSTEM_USER, AVA_ORGANISATION, BASE_URL
 
+session = requests.Session()
+session.verify = '/etc/ssl/certs/ca-certificates.crt'
+
 
 def create_virkning(frm=datetime.datetime.now(),
                     to="infinity",
@@ -118,7 +121,7 @@ def create_organisation(cvr_number, key, name, phone="", email="",
             }
         )
     url = "{0}/organisation/organisation".format(BASE_URL)
-    response = requests.post(url, json=organisation_dict)
+    response = session.post(url, json=organisation_dict)
 
     return response
 
@@ -130,7 +133,7 @@ def lookup_organisation(id_number):
         )
     )
 
-    result = requests.get(request_string)
+    result = session.get(request_string)
 
     if result:
         search_results = result.json()['results'][0]
@@ -226,7 +229,7 @@ def create_bruger(cpr_number, key, name, phone="", email="",
         )
 
     url = "{0}/organisation/bruger".format(BASE_URL)
-    response = requests.post(url, json=bruger_dict)
+    response = session.post(url, json=bruger_dict)
 
     return response
 
@@ -238,7 +241,7 @@ def lookup_bruger(id_number):
         )
     )
 
-    result = requests.get(request_string)
+    result = session.get(request_string)
 
     if result:
         search_results = result.json()['results'][0]
@@ -289,7 +292,7 @@ def create_interessefaellesskab(customer_number, customer_relation_name,
     }
 
     url = "{0}/organisation/interessefaellesskab".format(BASE_URL)
-    response = requests.post(url, json=interessefaellesskab_dict)
+    response = session.post(url, json=interessefaellesskab_dict)
 
     return response
 
@@ -339,7 +342,7 @@ def create_organisationfunktion(customer_number,
     }
 
     url = "{0}/organisation/organisationfunktion".format(BASE_URL)
-    response = requests.post(url, json=organisationfunktion_dict)
+    response = session.post(url, json=organisationfunktion_dict)
 
     return response
 
@@ -419,7 +422,7 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
         ]
     """
     url = "{0}/indsats/indsats".format(BASE_URL)
-    response = requests.post(url, json=indsats_dict)
+    response = session.post(url, json=indsats_dict)
 
     return response
 
@@ -460,5 +463,5 @@ def create_klasse(name, identification, installation_type,
     }
 
     url = "{0}/klassifikation/klasse".format(BASE_URL)
-    response = requests.post(url, json=klasse_dict)
+    response = session.post(url, json=klasse_dict)
     return response
