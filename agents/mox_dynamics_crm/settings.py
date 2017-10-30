@@ -9,8 +9,8 @@ dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
 
 # General
-DO_VERIFY_SSL_SIGNATURE = False
-DO_DISABLE_SSL_WARNINGS = True
+DO_VERIFY_SSL_SIGNATURE = True
+DO_DISABLE_SSL_WARNINGS = False
 DO_RUN_IN_TEST_MODE = True
 
 # Logging

@@ -12,8 +12,8 @@ import logging
 import requests
 
 # Local modules
-# import crm_interface as crm
-import crm_mock as crm
+import crm_interface as crm
+# import crm_mock as crm
 import oio_interface as oio
 import ava_adapter as adapter
 import dawa_interface as dawa
