@@ -261,7 +261,14 @@ def ava_account(entity):
     # Fetch references
     Name = egenskaber.get("interessefaellesskabsnavn")
     ava_kundenummer = egenskaber.get("brugervendtnoegle")
-    ava_kundetype = egenskaber.get("interessefaellesskabstype")
+
+    # Convert "kundetype" to literal
+    type_ref = egenskaber.get("interessefaellesskabstype")
+
+    ava_kundetype = {
+        "Varme": 915240001,
+        "Affald": 915240000
+    }
 
     # Not set by this agent
     # Lora does not persist this information
@@ -272,7 +279,7 @@ def ava_account(entity):
     payload = {
         "Name": Name,
         "ava_kundenummer": ava_kundenummer,
-        "ava_kundetype": ava_kundetype,
+        "ava_kundetype": ava_kundetype.get(type_ref),
         # "ava_kundeforholdstype": ava_kundeforholdstype,  # Currently not in use
         # "ava_ejendom": ava_ejendom,  # Currently not in use
     }
