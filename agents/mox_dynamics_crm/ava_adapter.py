@@ -217,6 +217,17 @@ def ava_kunderolle(entity):
 
     ava_rolle = egenskaber.get("funktionsnavn")
 
+    # Issue: KMDEE customers are classified as "Ligestillingskunde"
+    # Valid types are:
+    # Hovedejer = 915240000
+    # Ligestillingsejer = 915240001
+    # Administrator = 915240002
+    # Vicevært = 915240003
+    # Medejer = 915240005
+
+    # WORKAROUND: Forcing ava_rolle to be 915240001
+    ava_rolle = 915240001
+
     # This is a temporary value
     # At import this must be replaced with a CRM reference
     kundeforhold = relationer.get("tilknyttedeinteressefaellesskaber")[0]
