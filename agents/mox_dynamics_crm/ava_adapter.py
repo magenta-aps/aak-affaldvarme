@@ -330,6 +330,9 @@ def ava_aftale(entity):
     ava_startdato = virkning.get("from")
     ava_slutdato = virkning.get("to")
 
+    if ava_slutdato == "infinity":
+        ava_slutdato = None
+
     indsatsdokument = relationer.get("indsatsdokument")[0]
     ava_faktureringsgrad = indsatsdokument.get("uuid")
 
