@@ -337,7 +337,7 @@ def ava_aftale(entity):
         "ava_kundeforhold": ava_kundeforhold,
         "ava_aftaletype": ava_aftaletype,
         "ava_beskrivelse": ava_beskrivelse,
-        "ava_antal_produkt": egenskaber.get("beskrivelse"),
+        "ava_antal_produkter": egenskaber.get("beskrivelse"),
         "ava_faktureringsgrad": ava_faktureringsgrad,
         "ava_startdato": ava_startdato,
         "ava_slutdato": ava_slutdato,
