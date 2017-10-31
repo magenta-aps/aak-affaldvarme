@@ -1,0 +1,70 @@
+{
+    "attributter": {
+        "organisationfunktionegenskaber": [
+            {
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00",
+                    "to": "infinity"
+                },
+                "funktionsnavn": "ROLE",
+                "brugervendtnoegle": "ROLE CUSTOMER_NUMBER"
+            }
+        ]
+    },
+    "tilstande": {
+        "organisationfunktiongyldighed": [
+            {
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00",
+                    "to": "infinity"
+                },
+                "gyldighed": "Aktiv"
+            }
+        ]
+    },
+    "relationer": {
+        "tilknyttedeinteressefaellesskaber": [
+            {
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00",
+                    "to": "infinity"
+                },
+                "uuid": "CUSTOMER_RELATION_UUID"
+            }
+        ],
+        "tilknyttedebrugere": [
+            {
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00",
+                    "to": "infinity"
+                },
+                "uuid": "CUSTOMER_UUID"
+            }
+        ],
+        "organisatoriskfunktionstype": [
+            {
+                "urn": "urn:ROLE",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00",
+                    "to": "infinity"
+                }
+            }
+        ]
+    },
+    "note": "NOTE"
+}

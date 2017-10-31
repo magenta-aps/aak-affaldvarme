@@ -1,13 +1,13 @@
 import json
-
-import pika
+import pymssql
 import time
 
+import pika
 import requests
 from serviceplatformen_cpr.services import get_citizen as _get_cpr_data
 from serviceplatformen_cvr import get_cvr_data as _get_cvr_data
 
-from settings import ERROR_MQ_QUEUE, ERROR_MQ_HOST, CERTIFICATE_FILE, SP_UUIDS
+from settings import CERTIFICATE_FILE, ERROR_MQ_HOST, ERROR_MQ_QUEUE, SP_UUIDS
 
 
 def report_error(error_message, error_stack=None, error_object=None):
@@ -166,3 +166,17 @@ def get_address_uuid(address):
     else:
         # len(js) == 0
         raise RuntimeError('Address not found: {0}'.format(address))
+
+
+def connect(server, database, username, password):
+    driver1 = '{SQL Server}'
+    driver2 = '{ODBC Driver 13 for SQL Server}'
+    connection = None
+    try:
+        connection = pymssql.connect(server=server, user=username,
+                                     password=password, database=database)
+    except Exception as e:
+        print(e)
+        report_error(str(e))
+        raise
+    return connection

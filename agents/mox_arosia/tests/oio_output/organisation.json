@@ -1,0 +1,145 @@
+{
+    "attributter": {
+        "organisationegenskaber": [
+            {
+                "organisationsnavn": "NAME",
+                "brugervendtnoegle": "KEY",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "to": "infinity",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00"
+                },
+                "ava_sms_notifikation": "SMS_NOTIF"
+            }
+        ]
+    },
+    "tilstande": {
+        "organisationgyldighed": [
+            {
+                "gyldighed": "Aktiv",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "to": "infinity",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00"
+                }
+            }
+        ]
+    },
+    "relationer": {
+        "adresser": [
+            {
+                "urn": "urn:arosia_tel:AROSIA_PHONE",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "to": "infinity",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00"
+                }
+            },
+            {
+                "urn": "urn:arosia_email:AROSIA_EMAIL",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "to": "infinity",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00"
+                }
+            },
+            {
+                "urn": "urn:tel:KMDEE_PHONE",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "to": "infinity",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00"
+                }
+            },
+            {
+                "urn": "urn:email:KMDEE_EMAIL",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "to": "infinity",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00"
+                }
+            },
+            {
+                "uuid": "ADDRESS_UUID",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "to": "infinity",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00"
+                }
+            },
+            {
+                "urn": "urn:arosia_id:AROSIA_ID",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "to": "infinity",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00"
+                }
+            }
+        ],
+        "virksomhedstype": [
+            {
+                "urn": "urn:COMPANY_TYPE",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "to": "infinity",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00"
+                }
+            }
+        ],
+        "branche": [
+            {
+                "urn": "urn:INDUSTRY_CODE",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "to": "infinity",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00"
+                }
+            }
+        ],
+        "virksomhed": [
+            {
+                "urn": "urn:CVR",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "to": "infinity",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00"
+                }
+            }
+        ],
+        "tilhoerer": [
+            {
+                "uuid": "AVA_ORGANISATION",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "to": "infinity",
+                    "aktoerref": "",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00"
+                }
+            }
+        ]
+    },
+    "note": "NOTE"
+}

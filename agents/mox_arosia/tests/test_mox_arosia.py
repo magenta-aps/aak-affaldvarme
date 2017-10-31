@@ -269,12 +269,14 @@ def test_handle_account_extracts_parameters_as_expected(mock_create: MagicMock):
     # Arrange
     account_number = 'AccountNumber'
     name = 'Name'
+    account_id = 'AccountId'
 
     customer_type = 'Affald'
 
     row = {
         'AccountNumber': account_number,
         'Name': name,
+        'AccountId': account_id,
     }
 
     # Act
@@ -283,7 +285,8 @@ def test_handle_account_extracts_parameters_as_expected(mock_create: MagicMock):
     # Assert
     mock_create.assert_called_once_with(customer_number=account_number,
                                         customer_relation_name=name,
-                                        customer_type=customer_type)
+                                        customer_type=customer_type,
+                                        arosia_id=account_id)
 
 
 @patch('mox_arosia.create_or_update_interessefaellesskab')
@@ -395,12 +398,14 @@ def test_handle_placeretmateriel_extracts_parameters_as_expected(
     stregkode = 'Stregkode'
     affaldstype = 'Affaldstype'
     placeretmateriel_id = 'ID'
+    aftale_id = 'AftaleId'
 
     row = {
         'ava_navn': name,
         'ava_stregkode': stregkode,
         'ava_affaldstypeName': affaldstype,
-        'ava_placeretmaterielId': placeretmateriel_id
+        'ava_placeretmaterielId': placeretmateriel_id,
+        'ava_Kundeaftale': aftale_id
     }
 
     installation_type = 'Affald'
@@ -413,7 +418,8 @@ def test_handle_placeretmateriel_extracts_parameters_as_expected(
                                         identification=stregkode,
                                         installation_type=installation_type,
                                         arosia_id=placeretmateriel_id,
-                                        afhentningstype=affaldstype)
+                                        afhentningstype=affaldstype,
+                                        aftale_id=aftale_id)
 
 
 @patch('mox_arosia.create_or_update_klasse')

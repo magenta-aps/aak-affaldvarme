@@ -1,59 +1,46 @@
-from arosia_sql import (ACCOUNT_SQL, CONTACT_SQL, KONTAKTROLLE_SQL,
-                        KUNDEAFTALE_SQL, PLACERETMATERIEL_SQL)
+from arosia_oio import (lookup_account_arosia_id, lookup_contact_by_arosia_id,
+                        lookup_products_by_aftale_id)
+from arosia_sql import (ACCOUNT_SQL_RECENT, CONTACT_SQL_RECENT,
+                        KONTAKTROLLE_SQL_RECENT, KUNDEAFTALE_SQL_RECENT,
+                        PLACERETMATERIEL_SQL_RECENT)
 from mox_arosia import (handle_account, handle_contact, handle_kontaktrolle,
                         handle_kundeaftale, handle_placeretmateriel)
 from services import connect, report_error
 
-# Contains a map of Arosia Contact UUIDs to LoRa bruger and organisation UUIDs
-CONTACT_MAP = {}
-# Contains a map of Arosia Account UUIDs to LoRa interessefællesskab UUIDs
-ACCOUNT_MAP = {}
-# Contains a map of Arosia Kundeaftale UUIDs to a list of their associated
-# products as LoRa Klasse UUIDs
-AFTALE_PRODUCT_MAP = {}
 
-
-def import_contact(connection):
+def update_contact(connection):
     cursor = connection.cursor(as_dict=True)
-    cursor.execute(CONTACT_SQL)
+    cursor.execute(CONTACT_SQL_RECENT)
     rows = cursor.fetchall()
 
     for row in rows:
         lora_id = handle_contact(row)
-        contact_id = row['ContactId']
-        if lora_id and contact_id:
-            CONTACT_MAP[contact_id] = lora_id
-        else:
+        if not lora_id:
             report_error('Unable to import contact', error_object=row)
-            continue
 
 
-def import_account(connection):
+def update_account(connection):
     cursor = connection.cursor(as_dict=True)
-    cursor.execute(ACCOUNT_SQL)
+    cursor.execute(ACCOUNT_SQL_RECENT)
     rows = cursor.fetchall()
 
     for row in rows:
         lora_id = handle_account(row)
-        account_id = row['AccountId']
-        if lora_id and account_id:
-            ACCOUNT_MAP[account_id] = lora_id
-        else:
+        if not lora_id:
             report_error('Unable to import account', error_object=row)
-            continue
 
 
-def import_kontaktrolle(connection):
+def update_kontaktrolle(connection):
     cursor = connection.cursor(as_dict=True)
-    cursor.execute(KONTAKTROLLE_SQL)
+    cursor.execute(KONTAKTROLLE_SQL_RECENT)
     rows = cursor.fetchall()
 
     for row in rows:
         contact_id = row['ava_Kontakt']
         account_id = row['ava_Kundeforhold']
 
-        contact = CONTACT_MAP.get(contact_id)
-        account = ACCOUNT_MAP.get(account_id)
+        contact = lookup_contact_by_arosia_id(contact_id)
+        account = lookup_account_arosia_id(account_id)
         if not account or not contact:
             report_error('Unknown contact_id ({0}) or account_id ({1})'.format(
                 contact_id, account_id))
@@ -65,34 +52,30 @@ def import_kontaktrolle(connection):
             continue
 
 
-def import_placeretmateriel(connection):
+def update_placeretmateriel(connection):
     cursor = connection.cursor(as_dict=True)
-    cursor.execute(PLACERETMATERIEL_SQL)
+    cursor.execute(PLACERETMATERIEL_SQL_RECENT)
     rows = cursor.fetchall()
 
     for row in rows:
         lora_id = handle_placeretmateriel(row)
-        aftale_id = row.get('ava_Kundeaftale')
 
-        if lora_id and aftale_id:
-            product_list = AFTALE_PRODUCT_MAP.setdefault(aftale_id, [])
-            product_list.append(lora_id)
-        else:
+        if not lora_id:
             report_error('Unable to import placeretmateriel', error_object=row)
             continue
 
 
-def import_kundeaftale(connection):
+def update_kundeaftale(connection):
     cursor = connection.cursor(as_dict=True)
-    cursor.execute(KUNDEAFTALE_SQL)
+    cursor.execute(KUNDEAFTALE_SQL_RECENT)
     rows = cursor.fetchall()
 
     for row in rows:
         account_id = row.get('ava_kundeforhold')
-        account = ACCOUNT_MAP.get(account_id)
+        account = lookup_account_arosia_id(account_id)
 
         aftale_id = row.get('ava_kundeaftaleId')
-        products = AFTALE_PRODUCT_MAP.setdefault(aftale_id, [])
+        products = lookup_products_by_aftale_id(aftale_id)
 
         lora_id = handle_kundeaftale(row, account, products)
 
@@ -101,16 +84,16 @@ def import_kundeaftale(connection):
             continue
 
 
-def import_all(connection):
-    import_contact(connection)
-    import_account(connection)
-    import_kontaktrolle(connection)
-    import_placeretmateriel(connection)
-    import_kundeaftale(connection)
+def update_all(connection):
+    update_contact(connection)
+    update_account(connection)
+    update_kontaktrolle(connection)
+    update_placeretmateriel(connection)
+    update_kundeaftale(connection)
 
 
 if __name__ == '__main__':
     from mssql_config import username, password, server, database
 
     connection = connect(server, database, username, password)
-    import_all(connection)
+    update_all(connection)

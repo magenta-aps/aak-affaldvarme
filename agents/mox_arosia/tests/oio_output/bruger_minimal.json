@@ -1,0 +1,66 @@
+{
+    "attributter": {
+        "brugeregenskaber": [
+            {
+                "ava_koen": "",
+                "ava_adressebeskyttelse": "",
+                "ava_civilstand": "",
+                "ava_mellemnavn": "",
+                "ava_fornavn": "",
+                "ava_sms_notifikation": "",
+                "brugervendtnoegle": "KEY",
+                "brugernavn": "NAME",
+                "ava_efternavn": "",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "to": "infinity",
+                    "from": "2017-01-01 00:00:00"
+                }
+            }
+        ]
+    },
+    "tilstande": {
+        "brugergyldighed": [
+            {
+                "gyldighed": "Aktiv",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "to": "infinity",
+                    "from": "2017-01-01 00:00:00"
+                }
+            }
+        ]
+    },
+    "relationer": {
+        "tilknyttedepersoner": [
+            {
+                "urn": "urn:CPR",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "to": "infinity",
+                    "from": "2017-01-01 00:00:00"
+                }
+            }
+        ],
+        "adresser": [],
+        "tilhoerer": [
+            {
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "to": "infinity",
+                    "from": "2017-01-01 00:00:00"
+                },
+                "uuid": "AVA_ORGANISATION"
+            }
+        ]
+    },
+    "note": ""
+}

@@ -1,0 +1,59 @@
+{
+    "attributter": {
+        "interessefaellesskabegenskaber": [
+            {
+                "interessefaellesskabsnavn": "CUSTOMER_RELATION_NAME",
+                "brugervendtnoegle": "CUSTOMER_NUMBER",
+                "virkning": {
+                    "to": "infinity",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "aktoertypekode": "Bruger",
+                    "from": "2017-01-01 00:00:00"
+                },
+                "interessefaellesskabstype": "CUSTOMER_TYPE"
+            }
+        ]
+    },
+    "tilstande": {
+        "interessefaellesskabgyldighed": [
+            {
+                "virkning": {
+                    "to": "infinity",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "aktoertypekode": "Bruger",
+                    "from": "2017-01-01 00:00:00"
+                },
+                "gyldighed": "Aktiv"
+            }
+        ]
+    },
+    "relationer": {
+        "tilhoerer": [
+            {
+                "uuid": "AVA_ORGANISATION",
+                "virkning": {
+                    "to": "infinity",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "aktoertypekode": "Bruger",
+                    "from": "2017-01-01 00:00:00"
+                }
+            }
+        ],
+        "ava_arosia_id": [
+            {
+                "urn": "urn:arosia_id:AROSIA_ID",
+                "virkning": {
+                    "to": "infinity",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "aktoertypekode": "Bruger",
+                    "from": "2017-01-01 00:00:00"
+                }
+            }
+        ]
+    },
+    "note": "NOTE"
+}

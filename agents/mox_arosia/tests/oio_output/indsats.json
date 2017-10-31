@@ -1,0 +1,106 @@
+{
+    "attributter": {
+        "indsatsegenskaber": [
+            {
+                "brugervendtnoegle": "NAME",
+                "beskrivelse": "NO_OF_PRODUCTS",
+                "sluttidspunkt": "2017-01-01 00:00:00+01:00",
+                "virkning": {
+                    "notetekst": "",
+                    "aktoertypekode": "Bruger",
+                    "from": "2017-01-01 00:00:00",
+                    "aktoerref": "",
+                    "to": "infinity"
+                },
+                "starttidspunkt": "2010-01-01 00:00:00+01:00"
+            }
+        ]
+    },
+    "tilstande": {
+        "indsatspubliceret": [
+            {
+                "publiceret": "IkkePubliceret",
+                "virkning": {
+                    "notetekst": "",
+                    "aktoertypekode": "Bruger",
+                    "from": "2017-01-01 00:00:00",
+                    "aktoerref": "",
+                    "to": "infinity"
+                }
+            }
+        ],
+        "indsatsfremdrift": [
+            {
+                "virkning": {
+                    "notetekst": "",
+                    "aktoertypekode": "Bruger",
+                    "from": "2017-01-01 00:00:00",
+                    "aktoerref": "",
+                    "to": "infinity"
+                },
+                "fremdrift": "Disponeret"
+            }
+        ]
+    },
+    "relationer": {
+        "indsatstype": [
+            {
+                "virkning": {
+                    "notetekst": "",
+                    "aktoertypekode": "Bruger",
+                    "from": "2017-01-01 00:00:00",
+                    "aktoerref": "",
+                    "to": "infinity"
+                },
+                "urn": "urn:AGREEMENT_TYPE"
+            }
+        ],
+        "indsatskvalitet": [
+            {
+                "uuid": "PRODUCT1",
+                "virkning": {
+                    "notetekst": "",
+                    "aktoertypekode": "Bruger",
+                    "from": "2017-01-01 00:00:00",
+                    "aktoerref": "",
+                    "to": "infinity"
+                }
+            },
+            {
+                "uuid": "PRODUCT2",
+                "virkning": {
+                    "notetekst": "",
+                    "aktoertypekode": "Bruger",
+                    "from": "2017-01-01 00:00:00",
+                    "aktoerref": "",
+                    "to": "infinity"
+                }
+            }
+        ],
+        "indsatsmodtager": [
+            {
+                "uuid": "CUSTOMER_RELATION_UUID",
+                "virkning": {
+                    "notetekst": "",
+                    "aktoertypekode": "Bruger",
+                    "from": "2017-01-01 00:00:00",
+                    "aktoerref": "",
+                    "to": "infinity"
+                }
+            }
+        ],
+        "indsatsdokument": [
+            {
+                "uuid": "INVOICE_ADDRESS",
+                "virkning": {
+                    "notetekst": "",
+                    "aktoertypekode": "Bruger",
+                    "from": "2017-01-01 00:00:00",
+                    "aktoerref": "",
+                    "to": "infinity"
+                }
+            }
+        ]
+    },
+    "note": "NOTE"
+}

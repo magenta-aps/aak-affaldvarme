@@ -1,0 +1,127 @@
+{
+    "attributter": {
+        "brugeregenskaber": [
+            {
+                "brugernavn": "NAME",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "from": "2017-01-01 00:00:00",
+                    "to": "infinity"
+                },
+                "ava_koen": "GENDER",
+                "ava_sms_notifikation": "SMS_NOTIF",
+                "ava_fornavn": "FIRST_NAME",
+                "ava_civilstand": "MARITAL_STATUS",
+                "brugervendtnoegle": "KEY",
+                "ava_efternavn": "LAST_NAME",
+                "ava_adressebeskyttelse": "ADDRESS_PROTECTION",
+                "ava_mellemnavn": "MIDDLE_NAME"
+            }
+        ]
+    },
+    "tilstande": {
+        "brugergyldighed": [
+            {
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "from": "2017-01-01 00:00:00",
+                    "to": "infinity"
+                },
+                "gyldighed": "Aktiv"
+            }
+        ]
+    },
+    "relationer": {
+        "tilknyttedepersoner": [
+            {
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "from": "2017-01-01 00:00:00",
+                    "to": "infinity"
+                },
+                "urn": "urn:CPR"
+            }
+        ],
+        "tilhoerer": [
+            {
+                "uuid": "AVA_ORGANISATION",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "from": "2017-01-01 00:00:00",
+                    "to": "infinity"
+                }
+            }
+        ],
+        "adresser": [
+            {
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "from": "2017-01-01 00:00:00",
+                    "to": "infinity"
+                },
+                "urn": "urn:arosia_tel:AROSIA_PHONE"
+            },
+            {
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "from": "2017-01-01 00:00:00",
+                    "to": "infinity"
+                },
+                "urn": "urn:arosia_email:AROSIA_EMAIL"
+            },
+            {
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "from": "2017-01-01 00:00:00",
+                    "to": "infinity"
+                },
+                "urn": "urn:tel:KMDEE_PHONE"
+            },
+            {
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "from": "2017-01-01 00:00:00",
+                    "to": "infinity"
+                },
+                "urn": "urn:email:KMDEE_EMAIL"
+            },
+            {
+                "uuid": "ADDRESS_UUID",
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "from": "2017-01-01 00:00:00",
+                    "to": "infinity"
+                }
+            },
+            {
+                "virkning": {
+                    "aktoertypekode": "Bruger",
+                    "notetekst": "",
+                    "aktoerref": "",
+                    "from": "2017-01-01 00:00:00",
+                    "to": "infinity"
+                },
+                "urn": "urn:arosia_id:AROSIA_ID"
+            }
+        ]
+    },
+    "note": "NOTE"
+}

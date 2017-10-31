@@ -1,0 +1,96 @@
+{
+    "attributter": {
+        "klasseegenskaber": [
+            {
+                "brugervendtnoegle": "IDENTIFICATION",
+                "virkning": {
+                    "to": "infinity",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00",
+                    "aktoerref": "",
+                    "aktoertypekode": "Bruger"
+                },
+                "eksempel": "METER_NUMBER",
+                "titel": "NAME"
+            }
+        ]
+    },
+    "tilstande": {
+        "klassepubliceret": [
+            {
+                "virkning": {
+                    "to": "infinity",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00",
+                    "aktoerref": "",
+                    "aktoertypekode": "Bruger"
+                },
+                "publiceret": "Publiceret"
+            }
+        ]
+    },
+    "relationer": {
+        "ejer": [
+            {
+                "virkning": {
+                    "to": "infinity",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00",
+                    "aktoerref": "",
+                    "aktoertypekode": "Bruger"
+                },
+                "uuid": "AVA_ORGANISATION",
+                "objekttype": "Organisation"
+            }
+        ],
+        "ava_arosia_id": [
+            {
+                "urn": "urn:arosia_id:AROSIA_ID",
+                "virkning": {
+                    "to": "infinity",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00",
+                    "aktoerref": "",
+                    "aktoertypekode": "Bruger"
+                }
+            }
+        ],
+        "ava_aftale_id": [
+            {
+                "urn": "urn:ava_aftale_id:AFTALE_ID",
+                "virkning": {
+                    "to": "infinity",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00",
+                    "aktoerref": "",
+                    "aktoertypekode": "Bruger"
+                }
+            }
+        ],
+        "overordnetklasse": [
+            {
+                "urn": "urn:INSTALLATION_TYPE",
+                "virkning": {
+                    "to": "infinity",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00",
+                    "aktoerref": "",
+                    "aktoertypekode": "Bruger"
+                }
+            }
+        ],
+        "ava_afhentningstype": [
+            {
+                "urn": "urn:arosia_id:AFHENTNINGSTYPE",
+                "virkning": {
+                    "to": "infinity",
+                    "notetekst": "",
+                    "from": "2017-01-01 00:00:00",
+                    "aktoerref": "",
+                    "aktoertypekode": "Bruger"
+                }
+            }
+        ]
+    },
+    "note": "NOTE"
+}

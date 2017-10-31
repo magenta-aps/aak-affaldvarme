@@ -63,7 +63,7 @@ SELECT top(100)
     WHERE ModifiedOn >= DATEADD(DAY, -1, GETDATE())
 """
 
-ACCOUNT_SQL_RECENT= """
+ACCOUNT_SQL_RECENT = """
 SELECT top(100) 
         [Name],
         [AccountNumber],
@@ -73,7 +73,7 @@ SELECT top(100)
     WHERE ModifiedOn >= DATEADD(DAY, -1, GETDATE())
 """
 
-KONTAKTROLLE_SQL_RECENT= """
+KONTAKTROLLE_SQL_RECENT = """
 SELECT top(100) 
         [ava_Kontakt],
         [ava_Kundeforhold],
@@ -83,7 +83,7 @@ SELECT top(100)
     AND ModifiedOn >= DATEADD(DAY, -1, GETDATE())
 """
 
-KUNDEAFTALE_SQL_RECENT= """
+KUNDEAFTALE_SQL_RECENT = """
 SELECT top(100) 
         [ava_navn],
         [ava_kundeforhold],
@@ -94,7 +94,7 @@ SELECT top(100)
     WHERE ModifiedOn >= DATEADD(DAY, -1, GETDATE())
 """
 
-PLACERETMATERIEL_SQL_RECENT= """
+PLACERETMATERIEL_SQL_RECENT = """
 SELECT top(100) 
         [ava_navn],
         [ava_stregkode],

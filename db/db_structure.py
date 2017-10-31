@@ -54,7 +54,7 @@ DATABASE_STRUCTURE = {
         },
         "relationer_nul_til_en": [
             "ejer", "ansvarlig", "overordnetklasse", "facet",
-            "ava_opstillingsadresse", "ava_afhentningstype", "ava_arosia_id"
+            "ava_opstillingsadresse", "ava_afhentningstype", "ava_arosia_id", "ava_aftale_id"
         ],
         "relationer_nul_til_mange": [
             "redaktoerer", "sideordnede", "mapninger", "tilfoejelser",
@@ -102,7 +102,7 @@ DATABASE_STRUCTURE = {
         },
         "relationer_nul_til_en": [
             "branche", "interessefaellesskabstype", "overordnet", "tilhoerer",
-            "ava_ejendom"
+            "ava_ejendom", "ava_arosia_id"
         ],
         "relationer_nul_til_mange": [
             "adresser", "opgaver", "tilknyttedebrugere", "tilknyttedeenheder",
@@ -321,7 +321,7 @@ DATABASE_STRUCTURE = {
             "publiceret": ["Publiceret", "IkkePubliceret", "Normal"]
         },
         "relationer_nul_til_en": ["indsatsmodtager", "indsatstype"],
-                     
+
         "relationer_nul_til_mange": [
             "indsatskvalitet", "indsatsaktoer", "samtykke", "indsatssag",
             "indsatsdokument"

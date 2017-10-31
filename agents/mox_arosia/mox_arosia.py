@@ -1,9 +1,9 @@
-from arosia_oio import (create_or_update_indsats, create_or_update_interessefaellesskab,
-                        create_or_update_klasse, create_or_update_organisationfunktion,
+from arosia_oio import (create_or_update_indsats,
+                        create_or_update_interessefaellesskab,
+                        create_or_update_klasse,
+                        create_or_update_organisationfunktion,
                         extract_cpr_and_update_lora,
                         extract_cvr_and_update_lora)
-
-
 
 
 def handle_cpr(row, phone, email, sms_notif):
@@ -50,6 +50,7 @@ def handle_contact(row):
     elif cvr:
         return handle_cvr(row, phone, email, sms_notif)
 
+
 def handle_kundeaftale(row, account, products):
     print("Handling kundeaftale")
     name = row.get('ava_navn')
@@ -59,16 +60,18 @@ def handle_kundeaftale(row, account, products):
     end_date = row.get('ava_Slutdato')
     customer_relation_uuid = account
 
-    response = create_or_update_indsats(name=name,
-                                        agreement_type=agreement_type,
-                                        no_of_products=no_of_products,
-                                        start_date=start_date,
-                                        end_date=end_date,
-                                        customer_relation_uuid=customer_relation_uuid,
-                                        product_uuids=products)
+    response = create_or_update_indsats(
+        name=name,
+        agreement_type=agreement_type,
+        no_of_products=no_of_products,
+        start_date=start_date,
+        end_date=end_date,
+        customer_relation_uuid=customer_relation_uuid,
+        product_uuids=products)
     if response:
         lora_id = response.json()['uuid']
         return lora_id
+
 
 def handle_placeretmateriel(row):
     print("Handling placeretmateriel")
@@ -77,12 +80,14 @@ def handle_placeretmateriel(row):
     installation_type = "Affald"
     afhentningstype = row.get('ava_affaldstypeName')
     arosia_id = row.get('ava_placeretmaterielId')
+    aftale_id = row.get('ava_Kundeaftale')
 
     response = create_or_update_klasse(name=name,
                                        identification=identification,
                                        installation_type=installation_type,
                                        arosia_id=arosia_id,
-                                       afhentningstype=afhentningstype)
+                                       afhentningstype=afhentningstype,
+                                       aftale_id=aftale_id)
     if response:
         lora_id = response.json()['uuid']
         return lora_id
@@ -92,12 +97,14 @@ def handle_account(row):
     print("Handling account")
     customer_number = row.get('AccountNumber')
     customer_relation_name = row.get('Name')
+    arosia_id = row.get('AccountId')
     customer_type = "Affald"
 
     response = create_or_update_interessefaellesskab(
         customer_number=customer_number,
         customer_relation_name=customer_relation_name,
-        customer_type=customer_type)
+        customer_type=customer_type,
+        arosia_id=arosia_id)
     if response:
         lora_id = response.json()['uuid']
         return lora_id

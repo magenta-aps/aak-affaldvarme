@@ -69,11 +69,11 @@ def extract_cvr_and_update_lora(id_number, key="", phone="", email="", note="",
     )
 
 
-def generate_organisation_dict(cvr_number, key, name, arosia_phone,
-                               arosia_email, kmdee_phone,
-                               kmdee_email, address_uuid,
-                               company_type, industry_code, note,
-                               arosia_id, sms_notif):
+def generate_organisation_dict(cvr_number, key, name, arosia_phone="",
+                               arosia_email="", kmdee_phone="",
+                               kmdee_email="", address_uuid="",
+                               company_type="", industry_code="", note="",
+                               arosia_id="", sms_notif=""):
     virkning = create_virkning()
     organisation_dict = {
         "note": note,
@@ -276,12 +276,12 @@ def extract_cpr_and_update_lora(id_number, key="", name="", phone="", email="",
     )
 
 
-def generate_bruger_dict(cpr_number, key, name, arosia_phone,
-                         arosia_email, kmdee_phone, kmdee_email,
-                         first_name, middle_name, last_name,
-                         address_uuid, gender, marital_status,
-                         address_protection, note, arosia_id,
-                         sms_notif):
+def generate_bruger_dict(cpr_number, key, name, arosia_phone="",
+                         arosia_email="", kmdee_phone="", kmdee_email="",
+                         first_name="", middle_name="", last_name="",
+                         address_uuid="", gender="", marital_status="",
+                         address_protection="", note="", arosia_id="",
+                         sms_notif=""):
     virkning = create_virkning()
     bruger_dict = {
         "note": note,
@@ -411,6 +411,66 @@ def create_or_update_bruger(cpr_number, key, name, arosia_phone="",
         return requests.post(url, json=bruger_dict)
 
 
+def lookup(request_string):
+    result = requests.get(request_string)
+
+    if result:
+        search_results = result.json()['results'][0]
+
+        if len(search_results) > 0:
+            # There should only be one
+            if len(search_results) > 1:
+                # TODO: Report error?
+                pass
+            return search_results[0]
+
+
+def lookup_bruger_by_arosia_id(contact_id):
+    request_string = (
+        "{0}/organisation/bruger?adresser=urn:arosia_id:{1}".format(
+            BASE_URL, contact_id
+        )
+    )
+    return lookup(request_string)
+
+
+def lookup_organisation_by_arosia_id(contact_id):
+    request_string = (
+        "{0}/organisation/organisation?adresser=urn:arosia_id:{1}".format(
+            BASE_URL, contact_id
+        )
+    )
+    return lookup(request_string)
+
+
+def lookup_contact_by_arosia_id(contact_id):
+    uuid = lookup_bruger_by_arosia_id(contact_id)
+    if not uuid:
+        uuid = lookup_organisation_by_arosia_id(contact_id)
+
+    return uuid
+
+
+def lookup_account_arosia_id(account_id):
+    request_string = (
+        "{0}/organisation/interessefaellesskab?ava_arosia_id=urn:arosia_id:{1}".format(
+            BASE_URL, account_id
+        )
+    )
+    return lookup(request_string)
+
+
+def lookup_products_by_aftale_id(aftale_id):
+    request_string = (
+        "{0}/klassifikation/klasse?ava_aftale_id=urn:arosia_id:{1}".format(
+            BASE_URL, aftale_id
+        )
+    )
+    result = requests.get(request_string)
+    if result:
+        return result.json()['results'][0]
+
+
 def lookup_bruger(id_number):
     request_string = (
         "{0}/organisation/bruger?tilknyttedepersoner=urn:{1}".format(
@@ -427,12 +487,12 @@ def lookup_bruger(id_number):
             # There should only be one
             if len(search_results) > 1:
                 # TODO: Report error?
-                pass
+                print('HEJ')
             return search_results[0]
 
 
 def generate_interessefaellesskab_dict(customer_number, customer_relation_name,
-                                       customer_type, note):
+                                       customer_type, arosia_id, note):
     virkning = create_virkning()
     interessefaellesskab_dict = {
         "note": note,
@@ -462,6 +522,13 @@ def generate_interessefaellesskab_dict(customer_number, customer_relation_name,
             ],
         }
     }
+
+    if arosia_id:
+        interessefaellesskab_dict['relationer']['ava_arosia_id'] = [{
+            "urn": "urn:arosia_id:{0}".format(arosia_id),
+            "virkning": virkning
+        }]
+
     return interessefaellesskab_dict
 
 
@@ -487,11 +554,11 @@ def lookup_interessefaellesskab(customer_number):
 
 def create_or_update_interessefaellesskab(customer_number,
                                           customer_relation_name,
-                                          customer_type, note=""):
+                                          customer_type, arosia_id="", note=""):
     uuid = lookup_interessefaellesskab(customer_number)
 
     interessefaellesskab_dict = generate_interessefaellesskab_dict(
-        customer_number, customer_relation_name, customer_type, note)
+        customer_number, customer_relation_name, customer_type, arosia_id, note)
 
     if uuid:
         url = "{0}/organisation/interessefaellesskab/{1}".format(BASE_URL, uuid)
@@ -614,7 +681,7 @@ def generate_indsats_dict(name, agreement_type, no_of_products,
                           invoice_address,
                           start_date, end_date, customer_relation_uuid,
                           product_uuids,
-                          note=""):
+                          note):
     virkning = create_virkning()
     tz = pytz.timezone('Europe/Copenhagen')
 
@@ -747,12 +814,12 @@ def lookup_klasse(identification):
 @request
 def create_or_update_klasse(name, identification, installation_type,
                             meter_number="", note="", arosia_id="",
-                            afhentningstype=""):
+                            afhentningstype="", aftale_id=""):
     uuid = lookup_klasse(identification)
 
     klasse_dict = generate_klasse_dict(afhentningstype, arosia_id,
                                        identification, installation_type,
-                                       meter_number, name, note)
+                                       meter_number, name, note, aftale_id)
 
     if uuid:
         url = "{0}/klassifikation/klasse/{1}".format(BASE_URL, uuid)
@@ -763,7 +830,8 @@ def create_or_update_klasse(name, identification, installation_type,
 
 
 def generate_klasse_dict(afhentningstype, arosia_id, identification,
-                         installation_type, meter_number, name, note):
+                         installation_type, meter_number, name, note,
+                         aftale_id):
     virkning = create_virkning()
     klasse_dict = {
         "note": note,
@@ -803,6 +871,11 @@ def generate_klasse_dict(afhentningstype, arosia_id, identification,
     if afhentningstype:
         klasse_dict['relationer']['ava_afhentningstype'] = [{
             "urn": "urn:arosia_id:{0}".format(afhentningstype),
+            "virkning": virkning
+        }]
+    if aftale_id:
+        klasse_dict['relationer']['ava_aftale_id'] = [{
+            "urn": "urn:ava_aftale_id:{0}".format(aftale_id),
             "virkning": virkning
         }]
 
