@@ -14,6 +14,9 @@ import requests
 from services import get_address_uuid, get_cpr_data, get_cvr_data, report_error
 from settings import AVA_ORGANISATION, BASE_URL, SYSTEM_USER
 
+"""
+Contains all logic of interacting with LoRa
+"""
 
 def create_virkning(frm=None,
                     to="infinity",
@@ -43,8 +46,31 @@ def request(func):
     return call_and_raise
 
 
+def lookup_unique(request_string):
+    """
+    Perform lookup in LoRa using given request string and return result, if any
+    ensuring that only one result is found.
+    """
+    result = requests.get(request_string)
+
+    if result:
+        search_results = result.json()['results'][0]
+
+        if len(search_results) > 0:
+            # There should only be one
+            if len(search_results) > 1:
+                report_error(
+                    "More than one result found for request ({0})".format(
+                        request_string))
+                pass
+            return search_results[0]
+
+
 def extract_cvr_and_update_lora(id_number, key="", phone="", email="", note="",
                                 arosia_id="", sms_notif=""):
+    """
+    Extracts missing CVR data from SP, and updates LoRa
+    """
     # Collect info from SP and include in call creating user.
     # Avoid getting throttled by SP
     company_dir = get_cvr_data(id_number)
@@ -74,6 +100,9 @@ def generate_organisation_dict(cvr_number, key, name, arosia_phone="",
                                kmdee_email="", address_uuid="",
                                company_type="", industry_code="", note="",
                                arosia_id="", sms_notif=""):
+    """
+    Generates a 'Organisation' dict for inserting into LoRa
+    """
     virkning = create_virkning()
     organisation_dict = {
         "note": note,
@@ -183,16 +212,7 @@ def lookup_organisation(id_number):
         )
     )
 
-    result = requests.get(request_string)
-
-    if result:
-        search_results = result.json()['results'][0]
-
-        if len(search_results) > 0:
-            if len(search_results > 1):
-                # TODO: Report error?
-                pass
-            return search_results[0]
+    return lookup_unique(request_string)
 
 
 @request
@@ -247,7 +267,7 @@ def extract_cpr_and_update_lora(id_number, key="", name="", phone="", email="",
         address_uuid = get_address_uuid(address)
     except Exception as e:
         report_error(
-            "Unable to lookup address for customer: {0}".format(
+            "Unable to lookup_unique address for customer: {0}".format(
                 id_number
             ), error_stack=None, error_object=address
         )
@@ -282,6 +302,9 @@ def generate_bruger_dict(cpr_number, key, name, arosia_phone="",
                          address_uuid="", gender="", marital_status="",
                          address_protection="", note="", arosia_id="",
                          sms_notif=""):
+    """
+    Generates a 'Bruger' dict for inserting into LoRa
+    """
     virkning = create_virkning()
     bruger_dict = {
         "note": note,
@@ -373,6 +396,16 @@ def generate_bruger_dict(cpr_number, key, name, arosia_phone="",
     return bruger_dict
 
 
+def lookup_bruger(id_number):
+    request_string = (
+        "{0}/organisation/bruger?tilknyttedepersoner=urn:{1}".format(
+            BASE_URL, id_number
+        )
+    )
+
+    return request(request_string)
+
+
 @request
 def create_or_update_bruger(cpr_number, key, name, arosia_phone="",
                             arosia_email="", kmdee_phone="", kmdee_email="",
@@ -409,86 +442,6 @@ def create_or_update_bruger(cpr_number, key, name, arosia_phone="",
     else:
         url = "{0}/organisation/bruger".format(BASE_URL)
         return requests.post(url, json=bruger_dict)
-
-
-def lookup(request_string):
-    result = requests.get(request_string)
-
-    if result:
-        search_results = result.json()['results'][0]
-
-        if len(search_results) > 0:
-            # There should only be one
-            if len(search_results) > 1:
-                # TODO: Report error?
-                pass
-            return search_results[0]
-
-
-def lookup_bruger_by_arosia_id(contact_id):
-    request_string = (
-        "{0}/organisation/bruger?adresser=urn:arosia_id:{1}".format(
-            BASE_URL, contact_id
-        )
-    )
-    return lookup(request_string)
-
-
-def lookup_organisation_by_arosia_id(contact_id):
-    request_string = (
-        "{0}/organisation/organisation?adresser=urn:arosia_id:{1}".format(
-            BASE_URL, contact_id
-        )
-    )
-    return lookup(request_string)
-
-
-def lookup_contact_by_arosia_id(contact_id):
-    uuid = lookup_bruger_by_arosia_id(contact_id)
-    if not uuid:
-        uuid = lookup_organisation_by_arosia_id(contact_id)
-
-    return uuid
-
-
-def lookup_account_arosia_id(account_id):
-    request_string = (
-        "{0}/organisation/interessefaellesskab?ava_arosia_id=urn:arosia_id:{1}".format(
-            BASE_URL, account_id
-        )
-    )
-    return lookup(request_string)
-
-
-def lookup_products_by_aftale_id(aftale_id):
-    request_string = (
-        "{0}/klassifikation/klasse?ava_aftale_id=urn:arosia_id:{1}".format(
-            BASE_URL, aftale_id
-        )
-    )
-    result = requests.get(request_string)
-    if result:
-        return result.json()['results'][0]
-
-
-def lookup_bruger(id_number):
-    request_string = (
-        "{0}/organisation/bruger?tilknyttedepersoner=urn:{1}".format(
-            BASE_URL, id_number
-        )
-    )
-
-    result = requests.get(request_string)
-
-    if result:
-        search_results = result.json()['results'][0]
-
-        if len(search_results) > 0:
-            # There should only be one
-            if len(search_results) > 1:
-                # TODO: Report error?
-                print('HEJ')
-            return search_results[0]
 
 
 def generate_interessefaellesskab_dict(customer_number, customer_relation_name,
@@ -539,17 +492,7 @@ def lookup_interessefaellesskab(customer_number):
         )
     )
 
-    result = requests.get(request_string)
-
-    if result:
-        search_results = result.json()['results'][0]
-
-        if len(search_results) > 0:
-            # There should only be one
-            if len(search_results) > 1:
-                # TODO: Report error?
-                pass
-            return search_results[0]
+    return request(request_string)
 
 
 def create_or_update_interessefaellesskab(customer_number,
@@ -568,27 +511,6 @@ def create_or_update_interessefaellesskab(customer_number,
         response = requests.post(url, json=interessefaellesskab_dict)
 
     return response
-
-
-def lookup_organisationfunktion(role, customer_number):
-    key = " ".join([role, customer_number])
-    request_string = (
-        "{0}/organisation/organisationfunktion?bvn={1}".format(
-            BASE_URL, key
-        )
-    )
-
-    result = requests.get(request_string)
-
-    if result:
-        search_results = result.json()['results'][0]
-
-        if len(search_results) > 0:
-            # There should only be one
-            if len(search_results) > 1:
-                # TODO: Report error?
-                pass
-            return search_results[0]
 
 
 def generate_organisationfunktion_dict(customer_number, customer_uuid,
@@ -637,6 +559,17 @@ def generate_organisationfunktion_dict(customer_number, customer_uuid,
     return organisationfunktion_dict
 
 
+def lookup_organisationfunktion(role, customer_number):
+    key = " ".join([role, customer_number])
+    request_string = (
+        "{0}/organisation/organisationfunktion?bvn={1}".format(
+            BASE_URL, key
+        )
+    )
+
+    return request(request_string)
+
+
 @request
 def create_or_update_organisationfunktion(customer_number,
                                           customer_uuid,
@@ -655,26 +588,6 @@ def create_or_update_organisationfunktion(customer_number,
     else:
         url = "{0}/organisation/organisationfunktion".format(BASE_URL)
         return requests.post(url, json=organisationfunktion_dict)
-
-
-def lookup_indsats(name):
-    request_string = (
-        "{0}/indsats/indsats?bvn={1}".format(
-            BASE_URL, name
-        )
-    )
-
-    result = requests.get(request_string)
-
-    if result:
-        search_results = result.json()['results'][0]
-
-        if len(search_results) > 0:
-            # There should only be one
-            if len(search_results) > 1:
-                # TODO: Report error?
-                pass
-            return search_results[0]
 
 
 def generate_indsats_dict(name, agreement_type, no_of_products,
@@ -769,6 +682,16 @@ def generate_indsats_dict(name, agreement_type, no_of_products,
     return indsats_dict
 
 
+def lookup_indsats(name):
+    request_string = (
+        "{0}/indsats/indsats?bvn={1}".format(
+            BASE_URL, name
+        )
+    )
+
+    return request(request_string)
+
+
 @request
 def create_or_update_indsats(name, agreement_type, no_of_products,
                              invoice_address,
@@ -789,44 +712,6 @@ def create_or_update_indsats(name, agreement_type, no_of_products,
     else:
         url = "{0}/indsats/indsats".format(BASE_URL)
         return requests.post(url, json=indsats_dict)
-
-
-def lookup_klasse(identification):
-    request_string = (
-        "{0}/klassifikation/klasse?bvn={1}".format(
-            BASE_URL, identification
-        )
-    )
-
-    result = requests.get(request_string)
-
-    if result:
-        search_results = result.json()['results'][0]
-
-        if len(search_results) > 0:
-            # There should only be one
-            if len(search_results) > 1:
-                # TODO: Report error?
-                pass
-            return search_results[0]
-
-
-@request
-def create_or_update_klasse(name, identification, installation_type,
-                            meter_number="", note="", arosia_id="",
-                            afhentningstype="", aftale_id=""):
-    uuid = lookup_klasse(identification)
-
-    klasse_dict = generate_klasse_dict(afhentningstype, arosia_id,
-                                       identification, installation_type,
-                                       meter_number, name, note, aftale_id)
-
-    if uuid:
-        url = "{0}/klassifikation/klasse/{1}".format(BASE_URL, uuid)
-        return requests.put(url, json=klasse_dict)
-    else:
-        url = "{0}/klassifikation/klasse".format(BASE_URL)
-        return requests.post(url, json=klasse_dict)
 
 
 def generate_klasse_dict(afhentningstype, arosia_id, identification,
@@ -880,3 +765,77 @@ def generate_klasse_dict(afhentningstype, arosia_id, identification,
         }]
 
     return klasse_dict
+
+
+def lookup_klasse(identification):
+    request_string = (
+        "{0}/klassifikation/klasse?bvn={1}".format(
+            BASE_URL, identification
+        )
+    )
+
+    return request(request_string)
+
+
+@request
+def create_or_update_klasse(name, identification, installation_type,
+                            meter_number="", note="", arosia_id="",
+                            afhentningstype="", aftale_id=""):
+    uuid = lookup_klasse(identification)
+
+    klasse_dict = generate_klasse_dict(afhentningstype, arosia_id,
+                                       identification, installation_type,
+                                       meter_number, name, note, aftale_id)
+
+    if uuid:
+        url = "{0}/klassifikation/klasse/{1}".format(BASE_URL, uuid)
+        return requests.put(url, json=klasse_dict)
+    else:
+        url = "{0}/klassifikation/klasse".format(BASE_URL)
+        return requests.post(url, json=klasse_dict)
+
+
+def lookup_bruger_by_arosia_id(contact_id):
+    request_string = (
+        "{0}/organisation/bruger?adresser=urn:arosia_id:{1}".format(
+            BASE_URL, contact_id
+        )
+    )
+    return lookup_unique(request_string)
+
+
+def lookup_organisation_by_arosia_id(contact_id):
+    request_string = (
+        "{0}/organisation/organisation?adresser=urn:arosia_id:{1}".format(
+            BASE_URL, contact_id
+        )
+    )
+    return lookup_unique(request_string)
+
+
+def lookup_contact_by_arosia_id(contact_id):
+    uuid = lookup_bruger_by_arosia_id(contact_id)
+    if not uuid:
+        uuid = lookup_organisation_by_arosia_id(contact_id)
+
+    return uuid
+
+
+def lookup_account_arosia_id(account_id):
+    request_string = (
+        "{0}/organisation/interessefaellesskab?ava_arosia_id=urn:arosia_id:{1}".format(
+            BASE_URL, account_id
+        )
+    )
+    return lookup_unique(request_string)
+
+
+def lookup_products_by_aftale_id(aftale_id):
+    request_string = (
+        "{0}/klassifikation/klasse?ava_aftale_id=urn:arosia_id:{1}".format(
+            BASE_URL, aftale_id
+        )
+    )
+    result = requests.get(request_string)
+    if result:
+        return result.json()['results'][0]

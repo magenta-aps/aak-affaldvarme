@@ -37,62 +37,62 @@ def report_error(error_message, error_stack=None, error_object=None):
 
 def get_cpr_data(id_number):
     # TODO: Remove this
-    return {
-        "statsborgerskab": "5100",
-        "efternavn": "Jensen",
-        "postdistrikt": "Næstved",
-        "foedselsregistreringssted": "Myndighedsnavn for landekode: 5902",
-        "boernUnder18": "false",
-        "civilstandsdato": "1991-03-21+01:00",
-        "adresseringsnavn": "Jens Jensner Jensen",
-        "fornavn": "Jens Jensner",
-        "tilflytningsdato": "2001-12-01+01:00",
-        "markedsfoeringsbeskyttelse": "true",
-        "vejkode": "1759",
-        "standardadresse": "Sterkelsvej 17 A,2",
-        "etage": "02",
-        "koen": "M",
-        "status": "80",
-        "foedselsdato": "1978-04-27+01:00",
-        "vejnavn": "Sterkelsvej",
-        "statsborgerskabdato": "1991-09-23+02:00",
-        "adressebeskyttelse": "false",
-        "stilling": "Sygepl ske",
-        "gaeldendePersonnummer": "2704785263",
-        "vejadresseringsnavn": "Sterkelsvej",
-        "civilstand": "G",
-        "alder": "59",
-        "relationer": [
-            {
-                "cprnr": "0123456780",
-                "relation": "aegtefaelle"
-            },
-            {
-                "cprnr": "1123456789",
-                "relation": "barn"
-            },
-            {
-                "cprnr": "2123456789",
-                "relation": "barn"
-            },
-            {
-                "cprnr": "3123456789",
-                "relation": "barn"
-            },
-            {
-                "cprnr": "0000000000",
-                "relation": "mor"
-            },
-            {
-                "cprnr": "0000000000",
-                "relation": "far"
-            }
-        ],
-        "postnummer": "4700",
-        "husnummer": "017A",
-        "vejviserbeskyttelse": "true",
-        "kommunekode": "370"
-    }
+    # return {
+    #     "statsborgerskab": "5100",
+    #     "efternavn": "Jensen",
+    #     "postdistrikt": "Næstved",
+    #     "foedselsregistreringssted": "Myndighedsnavn for landekode: 5902",
+    #     "boernUnder18": "false",
+    #     "civilstandsdato": "1991-03-21+01:00",
+    #     "adresseringsnavn": "Jens Jensner Jensen",
+    #     "fornavn": "Jens Jensner",
+    #     "tilflytningsdato": "2001-12-01+01:00",
+    #     "markedsfoeringsbeskyttelse": "true",
+    #     "vejkode": "1759",
+    #     "standardadresse": "Sterkelsvej 17 A,2",
+    #     "etage": "02",
+    #     "koen": "M",
+    #     "status": "80",
+    #     "foedselsdato": "1978-04-27+01:00",
+    #     "vejnavn": "Sterkelsvej",
+    #     "statsborgerskabdato": "1991-09-23+02:00",
+    #     "adressebeskyttelse": "false",
+    #     "stilling": "Sygepl ske",
+    #     "gaeldendePersonnummer": "2704785263",
+    #     "vejadresseringsnavn": "Sterkelsvej",
+    #     "civilstand": "G",
+    #     "alder": "59",
+    #     "relationer": [
+    #         {
+    #             "cprnr": "0123456780",
+    #             "relation": "aegtefaelle"
+    #         },
+    #         {
+    #             "cprnr": "1123456789",
+    #             "relation": "barn"
+    #         },
+    #         {
+    #             "cprnr": "2123456789",
+    #             "relation": "barn"
+    #         },
+    #         {
+    #             "cprnr": "3123456789",
+    #             "relation": "barn"
+    #         },
+    #         {
+    #             "cprnr": "0000000000",
+    #             "relation": "mor"
+    #         },
+    #         {
+    #             "cprnr": "0000000000",
+    #             "relation": "far"
+    #         }
+    #     ],
+    #     "postnummer": "4700",
+    #     "husnummer": "017A",
+    #     "vejviserbeskyttelse": "true",
+    #     "kommunekode": "370"
+    # }
 
     # Avoid getting throttled by SP
     try:
@@ -116,21 +116,21 @@ def get_cpr_data(id_number):
 
 def get_cvr_data(id_number):
     # TODO: Remove this
-    return {
-        "vejkode": "5520",
-        "virksomhedsform": 80,
-        "etage": "3",
-        "organisationsnavn": "MAGENTA ApS",
-        "kommunekode": "0101",
-        "doer": "",
-        "branchekode": "620200",
-        "vejnavn": "Pilestr\u00e6de",
-        "dawa_uuid": "0a3f50a0-23c9-32b8-e044-0003ba298018",
-        "husnummer": "43",
-        "postnummer": "1112",
-        "postboks": "",
-        "branchebeskrivelse": "Konsulentbistand vedr\u00f8rende informationsteknologi"
-    }
+    # return {
+    #     "vejkode": "5520",
+    #     "virksomhedsform": 80,
+    #     "etage": "3",
+    #     "organisationsnavn": "MAGENTA ApS",
+    #     "kommunekode": "0101",
+    #     "doer": "",
+    #     "branchekode": "620200",
+    #     "vejnavn": "Pilestr\u00e6de",
+    #     "dawa_uuid": "0a3f50a0-23c9-32b8-e044-0003ba298018",
+    #     "husnummer": "43",
+    #     "postnummer": "1112",
+    #     "postboks": "",
+    #     "branchebeskrivelse": "Konsulentbistand vedr\u00f8rende informationsteknologi"
+    # }
 
     try:
         company_dir = _get_cvr_data(id_number, SP_UUIDS, CERTIFICATE_FILE)

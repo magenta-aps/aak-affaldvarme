@@ -7,8 +7,17 @@ from mox_arosia import (handle_account, handle_contact, handle_kontaktrolle,
                         handle_kundeaftale, handle_placeretmateriel)
 from services import connect, report_error
 
+"""
+Functions for performing regular updates of data from AROSia to LoRa
+Expects that an initial import of all data has already been performed
+"""
+
 
 def update_contact(connection):
+    """
+    Fetches all recently updated 'contact' objects from AROSia and inserts in
+    LoRa
+    """
     cursor = connection.cursor(as_dict=True)
     cursor.execute(CONTACT_SQL_RECENT)
     rows = cursor.fetchall()
@@ -20,6 +29,10 @@ def update_contact(connection):
 
 
 def update_account(connection):
+    """
+    Fetches all recently updated 'account' objects from AROSia and inserts in
+    LoRa
+    """
     cursor = connection.cursor(as_dict=True)
     cursor.execute(ACCOUNT_SQL_RECENT)
     rows = cursor.fetchall()
@@ -31,6 +44,12 @@ def update_account(connection):
 
 
 def update_kontaktrolle(connection):
+    """
+    Fetches all recently updated 'kontaktrolle' objects from AROSia and
+    inserts in LoRa. Performs additional lookups in LoRa to be able relate
+    the 'kontaktrolle' object with the associated 'contact' and 'account'
+    objects
+    """
     cursor = connection.cursor(as_dict=True)
     cursor.execute(KONTAKTROLLE_SQL_RECENT)
     rows = cursor.fetchall()
@@ -53,6 +72,10 @@ def update_kontaktrolle(connection):
 
 
 def update_placeretmateriel(connection):
+    """
+    Fetches all recently updated 'placeretmateriel' objects from AROSia and
+    inserts in LoRa.
+    """
     cursor = connection.cursor(as_dict=True)
     cursor.execute(PLACERETMATERIEL_SQL_RECENT)
     rows = cursor.fetchall()
@@ -66,6 +89,12 @@ def update_placeretmateriel(connection):
 
 
 def update_kundeaftale(connection):
+    """
+    Fetches all recently updated 'kundeaftale' objects from AROSia and
+    inserts in LoRa. Performs additional lookups in LoRa to be able relate
+    the 'kundeaftale' object with the associated 'account' and 'product'
+    objects
+    """
     cursor = connection.cursor(as_dict=True)
     cursor.execute(KUNDEAFTALE_SQL_RECENT)
     rows = cursor.fetchall()
@@ -85,6 +114,10 @@ def update_kundeaftale(connection):
 
 
 def update_all(connection):
+    """
+    Given a database connection, performs updates of all relevant AROSia
+    data in LoRa
+    """
     update_contact(connection)
     update_account(connection)
     update_kontaktrolle(connection)

@@ -1,3 +1,5 @@
+import logging
+
 from arosia_oio import (create_or_update_indsats,
                         create_or_update_interessefaellesskab,
                         create_or_update_klasse,
@@ -5,9 +7,15 @@ from arosia_oio import (create_or_update_indsats,
                         extract_cpr_and_update_lora,
                         extract_cvr_and_update_lora)
 
+"""
+This file contains general functions for handling rows from the various tables
+of AROSia
+"""
+
+logger = logging.getLogger('mox_arosia')
+
 
 def handle_cpr(row, phone, email, sms_notif):
-    print("Handling CPR")
     cpr = row.get('ava_CPRnummer')
     arosia_id = row.get('ContactId')
     response = extract_cpr_and_update_lora(cpr,
@@ -21,7 +29,6 @@ def handle_cpr(row, phone, email, sms_notif):
 
 
 def handle_cvr(row, phone, email, sms_notif):
-    print("Handling CVR")
     cvr = row.get('ava_CVRnummer')
     arosia_id = row.get('ContactId')
     response = extract_cvr_and_update_lora(cvr,
@@ -35,6 +42,7 @@ def handle_cvr(row, phone, email, sms_notif):
 
 
 def handle_contact(row):
+    logger.info('Handling contact')
     cpr = row['ava_CPRnummer']
     cvr = row['ava_CVRnummer']
     email = row['EMailAddress1']
@@ -52,7 +60,7 @@ def handle_contact(row):
 
 
 def handle_kundeaftale(row, account, products):
-    print("Handling kundeaftale")
+    logger.info('Handling kundeaftale')
     name = row.get('ava_navn')
     agreement_type = "Affald"
     no_of_products = len(products)
@@ -74,7 +82,7 @@ def handle_kundeaftale(row, account, products):
 
 
 def handle_placeretmateriel(row):
-    print("Handling placeretmateriel")
+    logger.info('Handling placeretmateriel')
     name = row.get('ava_navn')
     identification = row.get('ava_stregkode')
     installation_type = "Affald"
@@ -94,7 +102,7 @@ def handle_placeretmateriel(row):
 
 
 def handle_account(row):
-    print("Handling account")
+    logger.info('Handling account')
     customer_number = row.get('AccountNumber')
     customer_relation_name = row.get('Name')
     arosia_id = row.get('AccountId')
@@ -111,7 +119,7 @@ def handle_account(row):
 
 
 def handle_kontaktrolle(row, contact, account):
-    print("Handling kontaktrolle")
+    logger.info('Handling kontaktrolle')
     name = row.get('ava_KontaktName')
     role = row.get('ava_Rolle')
     response = create_or_update_organisationfunktion(customer_number=name,

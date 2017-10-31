@@ -12,8 +12,20 @@ ACCOUNT_MAP = {}
 # products as LoRa Klasse UUIDs
 AFTALE_PRODUCT_MAP = {}
 
+"""
+Contains functions for performing an initial import of all relevant data in
+AROSia and inserting in LoRa
+
+We use internal caches of UUIDs of inserted items, to save ourselves from 
+having to repeatedly perform lookups in LoRa when relating data.
+"""
+
 
 def import_contact(connection):
+    """
+    Fetches all 'contact' objects from AROSia and inserts in LoRa, while
+    updating the internal cache
+    """
     cursor = connection.cursor(as_dict=True)
     cursor.execute(CONTACT_SQL)
     rows = cursor.fetchall()
@@ -29,6 +41,10 @@ def import_contact(connection):
 
 
 def import_account(connection):
+    """
+    Fetches all 'account' objects from AROSia and inserts in LoRa, while
+    updating the internal cache
+    """
     cursor = connection.cursor(as_dict=True)
     cursor.execute(ACCOUNT_SQL)
     rows = cursor.fetchall()
@@ -44,6 +60,10 @@ def import_account(connection):
 
 
 def import_kontaktrolle(connection):
+    """
+    Fetches all 'kontaktrolle' objects from AROSia and inserts in LoRa, using
+    the cache where relevant
+    """
     cursor = connection.cursor(as_dict=True)
     cursor.execute(KONTAKTROLLE_SQL)
     rows = cursor.fetchall()
@@ -66,6 +86,10 @@ def import_kontaktrolle(connection):
 
 
 def import_placeretmateriel(connection):
+    """
+    Fetches all 'placeretmateriel' objects from AROSia and inserts in LoRa,
+    using and updating the cache where relevant
+    """
     cursor = connection.cursor(as_dict=True)
     cursor.execute(PLACERETMATERIEL_SQL)
     rows = cursor.fetchall()
@@ -83,6 +107,10 @@ def import_placeretmateriel(connection):
 
 
 def import_kundeaftale(connection):
+    """
+    Fetches all 'kundeaftale' objects from AROSia and inserts in LoRa,
+    using the cache where relevant
+    """
     cursor = connection.cursor(as_dict=True)
     cursor.execute(KUNDEAFTALE_SQL)
     rows = cursor.fetchall()
@@ -102,6 +130,10 @@ def import_kundeaftale(connection):
 
 
 def import_all(connection):
+    """
+    Given a database connection, performs insertions of all relevant AROSia
+    data into LoRa
+    """
     import_contact(connection)
     import_account(connection)
     import_kontaktrolle(connection)
