@@ -273,8 +273,8 @@ def ava_account(entity):
         "Name": Name,
         "ava_kundenummer": ava_kundenummer,
         "ava_kundetype": ava_kundetype,
-        "ava_kundeforholdstype": ava_kundeforholdstype,
-        "ava_ejendom": ava_ejendom,
+        # "ava_kundeforholdstype": ava_kundeforholdstype,  # Currently not in use
+        # "ava_ejendom": ava_ejendom,  # Currently not in use
     }
 
     return payload
