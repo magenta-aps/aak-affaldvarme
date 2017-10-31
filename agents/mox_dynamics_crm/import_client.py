@@ -359,6 +359,7 @@ def process_entity(entity):
             # Remove temporary address key
             aftale.pop("ava_kundeforhold", None)
             aftale.pop("ava_faktureringsgrad", None)
+            aftale.pop("ava_produkter", None)
 
             crm_aftale_guid = crm.store_aftale(aftale)
 
