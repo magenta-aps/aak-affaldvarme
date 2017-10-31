@@ -355,6 +355,8 @@ def store_kunderolle(payload):
     if response.status_code != 201:
         log.error("Error creating kunderolle in CRM")
         log.error(response.text)
+        log.error("Payload: ")
+        log.error(payload)
         return False
 
     crm_guid = response.json()["ava_kunderolleid"]
