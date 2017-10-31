@@ -311,7 +311,13 @@ def ava_aftale(entity):
     ava_kundeforhold = kundeforhold.get("uuid")
 
     aftaletype = relationer.get("indsatstype")[0]
-    ava_aftaletype = aftaletype.get("urn")[-1]
+    type_ref = aftaletype.get("urn")[4:]
+
+    # Convert type to literal
+    ava_aftaletype = {
+        "Varme": 915240001,
+        "Affald": 915240000
+    }
 
     # Not necessarily present
     produkter = relationer.get("indsatskvalitet")
@@ -335,7 +341,7 @@ def ava_aftale(entity):
     payload = {
         "ava_name": ava_name,
         "ava_kundeforhold": ava_kundeforhold,
-        "ava_aftaletype": ava_aftaletype,
+        "ava_aftaletype": ava_aftaletype.get(type_ref),
         "ava_beskrivelse": ava_beskrivelse,
         "ava_antal_produkter": egenskaber.get("beskrivelse"),
         "ava_faktureringsgrad": ava_faktureringsgrad,
