@@ -391,10 +391,6 @@ def store_account(payload):
 
     # REST resource
     resource = "accounts"
-    service_url = "{api}/{resource}".format(
-        api=base_endpoint,
-        resource=resource
-    )
 
     # Check if payload exists
     if not payload:
@@ -403,7 +399,7 @@ def store_account(payload):
 
     log.info("Creating account in CRM")
     log.debug(payload)
-    response = post_request(service_url, payload)
+    response = post_request(resource, payload)
 
     # Return False if not created
     if response.status_code != 201:
@@ -436,10 +432,6 @@ def store_aftale(payload):
 
     # REST resource
     resource = "ava_aftales"
-    service_url = "{api}/{resource}".format(
-        api=base_endpoint,
-        resource=resource
-    )
 
     # Check if payload exists
     if not payload:
@@ -447,7 +439,7 @@ def store_aftale(payload):
 
     log.info("Creating aftale in CRM")
     log.debug(payload)
-    response = post_request(service_url, payload)
+    response = post_request(resource, payload)
 
     # Return False if not created
     if response.status_code != 201:
@@ -479,10 +471,6 @@ def store_produkt(payload):
 
     # REST resource
     resource = "ava_installations"
-    service_url = "{api}/{resource}".format(
-        api=base_endpoint,
-        resource=resource
-    )
 
     # Check if payload exists
     if not payload:
@@ -490,7 +478,7 @@ def store_produkt(payload):
 
     log.info("Creating produkt in CRM")
     log.debug(payload)
-    response = post_request(service_url, payload)
+    response = post_request(resource, payload)
 
     # Return False if not created
     if response.status_code != 201:
