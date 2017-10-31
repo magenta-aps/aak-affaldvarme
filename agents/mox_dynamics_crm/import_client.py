@@ -354,7 +354,7 @@ def process_entity(entity):
 
             # Resolve dependencies for Aftale
             aftale["ava_kundeforhold@odata.bind"] = lookup_crm_account
-            aftale["ava_faktureringsgrad@odata.bind"] = lookup_crm_address
+            aftale["ava_faktureringsadresse@odata.bind"] = lookup_crm_address
 
             # Remove temporary address key
             aftale.pop("ava_kundeforhold", None)
