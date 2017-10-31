@@ -368,7 +368,13 @@ def ava_installation(entity):
     ava_identifikation = egenskaber.get("brugervendtnoegle")
 
     installationstype = relationer.get("overordnetklasse")[0]
-    ava_installationstype = installationstype.get("urn").split(":")[-1]
+
+    # Convert type to literal
+    type_ref = installationstype.get("urn").split(":")[-1]
+    ava_installationstype = {
+        "Varme": 915240000,
+        "Affald": 915240001
+    }
 
     ava_maalernummer = egenskaber.get("eksempel")
 
@@ -395,10 +401,10 @@ def ava_installation(entity):
         "ava_identifikation": ava_identifikation,
         "ava_aftale": ava_aftale,
         "ava_adresse": ava_adresse,
-        "ava_installationstype": ava_installationstype,
-        "ava_afhentningstype": ava_afhentningstype,
+        "ava_installationstype": ava_installationstype.get(type_ref),
+        # "ava_afhentningstype": ava_afhentningstype,  # Currently not supported
         "ava_maalernummer": ava_maalernummer,
-        "ava_beskrivelse": ava_beskrivelse,
+        # "ava_beskrivelse": ava_beskrivelse,  # Currently not supported
         "ava_kundenummer": ava_kundenummer
     }
 
