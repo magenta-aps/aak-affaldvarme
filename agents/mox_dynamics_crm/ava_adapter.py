@@ -259,7 +259,7 @@ def ava_account(entity):
     egenskaber = attributter["interessefaellesskabegenskaber"][0]
 
     # Fetch references
-    Name = egenskaber.get("interessefaellesskabsnavn")
+    account_name = egenskaber.get("interessefaellesskabsnavn")
     ava_kundenummer = egenskaber.get("brugervendtnoegle")
 
     # Convert "kundetype" to literal
@@ -277,7 +277,7 @@ def ava_account(entity):
 
     # Format CRM payload
     payload = {
-        "Name": Name,
+        "name": account_name,
         "ava_kundenummer": ava_kundenummer,
         "ava_kundetype": ava_kundetype.get(type_ref),
         # "ava_kundeforholdstype": ava_kundeforholdstype,  # Currently not in use
