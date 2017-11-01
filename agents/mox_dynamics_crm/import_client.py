@@ -380,7 +380,7 @@ def process_entity(entity):
 
             log.info("Resolving dependencies for produkt")
             # Insert dependencies
-            produkt["ava_aftaled@odata.bind"] = lookup_crm_aftale
+            # produkt["ava_aftale@odata.bind"] = lookup_crm_aftale
             produkt["ava_adresse@odata.bind"] = lookup_crm_address
 
             # Remove temporary address key
