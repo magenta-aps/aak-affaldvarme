@@ -466,6 +466,13 @@ def store_produkt(payload):
 
     return crm_guid
 
+def get_produkt(identifier):
+    """MISSING: We have no reference for the CRM entity
+
+    TODO: May be resolved by creating CRM meta fields
+
+    """
+    return False
 
 # DO NOT USE THE DELETE FUNCTION
 # def delete_contact(uuid):
