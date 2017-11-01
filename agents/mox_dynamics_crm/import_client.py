@@ -50,6 +50,9 @@ resources = {
     "klasse": "klassifikation/klasse"
 }
 
+# Set logging
+log = logging.getLogger(__name__)
+
 
 def batch_generator(resource, list_of_things):
     """Generate and return batches of objects"""
@@ -93,9 +96,6 @@ def run_import_all():
     All contacts that belongs to parent organisation (See settings)
     """
 
-    # Init logger
-    log = logging.getLogger()
-
     # Use switch to determine resource path
     bruger = resources["bruger"]
 
@@ -133,9 +133,6 @@ def process_entity(entity):
     TODO: Consolidate logic for process contact/organisation
     TODO: Absolutely must be broken down to smaller pieces
     """
-
-    # Set logging
-    log = logging.getLogger()
 
     # Contact required
     if not entity:
@@ -392,6 +389,8 @@ def process_entity(entity):
 
             # Call function to insert object into CRM
             crm_produkt_guid = crm.store_produkt(produkt)
+        else:
+            log.info("Produkt truly does exist in CRM")
 
         # No need to create a lookup reference
         # lookup_crm_produkt = crm_produkt_guid ?

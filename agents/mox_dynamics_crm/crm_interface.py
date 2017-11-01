@@ -15,6 +15,9 @@ from settings import CRM_CLIENT_ID
 from settings import CRM_CLIENT_SECRET
 from settings import CRM_REST_API_PATH
 
+# Init logger
+log = logging.getLogger(__name__)
+
 # Set vars
 base_endpoint = "{resource}/{path}".format(
     resource=CRM_RESOURCE,
@@ -78,9 +81,6 @@ def get_request(resource, params):
     Generic GET Request function
     """
 
-    # Init logger
-    log = logging.getLogger()
-
     headers = {
         "Authorization": get_token(),
         "OData-MaxVersion": "4.0",
@@ -129,9 +129,6 @@ def post_request(resource, payload):
     Generic POST request function
     """
 
-    # Init logger
-    log = logging.getLogger()
-
     headers = {
         "Authorization": get_token(),
         "OData-MaxVersion": "4.0",
@@ -153,6 +150,8 @@ def post_request(resource, payload):
     )
 
     if response.status_code == 401:
+        log.debug('Requesting token and retrying POST request')
+
         # Generate a new token
         request_token()
 
@@ -181,9 +180,6 @@ def delete_request(service_url):
 
 def get_contact(lora_uuid):
 
-    # Init logger
-    log = logging.getLogger()
-
     # REST resource
     resource = "contact"
 
@@ -206,9 +202,6 @@ def get_contact(lora_uuid):
 
 
 def get_ava_address(dawa_uuid):
-
-    # Init logger
-    log = logging.getLogger()
 
     # REST resource
     resource = "ava_adresses"
@@ -233,9 +226,6 @@ def get_ava_address(dawa_uuid):
 
 def store_address(payload):
     """Address retrieved from DAWA"""
-
-    # Init logger
-    log = logging.getLogger()
 
     # REST resource
     resource = "ava_adresses"
@@ -266,9 +256,6 @@ def get_contact(cpr_id):
     Missing: Logging on events
     """
 
-    # Init logger
-    log = logging.getLogger()
-
     # REST resource
     resource = "contacts"
 
@@ -294,9 +281,6 @@ def store_contact(payload):
     Store CRM contact and returns creation GUID
     Missing: Logging on events
     """
-
-    # Init logger
-    log = logging.getLogger()
 
     # REST resource
     resource = "contacts"
@@ -335,9 +319,6 @@ def get_kunderolle(identifier):
 
 def store_kunderolle(payload):
     """Organisationsfunktion"""
-
-    # Init logger
-    log = logging.getLogger()
 
     # REST resource
     resource = "ava_kunderolles"
@@ -386,9 +367,6 @@ def store_account(payload):
     Missing: Logging on events
     """
 
-    # Init logger
-    log = logging.getLogger()
-
     # REST resource
     resource = "accounts"
 
@@ -404,7 +382,8 @@ def store_account(payload):
     # Return False if not created
     if response.status_code != 201:
         log.error("Error creating account in CRM")
-        log.error(response.text)
+        log.error(response.json())
+        log.error(payload)
         return False
 
     crm_guid = response.json()["accountid"]
@@ -426,9 +405,6 @@ def get_aftale(identifier):
 
 def store_aftale(payload):
     """Indsats"""
-
-    # Init logger
-    log = logging.getLogger()
 
     # REST resource
     resource = "ava_aftales"
@@ -465,9 +441,6 @@ def get_produkt(identifier):
 
 def store_produkt(payload):
     """Klasse"""
-
-    # Init logger
-    log = logging.getLogger()
 
     # REST resource
     resource = "ava_installations"

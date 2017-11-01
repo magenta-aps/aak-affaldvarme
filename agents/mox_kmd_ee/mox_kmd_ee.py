@@ -76,6 +76,8 @@ def create_customer(id_number, key, name, phone="", email="",
             try:
                 person_dir = get_cpr_data(id_number)
             except Exception as e:
+                report_error(traceback.format_exc())
+
                 # Retry *once* after sleeping
                 time.sleep(40)
                 try:
@@ -272,9 +274,9 @@ def import_all(connection):
                 n += 1
             else:
                 # No customer created or found.
-                report_error("No customer created:" +
-                             row['KundeNavn'] +
-                             str(row['PersonnrSEnr']))
+                report_error("No customer created: %s %s" % (
+                             row['KundeNavn'],
+                             row['PersonnrSEnr']))
                 continue
 
         # Create customer relation

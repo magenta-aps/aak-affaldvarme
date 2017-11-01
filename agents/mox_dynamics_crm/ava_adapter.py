@@ -3,13 +3,14 @@
 import logging
 
 
+log = logging.getLogger(__name__)
+
+
 def ava_bruger(entity):
     """
     Lora:    Bruger
     CRM:    Aktoer
     """
-
-    log = logging.getLogger()
 
     # CRM meta field references Lora entity
     ava_lora_uuid = entity["id"]
