@@ -361,7 +361,7 @@ def process_entity(entity):
             crm_aftale_guid = crm.store_aftale(aftale)
 
         # Update lookup reference
-        lookup_crm_aftale = "/ava_aftale({0})".format(crm_aftale_guid)
+        lookup_crm_aftale = "/ava_aftales({0})".format(crm_aftale_guid)
         log.info("Lookup for aftale created: {0}".format(lookup_crm_aftale))
 
     # Product
@@ -380,7 +380,7 @@ def process_entity(entity):
 
             log.info("Resolving dependencies for produkt")
             # Insert dependencies
-            # produkt["ava_aftale@odata.bind"] = lookup_crm_aftale
+            produkt["ava_aftale@odata.bind"] = lookup_crm_aftale
             produkt["ava_adresse@odata.bind"] = lookup_crm_address
 
             # Remove temporary address key
