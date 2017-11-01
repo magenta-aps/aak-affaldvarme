@@ -348,8 +348,9 @@ def ava_aftale(entity):
         "ava_beskrivelse": ava_beskrivelse,
         "ava_antal_produkter": egenskaber.get("beskrivelse"),
         "ava_faktureringsgrad": ava_faktureringsgrad,
-        "ava_startdato": ava_startdato,
-        "ava_slutdato": ava_slutdato,
+        # Date fields have been disabled due to formatting issues
+        # "ava_startdato": ava_startdato,
+        # "ava_slutdato": ava_slutdato,
         "ava_produkter": ava_produkter
     }
 
