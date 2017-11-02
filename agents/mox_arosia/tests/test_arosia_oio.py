@@ -303,9 +303,9 @@ def test_create_or_update_indsats_handles_create(
     mock_lookup.return_value = '6e9908df-2b6b-472b-a2de-d58d79e59c33'
 
     # Act
-    arosia_oio.create_or_update_indsats('12', '34', '56', '78',
+    arosia_oio.create_or_update_indsats('12', '34', '56',
                                         datetime.datetime.now(),
-                                        datetime.datetime.now(), '90',
+                                        datetime.datetime.now(), '78',
                                         ['12', '34'])
 
     # Assert
@@ -322,9 +322,9 @@ def test_create_or_update_indsats_handles_update(
     mock_lookup.return_value = None
 
     # Act
-    arosia_oio.create_or_update_indsats('12', '34', '56', '78',
+    arosia_oio.create_or_update_indsats('12', '34', '56',
                                         datetime.datetime.now(),
-                                        datetime.datetime.now(), '90',
+                                        datetime.datetime.now(), '78',
                                         ['12', '34'])
 
     # Assert

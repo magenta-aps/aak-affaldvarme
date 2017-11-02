@@ -18,6 +18,9 @@ from settings import AVA_ORGANISATION, BASE_URL, SYSTEM_USER
 Contains all logic of interacting with LoRa
 """
 
+s = requests.Session()
+
+
 def create_virkning(frm=None,
                     to="infinity",
                     user=SYSTEM_USER,
@@ -51,7 +54,7 @@ def lookup_unique(request_string):
     Perform lookup in LoRa using given request string and return result, if any
     ensuring that only one result is found.
     """
-    result = requests.get(request_string)
+    result = s.get(request_string)
 
     if result:
         search_results = result.json()['results'][0]
@@ -234,10 +237,10 @@ def create_or_update_organisation(cvr_number, key, name, arosia_phone="",
     if uuid:
         print("{0} already exists with UUID {1}".format(cvr_number, uuid))
         url = "{0}/organisation/organisation/{1}".format(BASE_URL, uuid)
-        return requests.put(url, json=organisation_dict)
+        return s.put(url, json=organisation_dict)
     else:
         url = "{0}/organisation/organisation".format(BASE_URL)
-        return requests.post(url, json=organisation_dict)
+        return s.post(url, json=organisation_dict)
 
 
 def extract_cpr_and_update_lora(id_number, key="", name="", phone="", email="",
@@ -438,10 +441,10 @@ def create_or_update_bruger(cpr_number, key, name, arosia_phone="",
     if uuid:
         print("{0} already exists with UUID {1}".format(cpr_number, uuid))
         url = "{0}/organisation/bruger/{1}".format(BASE_URL, uuid)
-        return requests.put(url, json=bruger_dict)
+        return s.put(url, json=bruger_dict)
     else:
         url = "{0}/organisation/bruger".format(BASE_URL)
-        return requests.post(url, json=bruger_dict)
+        return s.post(url, json=bruger_dict)
 
 
 def generate_interessefaellesskab_dict(customer_number, customer_relation_name,
@@ -505,10 +508,10 @@ def create_or_update_interessefaellesskab(customer_number,
 
     if uuid:
         url = "{0}/organisation/interessefaellesskab/{1}".format(BASE_URL, uuid)
-        response = requests.put(url, json=interessefaellesskab_dict)
+        response = s.put(url, json=interessefaellesskab_dict)
     else:
         url = "{0}/organisation/interessefaellesskab".format(BASE_URL)
-        response = requests.post(url, json=interessefaellesskab_dict)
+        response = s.post(url, json=interessefaellesskab_dict)
 
     return response
 
@@ -584,10 +587,10 @@ def create_or_update_organisationfunktion(customer_number,
 
     if uuid:
         url = "{0}/organisation/organisationfunktion/{1}".format(BASE_URL, uuid)
-        return requests.put(url, json=organisationfunktion_dict)
+        return s.put(url, json=organisationfunktion_dict)
     else:
         url = "{0}/organisation/organisationfunktion".format(BASE_URL)
-        return requests.post(url, json=organisationfunktion_dict)
+        return s.post(url, json=organisationfunktion_dict)
 
 
 def generate_indsats_dict(name, agreement_type, no_of_products,
@@ -694,9 +697,9 @@ def lookup_indsats(name):
 
 @request
 def create_or_update_indsats(name, agreement_type, no_of_products,
-                             invoice_address,
                              start_date, end_date, customer_relation_uuid,
                              product_uuids,
+                             invoice_address="",
                              note=""):
     uuid = lookup_indsats(name)
     indsats_dict = generate_indsats_dict(name, agreement_type, no_of_products,
@@ -708,10 +711,10 @@ def create_or_update_indsats(name, agreement_type, no_of_products,
 
     if uuid:
         url = "{0}/indsats/indsats/{1}".format(BASE_URL, uuid)
-        return requests.put(url, json=indsats_dict)
+        return s.put(url, json=indsats_dict)
     else:
         url = "{0}/indsats/indsats".format(BASE_URL)
-        return requests.post(url, json=indsats_dict)
+        return s.post(url, json=indsats_dict)
 
 
 def generate_klasse_dict(afhentningstype, arosia_id, identification,
@@ -789,10 +792,10 @@ def create_or_update_klasse(name, identification, installation_type,
 
     if uuid:
         url = "{0}/klassifikation/klasse/{1}".format(BASE_URL, uuid)
-        return requests.put(url, json=klasse_dict)
+        return s.put(url, json=klasse_dict)
     else:
         url = "{0}/klassifikation/klasse".format(BASE_URL)
-        return requests.post(url, json=klasse_dict)
+        return s.post(url, json=klasse_dict)
 
 
 def lookup_bruger_by_arosia_id(contact_id):
@@ -836,6 +839,6 @@ def lookup_products_by_aftale_id(aftale_id):
             BASE_URL, aftale_id
         )
     )
-    result = requests.get(request_string)
+    result = s.get(request_string)
     if result:
         return result.json()['results'][0]

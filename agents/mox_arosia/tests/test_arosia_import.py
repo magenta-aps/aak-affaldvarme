@@ -1,12 +1,12 @@
 from unittest.mock import ANY, MagicMock, patch
 
 import arosia_import
+from arosia_cache import ArosiaCache
 
 
 def setup():
-    arosia_import.AFTALE_PRODUCT_MAP = {}
-    arosia_import.ACCOUNT_MAP = {}
-    arosia_import.CONTACT_MAP = {}
+    arosia_import.CACHE = ArosiaCache()
+    pass
 
 
 @patch('arosia_import.handle_contact')
@@ -45,7 +45,7 @@ def test_import_contact_caches_lora_id(mock_handle: MagicMock):
     arosia_import.import_contact(connection)
 
     # Assert
-    assert arosia_import.CONTACT_MAP.get(contact_id) is lora_id
+    assert arosia_import.CACHE.get_contact(contact_id) is lora_id
 
 
 @patch('arosia_import.handle_contact')
@@ -144,7 +144,7 @@ def test_import_account_caches_lora_id(mock_handle: MagicMock):
     arosia_import.import_account(connection)
 
     # Assert
-    assert arosia_import.ACCOUNT_MAP.get(account_id) is lora_id
+    assert arosia_import.CACHE.get_account(account_id) is lora_id
 
 
 @patch('arosia_import.handle_account')
@@ -222,8 +222,8 @@ def test_import_kontaktrolle_calls_handle_kontaktrolle_correctly(
     # Populate the cache
     kontakt_lora = '1d04e1f0-fe59-4613-b59e-27432dd621b4'
     kundeforhold_lora = '5ad648ec-7662-4b6a-8e78-90265f973f6b'
-    arosia_import.CONTACT_MAP[kontakt] = kontakt_lora
-    arosia_import.ACCOUNT_MAP[kundeforhold] = kundeforhold_lora
+    arosia_import.CACHE.add_contact(kontakt, kontakt_lora)
+    arosia_import.CACHE.add_account(kundeforhold, kundeforhold_lora)
 
     connection = MagicMock()
     connection.cursor.return_value.fetchall.return_value = rows
@@ -249,8 +249,8 @@ def test_import_kontaktrolle_handles_multiple_rows(mock_handle: MagicMock):
     # Populate the cache
     kontakt_lora = '1d04e1f0-fe59-4613-b59e-27432dd621b4'
     kundeforhold_lora = '5ad648ec-7662-4b6a-8e78-90265f973f6b'
-    arosia_import.CONTACT_MAP[kontakt] = kontakt_lora
-    arosia_import.ACCOUNT_MAP[kundeforhold] = kundeforhold_lora
+    arosia_import.CACHE.add_contact(kontakt, kontakt_lora)
+    arosia_import.CACHE.add_account(kundeforhold, kundeforhold_lora)
 
     connection = MagicMock()
     connection.cursor.return_value.fetchall.return_value = rows
@@ -278,7 +278,7 @@ def test_import_kontaktrolle_reports_error_on_missing_contact_cache(
 
     # Populate the cache
     kundeforhold_lora = '5ad648ec-7662-4b6a-8e78-90265f973f6b'
-    arosia_import.ACCOUNT_MAP[kundeforhold] = kundeforhold_lora
+    arosia_import.CACHE.add_account(kundeforhold, kundeforhold_lora)
 
     connection = MagicMock()
     connection.cursor.return_value.fetchall.return_value = rows
@@ -288,6 +288,7 @@ def test_import_kontaktrolle_reports_error_on_missing_contact_cache(
 
     # Assert
     mock_report.assert_called_once_with(ANY)
+
 
 @patch('arosia_import.report_error')
 @patch('arosia_import.handle_kontaktrolle')
@@ -305,7 +306,7 @@ def test_import_kontaktrolle_reports_error_on_missing_account_cache(
 
     # Populate the cache
     kontakt_lora = '1d04e1f0-fe59-4613-b59e-27432dd621b4'
-    arosia_import.CONTACT_MAP[kontakt] = kontakt_lora
+    arosia_import.CACHE.add_contact(kontakt, kontakt_lora)
 
     connection = MagicMock()
     connection.cursor.return_value.fetchall.return_value = rows
@@ -333,8 +334,8 @@ def test_import_kontaktrolle_reports_error_on_no_lora_id(mock_handle: MagicMock,
     # Populate the cache
     kontakt_lora = '1d04e1f0-fe59-4613-b59e-27432dd621b4'
     kundeforhold_lora = '5ad648ec-7662-4b6a-8e78-90265f973f6b'
-    arosia_import.CONTACT_MAP[kontakt] = kontakt_lora
-    arosia_import.ACCOUNT_MAP[kundeforhold] = kundeforhold_lora
+    arosia_import.CACHE.add_contact(kontakt, kontakt_lora)
+    arosia_import.CACHE.add_account(kundeforhold, kundeforhold_lora)
 
     connection = MagicMock()
     connection.cursor.return_value.fetchall.return_value = rows
@@ -346,8 +347,10 @@ def test_import_kontaktrolle_reports_error_on_no_lora_id(mock_handle: MagicMock,
     # Assert
     mock_report.assert_called_once_with(ANY, error_object=row)
 
+
 @patch('arosia_import.handle_placeretmateriel')
-def test_import_placeretmateriel_calls_handle_placeretmateriel(mock_handle: MagicMock):
+def test_import_placeretmateriel_calls_handle_placeretmateriel(
+        mock_handle: MagicMock):
     # Arrange
     row = {
         'ava_Kundeaftale': '364726df-efff-4e09-bbdf-284c7866cef2',
@@ -382,8 +385,8 @@ def test_import_placeretmateriel_caches_lora_id(mock_handle: MagicMock):
     arosia_import.import_placeretmateriel(connection)
 
     # Assert
-    assert len(arosia_import.AFTALE_PRODUCT_MAP.get(kundeaftale_id)) is 1
-    assert lora_id in arosia_import.AFTALE_PRODUCT_MAP.get(kundeaftale_id)
+    assert len(arosia_import.CACHE.get_products(kundeaftale_id)) is 1
+    assert lora_id in arosia_import.CACHE.get_products(kundeaftale_id)
 
 
 @patch('arosia_import.handle_placeretmateriel')
@@ -427,8 +430,9 @@ def test_import_placeretmateriel_reports_error_on_missing_kundeaftale_id(
 
 @patch('arosia_import.report_error')
 @patch('arosia_import.handle_placeretmateriel')
-def test_import_placeretmateriel_reports_error_on_no_lora_id(mock_handle: MagicMock,
-                                                    mock_report: MagicMock):
+def test_import_placeretmateriel_reports_error_on_no_lora_id(
+        mock_handle: MagicMock,
+        mock_report: MagicMock):
     # Arrange
     row = {
         'ava_Kundeaftale': '364726df-efff-4e09-bbdf-284c7866cef2',

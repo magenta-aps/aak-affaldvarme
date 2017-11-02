@@ -122,10 +122,11 @@ def handle_kontaktrolle(row, contact, account):
     logger.info('Handling kontaktrolle')
     name = row.get('ava_KontaktName')
     role = row.get('ava_Rolle')
-    response = create_or_update_organisationfunktion(customer_number=name,
-                                                     customer_uuid=contact,
-                                                     customer_relation_uuid=account,
-                                                     role=role)
+    response = create_or_update_organisationfunktion(
+        customer_number=name,
+        customer_uuid=contact,
+        customer_relation_uuid=account,
+        role=role)
     if response:
         lora_id = response.json()['uuid']
         return lora_id

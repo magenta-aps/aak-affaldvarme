@@ -3,8 +3,8 @@ from arosia_oio import (lookup_account_arosia_id, lookup_contact_by_arosia_id,
 from arosia_sql import (ACCOUNT_SQL_RECENT, CONTACT_SQL_RECENT,
                         KONTAKTROLLE_SQL_RECENT, KUNDEAFTALE_SQL_RECENT,
                         PLACERETMATERIEL_SQL_RECENT)
-from mox_arosia import (handle_account, handle_contact, handle_kontaktrolle,
-                        handle_kundeaftale, handle_placeretmateriel)
+from arosia_common import (handle_account, handle_contact, handle_kontaktrolle,
+                           handle_kundeaftale, handle_placeretmateriel)
 from services import connect, report_error
 
 """

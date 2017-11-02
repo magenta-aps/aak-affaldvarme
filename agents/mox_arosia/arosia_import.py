@@ -1,16 +1,11 @@
+from arosia_cache import ArosiaCache
 from arosia_sql import (ACCOUNT_SQL, CONTACT_SQL, KONTAKTROLLE_SQL,
                         KUNDEAFTALE_SQL, PLACERETMATERIEL_SQL)
-from mox_arosia import (handle_account, handle_contact, handle_kontaktrolle,
-                        handle_kundeaftale, handle_placeretmateriel)
+from arosia_common import (handle_account, handle_contact, handle_kontaktrolle,
+                           handle_kundeaftale, handle_placeretmateriel)
 from services import connect, report_error
 
-# Contains a map of Arosia Contact UUIDs to LoRa bruger and organisation UUIDs
-CONTACT_MAP = {}
-# Contains a map of Arosia Account UUIDs to LoRa interessefællesskab UUIDs
-ACCOUNT_MAP = {}
-# Contains a map of Arosia Kundeaftale UUIDs to a list of their associated
-# products as LoRa Klasse UUIDs
-AFTALE_PRODUCT_MAP = {}
+CACHE = ArosiaCache()
 
 """
 Contains functions for performing an initial import of all relevant data in
@@ -34,7 +29,7 @@ def import_contact(connection):
         lora_id = handle_contact(row)
         contact_id = row['ContactId']
         if lora_id and contact_id:
-            CONTACT_MAP[contact_id] = lora_id
+            CACHE.add_contact(contact_id, lora_id)
         else:
             report_error('Unable to import contact', error_object=row)
             continue
@@ -53,7 +48,7 @@ def import_account(connection):
         lora_id = handle_account(row)
         account_id = row['AccountId']
         if lora_id and account_id:
-            ACCOUNT_MAP[account_id] = lora_id
+            CACHE.add_account(account_id, lora_id)
         else:
             report_error('Unable to import account', error_object=row)
             continue
@@ -72,8 +67,8 @@ def import_kontaktrolle(connection):
         contact_id = row['ava_Kontakt']
         account_id = row['ava_Kundeforhold']
 
-        contact = CONTACT_MAP.get(contact_id)
-        account = ACCOUNT_MAP.get(account_id)
+        contact = CACHE.get_contact(contact_id)
+        account = CACHE.get_account(account_id)
         if not account or not contact:
             report_error('Unknown contact_id ({0}) or account_id ({1})'.format(
                 contact_id, account_id))
@@ -99,8 +94,7 @@ def import_placeretmateriel(connection):
         aftale_id = row.get('ava_Kundeaftale')
 
         if lora_id and aftale_id:
-            product_list = AFTALE_PRODUCT_MAP.setdefault(aftale_id, [])
-            product_list.append(lora_id)
+            CACHE.add_product(aftale_id, lora_id)
         else:
             report_error('Unable to import placeretmateriel', error_object=row)
             continue
@@ -117,10 +111,12 @@ def import_kundeaftale(connection):
 
     for row in rows:
         account_id = row.get('ava_kundeforhold')
-        account = ACCOUNT_MAP.get(account_id)
+        account = CACHE.get_account(account_id)
 
         aftale_id = row.get('ava_kundeaftaleId')
-        products = AFTALE_PRODUCT_MAP.setdefault(aftale_id, [])
+        products = CACHE.get_products(aftale_id)
+        if not products:
+            products = []
 
         lora_id = handle_kundeaftale(row, account, products)
 

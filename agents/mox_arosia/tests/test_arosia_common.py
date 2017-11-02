@@ -1,9 +1,9 @@
 from unittest.mock import MagicMock, patch
 
-import mox_arosia
+import arosia_common
 
 
-@patch('mox_arosia.extract_cpr_and_update_lora')
+@patch('arosia_common.extract_cpr_and_update_lora')
 def test_handle_cpr_extracts_parameters_as_expected(mock_extract: MagicMock):
     # Arrange
     cpr = 'CPR'
@@ -18,7 +18,7 @@ def test_handle_cpr_extracts_parameters_as_expected(mock_extract: MagicMock):
     sms_notif = 'SMSNotif'
 
     # Act
-    mox_arosia.handle_cpr(row, phone, email, sms_notif)
+    arosia_common.handle_cpr(row, phone, email, sms_notif)
 
     # Assert
     mock_extract.assert_called_once_with(cpr,
@@ -28,7 +28,7 @@ def test_handle_cpr_extracts_parameters_as_expected(mock_extract: MagicMock):
                                          sms_notif=sms_notif)
 
 
-@patch('mox_arosia.extract_cpr_and_update_lora')
+@patch('arosia_common.extract_cpr_and_update_lora')
 def test_handle_cpr_returns_lora_uuid_if_response(mock_extract: MagicMock):
     # Arrange
     row = {
@@ -42,13 +42,13 @@ def test_handle_cpr_returns_lora_uuid_if_response(mock_extract: MagicMock):
     mock_response.json.return_value = {'uuid': uuid}
 
     # Act
-    actual_result = mox_arosia.handle_cpr(row, "", "", "")
+    actual_result = arosia_common.handle_cpr(row, "", "", "")
 
     # Assert
     assert uuid == actual_result
 
 
-@patch('mox_arosia.extract_cpr_and_update_lora')
+@patch('arosia_common.extract_cpr_and_update_lora')
 def test_handle_cpr_returns_none_if_no_response(mock_extract: MagicMock):
     # Arrange
     row = {
@@ -59,13 +59,13 @@ def test_handle_cpr_returns_none_if_no_response(mock_extract: MagicMock):
     mock_extract.return_value = None
 
     # Act
-    actual_result = mox_arosia.handle_cpr(row, "", "", "")
+    actual_result = arosia_common.handle_cpr(row, "", "", "")
 
     # Assert
     assert actual_result is None
 
 
-@patch('mox_arosia.extract_cvr_and_update_lora')
+@patch('arosia_common.extract_cvr_and_update_lora')
 def test_handle_cvr_extracts_parameters_as_expected(mock_extract: MagicMock):
     # Arrange
     cvr = 'CVR'
@@ -80,7 +80,7 @@ def test_handle_cvr_extracts_parameters_as_expected(mock_extract: MagicMock):
     sms_notif = 'SMSNotif'
 
     # Act
-    mox_arosia.handle_cvr(row, phone, email, sms_notif)
+    arosia_common.handle_cvr(row, phone, email, sms_notif)
 
     # Assert
     mock_extract.assert_called_once_with(cvr,
@@ -90,7 +90,7 @@ def test_handle_cvr_extracts_parameters_as_expected(mock_extract: MagicMock):
                                          sms_notif=sms_notif)
 
 
-@patch('mox_arosia.extract_cvr_and_update_lora')
+@patch('arosia_common.extract_cvr_and_update_lora')
 def test_handle_cvr_returns_lora_uuid_if_response(mock_extract: MagicMock):
     # Arrange
     row = {
@@ -104,13 +104,13 @@ def test_handle_cvr_returns_lora_uuid_if_response(mock_extract: MagicMock):
     mock_response.json.return_value = {'uuid': uuid}
 
     # Act
-    actual_result = mox_arosia.handle_cvr(row, "", "", "")
+    actual_result = arosia_common.handle_cvr(row, "", "", "")
 
     # Assert
     assert uuid == actual_result
 
 
-@patch('mox_arosia.extract_cvr_and_update_lora')
+@patch('arosia_common.extract_cvr_and_update_lora')
 def test_handle_cvr_returns_none_if_no_response(mock_extract: MagicMock):
     # Arrange
     row = {
@@ -121,14 +121,14 @@ def test_handle_cvr_returns_none_if_no_response(mock_extract: MagicMock):
     mock_extract.return_value = None
 
     # Act
-    actual_result = mox_arosia.handle_cvr(row, "", "", "")
+    actual_result = arosia_common.handle_cvr(row, "", "", "")
 
     # Assert
     assert actual_result is None
 
 
-@patch('mox_arosia.handle_cpr')
-@patch('mox_arosia.handle_cvr')
+@patch('arosia_common.handle_cpr')
+@patch('arosia_common.handle_cvr')
 def test_handle_contact_calls_handle_cpr_if_cpr(mock_cvr: MagicMock,
                                                 mock_cpr: MagicMock):
     # Arrange
@@ -148,7 +148,7 @@ def test_handle_contact_calls_handle_cpr_if_cpr(mock_cvr: MagicMock,
     expected_result = mock_cpr.return_value
 
     # Act
-    actual_result = mox_arosia.handle_contact(row)
+    actual_result = arosia_common.handle_contact(row)
 
     # Assert
     assert expected_result is actual_result
@@ -156,8 +156,8 @@ def test_handle_contact_calls_handle_cpr_if_cpr(mock_cvr: MagicMock,
     mock_cvr.assert_not_called()
 
 
-@patch('mox_arosia.handle_cpr')
-@patch('mox_arosia.handle_cvr')
+@patch('arosia_common.handle_cpr')
+@patch('arosia_common.handle_cvr')
 def test_handle_contact_calls_handle_cvr_if_cvr(mock_cvr: MagicMock,
                                                 mock_cpr: MagicMock):
     # Arrange
@@ -177,7 +177,7 @@ def test_handle_contact_calls_handle_cvr_if_cvr(mock_cvr: MagicMock,
     expected_result = mock_cvr.return_value
 
     # Act
-    actual_result = mox_arosia.handle_contact(row)
+    actual_result = arosia_common.handle_contact(row)
 
     # Assert
     assert expected_result is actual_result
@@ -185,8 +185,8 @@ def test_handle_contact_calls_handle_cvr_if_cvr(mock_cvr: MagicMock,
     mock_cpr.assert_not_called()
 
 
-@patch('mox_arosia.handle_cpr')
-@patch('mox_arosia.handle_cvr')
+@patch('arosia_common.handle_cpr')
+@patch('arosia_common.handle_cvr')
 def test_handle_contact_returns_none_if_no_cpr_or_cvr(mock_cvr: MagicMock,
                                                       mock_cpr: MagicMock):
     # Arrange
@@ -204,7 +204,7 @@ def test_handle_contact_returns_none_if_no_cpr_or_cvr(mock_cvr: MagicMock,
     }
 
     # Act
-    result = mox_arosia.handle_contact(row)
+    result = arosia_common.handle_contact(row)
 
     # Assert
     assert result is None
@@ -212,8 +212,8 @@ def test_handle_contact_returns_none_if_no_cpr_or_cvr(mock_cvr: MagicMock,
     mock_cpr.assert_not_called()
 
 
-@patch('mox_arosia.handle_cpr')
-@patch('mox_arosia.handle_cvr')
+@patch('arosia_common.handle_cpr')
+@patch('arosia_common.handle_cvr')
 def test_handle_contact_uses_mobile_phone_if_available(mock_cvr: MagicMock,
                                                        mock_cpr: MagicMock):
     # Arrange
@@ -231,15 +231,15 @@ def test_handle_contact_uses_mobile_phone_if_available(mock_cvr: MagicMock,
     }
 
     # Act
-    mox_arosia.handle_contact(row)
+    arosia_common.handle_contact(row)
 
     # Assert
     mock_cpr.assert_called_with(row, phone, email, smsnotif)
     mock_cvr.assert_not_called()
 
 
-@patch('mox_arosia.handle_cpr')
-@patch('mox_arosia.handle_cvr')
+@patch('arosia_common.handle_cpr')
+@patch('arosia_common.handle_cvr')
 def test_handle_contact_uses_telephone_if_available(mock_cvr: MagicMock,
                                                     mock_cpr: MagicMock):
     # Arrange
@@ -257,14 +257,14 @@ def test_handle_contact_uses_telephone_if_available(mock_cvr: MagicMock,
     }
 
     # Act
-    mox_arosia.handle_contact(row)
+    arosia_common.handle_contact(row)
 
     # Assert
     mock_cpr.assert_called_with(row, phone, email, smsnotif)
     mock_cvr.assert_not_called()
 
 
-@patch('mox_arosia.create_or_update_interessefaellesskab')
+@patch('arosia_common.create_or_update_interessefaellesskab')
 def test_handle_account_extracts_parameters_as_expected(mock_create: MagicMock):
     # Arrange
     account_number = 'AccountNumber'
@@ -280,7 +280,7 @@ def test_handle_account_extracts_parameters_as_expected(mock_create: MagicMock):
     }
 
     # Act
-    mox_arosia.handle_account(row)
+    arosia_common.handle_account(row)
 
     # Assert
     mock_create.assert_called_once_with(customer_number=account_number,
@@ -289,7 +289,7 @@ def test_handle_account_extracts_parameters_as_expected(mock_create: MagicMock):
                                         arosia_id=account_id)
 
 
-@patch('mox_arosia.create_or_update_interessefaellesskab')
+@patch('arosia_common.create_or_update_interessefaellesskab')
 def test_handle_account_returns_lora_uuid_if_response(mock_create: MagicMock):
     # Arrange
     row = {
@@ -303,13 +303,13 @@ def test_handle_account_returns_lora_uuid_if_response(mock_create: MagicMock):
     mock_response.json.return_value = {'uuid': uuid}
 
     # Act
-    actual_result = mox_arosia.handle_account(row)
+    actual_result = arosia_common.handle_account(row)
 
     # Assert
     assert uuid == actual_result
 
 
-@patch('mox_arosia.create_or_update_interessefaellesskab')
+@patch('arosia_common.create_or_update_interessefaellesskab')
 def test_handle_account_returns_none_if_no_response(mock_create: MagicMock):
     # Arrange
     row = {
@@ -320,13 +320,13 @@ def test_handle_account_returns_none_if_no_response(mock_create: MagicMock):
     mock_create.return_value = None
 
     # Act
-    actual_result = mox_arosia.handle_account(row)
+    actual_result = arosia_common.handle_account(row)
 
     # Assert
     assert actual_result is None
 
 
-@patch('mox_arosia.create_or_update_organisationfunktion')
+@patch('arosia_common.create_or_update_organisationfunktion')
 def test_handle_kontaktrolle_extracts_parameters_as_expected(
         mock_create: MagicMock):
     # Arrange
@@ -342,7 +342,7 @@ def test_handle_kontaktrolle_extracts_parameters_as_expected(
     account = "b4a47942-b5c3-48d7-8733-6d51fe2b1b91"
 
     # Act
-    mox_arosia.handle_kontaktrolle(row, contact, account)
+    arosia_common.handle_kontaktrolle(row, contact, account)
 
     # Assert
     mock_create.assert_called_once_with(customer_number=name,
@@ -351,7 +351,7 @@ def test_handle_kontaktrolle_extracts_parameters_as_expected(
                                         role=role)
 
 
-@patch('mox_arosia.create_or_update_organisationfunktion')
+@patch('arosia_common.create_or_update_organisationfunktion')
 def test_handle_kontaktrolle_returns_lora_uuid_if_response(
         mock_create: MagicMock):
     # Arrange
@@ -366,13 +366,13 @@ def test_handle_kontaktrolle_returns_lora_uuid_if_response(
     mock_response.json.return_value = {'uuid': uuid}
 
     # Act
-    actual_result = mox_arosia.handle_kontaktrolle(row, "", "")
+    actual_result = arosia_common.handle_kontaktrolle(row, "", "")
 
     # Assert
     assert uuid == actual_result
 
 
-@patch('mox_arosia.create_or_update_organisationfunktion')
+@patch('arosia_common.create_or_update_organisationfunktion')
 def test_handle_kontaktrolle_returns_none_if_no_response(
         mock_create: MagicMock):
     # Arrange
@@ -384,13 +384,13 @@ def test_handle_kontaktrolle_returns_none_if_no_response(
     mock_create.return_value = None
 
     # Act
-    actual_result = mox_arosia.handle_kontaktrolle(row, "", "")
+    actual_result = arosia_common.handle_kontaktrolle(row, "", "")
 
     # Assert
     assert actual_result is None
 
 
-@patch('mox_arosia.create_or_update_klasse')
+@patch('arosia_common.create_or_update_klasse')
 def test_handle_placeretmateriel_extracts_parameters_as_expected(
         mock_create: MagicMock):
     # Arrange
@@ -411,7 +411,7 @@ def test_handle_placeretmateriel_extracts_parameters_as_expected(
     installation_type = 'Affald'
 
     # Act
-    mox_arosia.handle_placeretmateriel(row)
+    arosia_common.handle_placeretmateriel(row)
 
     # Assert
     mock_create.assert_called_once_with(name=name,
@@ -422,7 +422,7 @@ def test_handle_placeretmateriel_extracts_parameters_as_expected(
                                         aftale_id=aftale_id)
 
 
-@patch('mox_arosia.create_or_update_klasse')
+@patch('arosia_common.create_or_update_klasse')
 def test_handle_placeretmateriel_returns_lora_uuid_if_response(
         mock_create: MagicMock):
     # Arrange
@@ -439,13 +439,13 @@ def test_handle_placeretmateriel_returns_lora_uuid_if_response(
     mock_response.json.return_value = {'uuid': uuid}
 
     # Act
-    actual_result = mox_arosia.handle_placeretmateriel(row)
+    actual_result = arosia_common.handle_placeretmateriel(row)
 
     # Assert
     assert uuid == actual_result
 
 
-@patch('mox_arosia.create_or_update_klasse')
+@patch('arosia_common.create_or_update_klasse')
 def test_handle_placeretmateriel_returns_none_if_no_response(
         mock_create: MagicMock):
     # Arrange
@@ -457,13 +457,13 @@ def test_handle_placeretmateriel_returns_none_if_no_response(
     mock_create.return_value = None
 
     # Act
-    actual_result = mox_arosia.handle_placeretmateriel(row)
+    actual_result = arosia_common.handle_placeretmateriel(row)
 
     # Assert
     assert actual_result is None
 
 
-@patch('mox_arosia.create_or_update_indsats')
+@patch('arosia_common.create_or_update_indsats')
 def test_handle_kundeaftale_extracts_parameters_as_expected(
         mock_create: MagicMock):
     # Arrange
@@ -482,7 +482,7 @@ def test_handle_kundeaftale_extracts_parameters_as_expected(
     products = ['product1', 'product2']
 
     # Act
-    mox_arosia.handle_kundeaftale(row, cr_uuid, products)
+    arosia_common.handle_kundeaftale(row, cr_uuid, products)
 
     # Assert
     mock_create.assert_called_once_with(name=name,
@@ -494,7 +494,7 @@ def test_handle_kundeaftale_extracts_parameters_as_expected(
                                         product_uuids=products)
 
 
-@patch('mox_arosia.create_or_update_indsats')
+@patch('arosia_common.create_or_update_indsats')
 def test_handle_kundeaftale_returns_lora_uuid_if_response(
         mock_create: MagicMock):
     # Arrange
@@ -510,13 +510,13 @@ def test_handle_kundeaftale_returns_lora_uuid_if_response(
     mock_response.json.return_value = {'uuid': uuid}
 
     # Act
-    actual_result = mox_arosia.handle_kundeaftale(row, '', [])
+    actual_result = arosia_common.handle_kundeaftale(row, '', [])
 
     # Assert
     assert uuid == actual_result
 
 
-@patch('mox_arosia.create_or_update_indsats')
+@patch('arosia_common.create_or_update_indsats')
 def test_handle_kundeaftale_returns_none_if_no_response(
         mock_create: MagicMock):
     # Arrange
@@ -529,7 +529,7 @@ def test_handle_kundeaftale_returns_none_if_no_response(
     mock_create.return_value = None
 
     # Act
-    actual_result = mox_arosia.handle_kundeaftale(row, '', [])
+    actual_result = arosia_common.handle_kundeaftale(row, '', [])
 
     # Assert
     assert actual_result is None
