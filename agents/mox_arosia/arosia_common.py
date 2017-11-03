@@ -6,6 +6,7 @@ from arosia_oio import (create_or_update_indsats,
                         create_or_update_organisationfunktion,
                         extract_cpr_and_update_lora,
                         extract_cvr_and_update_lora)
+from services import fuzzy_address_uuid
 
 """
 This file contains general functions for handling rows from the various tables
@@ -62,16 +63,18 @@ def handle_contact(row):
 def handle_kundeaftale(row, account, products):
     logger.info('Handling kundeaftale')
     name = row.get('ava_navn')
-    invoice_address = row.get('ava_Kundeforholdname')
     agreement_type = "Affald"
     no_of_products = len(products)
     start_date = row.get('ava_Startdato')
     end_date = row.get('ava_Slutdato')
     customer_relation_uuid = account
 
+    invoice_address = row.get('ava_Kundeforholdname')
+    invoice_address_uuid = fuzzy_address_uuid(invoice_address)
+
     response = create_or_update_indsats(
         name=name,
-        invoice_address=invoice_address,
+        invoice_address=invoice_address_uuid,
         agreement_type=agreement_type,
         no_of_products=no_of_products,
         start_date=start_date,

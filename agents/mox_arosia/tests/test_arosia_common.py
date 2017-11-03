@@ -463,14 +463,19 @@ def test_handle_placeretmateriel_returns_none_if_no_response(
     assert actual_result is None
 
 
+@patch('arosia_common.fuzzy_address_uuid')
 @patch('arosia_common.create_or_update_indsats')
 def test_handle_kundeaftale_extracts_parameters_as_expected(
-        mock_create: MagicMock):
+        mock_create: MagicMock,
+        mock_fuzzy: MagicMock):
     # Arrange
     name = "Name"
     invoice_address = "Invoice Address"
     start_date = "Startdate"
     end_date = "Enddate"
+
+    invoice_address_uuid = "Invoice Address UUID"
+    mock_fuzzy.return_value = invoice_address_uuid
 
     row = {
         'ava_navn': name,
@@ -490,7 +495,7 @@ def test_handle_kundeaftale_extracts_parameters_as_expected(
     mock_create.assert_called_once_with(name=name,
                                         agreement_type=agreement_type,
                                         no_of_products=len(products),
-                                        invoice_address=invoice_address,
+                                        invoice_address=invoice_address_uuid,
                                         start_date=start_date,
                                         end_date=end_date,
                                         customer_relation_uuid=cr_uuid,

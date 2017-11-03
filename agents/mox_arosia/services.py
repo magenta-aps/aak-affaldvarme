@@ -171,6 +171,32 @@ def get_address_uuid(address):
         raise RuntimeError('Address not found: {0}'.format(address))
 
 
+def fuzzy_address_uuid(addr_str):
+    "Get DAWA UUID from string using the 'datavask' API."
+
+    DAWA_DATAVASK_URL = "https://dawa.aws.dk/datavask/adresser"
+
+    params = {'betegnelse': addr_str}
+
+    result = requests.get(url=DAWA_DATAVASK_URL, params=params)
+
+    if result:
+        addrs = result.json()['resultater']
+        if len(addrs) == 1:
+            return addrs[0]['adresse']['id']
+        elif len(addrs) > 1:
+            raise RuntimeError(
+                'Non-unique (datavask) address: {0}'.format(addr_str)
+            )
+        else:
+            # len(addrs) == 0
+            raise RuntimeError(
+                '(datavask) address not found: {0}'.format(addr_str)
+            )
+    else:
+        return None
+
+
 def connect(server, database, username, password):
     driver1 = '{SQL Server}'
     driver2 = '{ODBC Driver 13 for SQL Server}'
