@@ -2,7 +2,7 @@
     "attributter": {
         "indsatsegenskaber": [
             {
-                "brugervendtnoegle": "NAME",
+                "brugervendtnoegle": "NAME INVOICE_ADDRESS",
                 "beskrivelse": "NO_OF_PRODUCTS",
                 "sluttidspunkt": "2017-01-01 00:00:00+01:00",
                 "virkning": {

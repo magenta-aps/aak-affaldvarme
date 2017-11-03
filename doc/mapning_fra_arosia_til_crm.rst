@@ -115,7 +115,7 @@ Aftaletype                  "AFFALD"                    indsatstype
 Beskrivelse                 <Udfyldes ikke>             -
 Produkter                   <Refs til Klasse>⁺⁺⁺        indsatskvalitet
 Antal produkter             n/a⁺⁺                       beskrivelse
-Faktureringsadresse         <N/A>                       indsatsdokument
+Faktureringsadresse         ava_Kundeforholdname        indsatsdokument
 Ejendom                     <TBD>                       -
 Startdato                   ava_Startdato               starttidspunkt
 Slutdato                    ava_Slutdato                sluttidspunkt

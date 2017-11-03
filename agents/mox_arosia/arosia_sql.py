@@ -33,6 +33,7 @@ KUNDEAFTALE_SQL = """
 SELECT top(100) 
         [ava_navn],
         [ava_kundeforhold],
+        [ava_KundeforholdName],
         [ava_Startdato], 
         [ava_Slutdato], 
         [ava_kundeaftaleId] 
@@ -87,6 +88,7 @@ KUNDEAFTALE_SQL_RECENT = """
 SELECT top(100) 
         [ava_navn],
         [ava_kundeforhold],
+        [ava_KundeforholdName],
         [ava_Startdato], 
         [ava_Slutdato], 
         [ava_kundeaftaleId] 

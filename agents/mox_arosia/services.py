@@ -7,7 +7,8 @@ import requests
 from serviceplatformen_cpr.services import get_citizen as _get_cpr_data
 from serviceplatformen_cvr import get_cvr_data as _get_cvr_data
 
-from settings import CERTIFICATE_FILE, ERROR_MQ_HOST, ERROR_MQ_QUEUE, SP_UUIDS
+from settings import (CPR_CERTIFICATE_FILE, CPR_SP_UUIDS, CVR_CERTIFICATE_FILE,
+                      CVR_SP_UUIDS, ERROR_MQ_HOST, ERROR_MQ_QUEUE)
 
 
 def report_error(error_message, error_stack=None, error_object=None):
@@ -96,15 +97,15 @@ def get_cpr_data(id_number):
 
     # Avoid getting throttled by SP
     try:
-        person_dir = _get_cpr_data(service_uuids=SP_UUIDS,
-                                   certificate=CERTIFICATE_FILE,
+        person_dir = _get_cpr_data(service_uuids=CPR_SP_UUIDS,
+                                   certificate=CPR_CERTIFICATE_FILE,
                                    cprnr=id_number)
     except Exception as e:
         # Retry *once* after sleeping
         time.sleep(40)
         try:
-            person_dir = _get_cpr_data(service_uuids=SP_UUIDS,
-                                       certificate=CERTIFICATE_FILE,
+            person_dir = _get_cpr_data(service_uuids=CPR_SP_UUIDS,
+                                       certificate=CPR_CERTIFICATE_FILE,
                                        cprnr=id_number)
         except Exception as e:
             report_error(
@@ -133,12 +134,14 @@ def get_cvr_data(id_number):
     # }
 
     try:
-        company_dir = _get_cvr_data(id_number, SP_UUIDS, CERTIFICATE_FILE)
+        company_dir = _get_cvr_data(id_number, CVR_SP_UUIDS,
+                                    CVR_CERTIFICATE_FILE)
     except Exception as e:
         # Retry *once* after sleeping
         time.sleep(40)
         try:
-            company_dir = _get_cvr_data(id_number, SP_UUIDS, CERTIFICATE_FILE)
+            company_dir = _get_cvr_data(id_number, CVR_SP_UUIDS,
+                                        CVR_CERTIFICATE_FILE)
         except Exception as e:
             report_error(
                 "CVR number not found: {0}".format(id_number)

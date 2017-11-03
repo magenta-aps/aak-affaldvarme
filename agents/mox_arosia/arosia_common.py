@@ -62,6 +62,7 @@ def handle_contact(row):
 def handle_kundeaftale(row, account, products):
     logger.info('Handling kundeaftale')
     name = row.get('ava_navn')
+    invoice_address = row.get('ava_Kundeforholdname')
     agreement_type = "Affald"
     no_of_products = len(products)
     start_date = row.get('ava_Startdato')
@@ -70,6 +71,7 @@ def handle_kundeaftale(row, account, products):
 
     response = create_or_update_indsats(
         name=name,
+        invoice_address=invoice_address,
         agreement_type=agreement_type,
         no_of_products=no_of_products,
         start_date=start_date,

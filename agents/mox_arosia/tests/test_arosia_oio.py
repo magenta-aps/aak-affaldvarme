@@ -170,10 +170,10 @@ def test_extract_cvr_calls_get_cvr_data(mock_get_cvr: MagicMock,
     mock_get_cvr.assert_called_once_with(id_number)
 
 
-@patch('arosia_oio.requests')
+@patch('arosia_oio.session')
 @patch('arosia_oio.lookup_organisation')
 def test_create_or_update_organisation_handles_create(mock_lookup: MagicMock,
-                                                      mock_requests: MagicMock):
+                                                      mock_session: MagicMock):
     # Arrange
     mock_lookup.return_value = '6e9908df-2b6b-472b-a2de-d58d79e59c33'
 
@@ -181,14 +181,14 @@ def test_create_or_update_organisation_handles_create(mock_lookup: MagicMock,
     arosia_oio.create_or_update_organisation('CVR', 'KEY', 'NAME')
 
     # Assert
-    mock_requests.put.assert_called_once_with(ANY, json=ANY)
-    mock_requests.post.assert_not_called()
+    mock_session.put.assert_called_once_with(ANY, json=ANY)
+    mock_session.post.assert_not_called()
 
 
-@patch('arosia_oio.requests')
+@patch('arosia_oio.session')
 @patch('arosia_oio.lookup_organisation')
 def test_create_or_update_organisation_handles_update(mock_lookup: MagicMock,
-                                                      mock_requests: MagicMock):
+                                                      mock_session: MagicMock):
     # Arrange
     mock_lookup.return_value = None
 
@@ -196,14 +196,14 @@ def test_create_or_update_organisation_handles_update(mock_lookup: MagicMock,
     arosia_oio.create_or_update_organisation('CVR', 'KEY', 'NAME')
 
     # Assert
-    mock_requests.post.assert_called_once_with(ANY, json=ANY)
-    mock_requests.put.assert_not_called()
+    mock_session.post.assert_called_once_with(ANY, json=ANY)
+    mock_session.put.assert_not_called()
 
 
-@patch('arosia_oio.requests')
+@patch('arosia_oio.session')
 @patch('arosia_oio.lookup_bruger')
 def test_create_or_update_bruger_handles_create(mock_lookup: MagicMock,
-                                                mock_requests: MagicMock):
+                                                mock_session: MagicMock):
     # Arrange
     mock_lookup.return_value = '6e9908df-2b6b-472b-a2de-d58d79e59c33'
 
@@ -211,14 +211,14 @@ def test_create_or_update_bruger_handles_create(mock_lookup: MagicMock,
     arosia_oio.create_or_update_bruger('CVR', 'KEY', 'NAME')
 
     # Assert
-    mock_requests.put.assert_called_once_with(ANY, json=ANY)
-    mock_requests.post.assert_not_called()
+    mock_session.put.assert_called_once_with(ANY, json=ANY)
+    mock_session.post.assert_not_called()
 
 
-@patch('arosia_oio.requests')
+@patch('arosia_oio.session')
 @patch('arosia_oio.lookup_bruger')
 def test_create_or_update_bruger_handles_update(mock_lookup: MagicMock,
-                                                mock_requests: MagicMock):
+                                                mock_session: MagicMock):
     # Arrange
     mock_lookup.return_value = None
 
@@ -226,15 +226,15 @@ def test_create_or_update_bruger_handles_update(mock_lookup: MagicMock,
     arosia_oio.create_or_update_bruger('CPR', 'KEY', 'NAME')
 
     # Assert
-    mock_requests.post.assert_called_once_with(ANY, json=ANY)
-    mock_requests.put.assert_not_called()
+    mock_session.post.assert_called_once_with(ANY, json=ANY)
+    mock_session.put.assert_not_called()
 
 
-@patch('arosia_oio.requests')
+@patch('arosia_oio.session')
 @patch('arosia_oio.lookup_interessefaellesskab')
 def test_create_or_update_interessefaellesskab_handles_create(
         mock_lookup: MagicMock,
-        mock_requests: MagicMock):
+        mock_session: MagicMock):
     # Arrange
     mock_lookup.return_value = '6e9908df-2b6b-472b-a2de-d58d79e59c33'
 
@@ -242,15 +242,15 @@ def test_create_or_update_interessefaellesskab_handles_create(
     arosia_oio.create_or_update_interessefaellesskab('123', '456', '789')
 
     # Assert
-    mock_requests.put.assert_called_once_with(ANY, json=ANY)
-    mock_requests.post.assert_not_called()
+    mock_session.put.assert_called_once_with(ANY, json=ANY)
+    mock_session.post.assert_not_called()
 
 
-@patch('arosia_oio.requests')
+@patch('arosia_oio.session')
 @patch('arosia_oio.lookup_interessefaellesskab')
 def test_create_or_update_interessefaellesskab_handles_update(
         mock_lookup: MagicMock,
-        mock_requests: MagicMock):
+        mock_session: MagicMock):
     # Arrange
     mock_lookup.return_value = None
 
@@ -258,15 +258,15 @@ def test_create_or_update_interessefaellesskab_handles_update(
     arosia_oio.create_or_update_interessefaellesskab('123', '456', '789')
 
     # Assert
-    mock_requests.post.assert_called_once_with(ANY, json=ANY)
-    mock_requests.put.assert_not_called()
+    mock_session.post.assert_called_once_with(ANY, json=ANY)
+    mock_session.put.assert_not_called()
 
 
-@patch('arosia_oio.requests')
+@patch('arosia_oio.session')
 @patch('arosia_oio.lookup_organisationfunktion')
 def test_create_or_update_organisationfunktion_handles_create(
         mock_lookup: MagicMock,
-        mock_requests: MagicMock):
+        mock_session: MagicMock):
     # Arrange
     mock_lookup.return_value = '6e9908df-2b6b-472b-a2de-d58d79e59c33'
 
@@ -274,15 +274,15 @@ def test_create_or_update_organisationfunktion_handles_create(
     arosia_oio.create_or_update_organisationfunktion('12', '34', '56', '78')
 
     # Assert
-    mock_requests.put.assert_called_once_with(ANY, json=ANY)
-    mock_requests.post.assert_not_called()
+    mock_session.put.assert_called_once_with(ANY, json=ANY)
+    mock_session.post.assert_not_called()
 
 
-@patch('arosia_oio.requests')
+@patch('arosia_oio.session')
 @patch('arosia_oio.lookup_organisationfunktion')
 def test_create_or_update_organisationfunktion_handles_update(
         mock_lookup: MagicMock,
-        mock_requests: MagicMock):
+        mock_session: MagicMock):
     # Arrange
     mock_lookup.return_value = None
 
@@ -290,53 +290,53 @@ def test_create_or_update_organisationfunktion_handles_update(
     arosia_oio.create_or_update_organisationfunktion('12', '34', '56', '78')
 
     # Assert
-    mock_requests.post.assert_called_once_with(ANY, json=ANY)
-    mock_requests.put.assert_not_called()
+    mock_session.post.assert_called_once_with(ANY, json=ANY)
+    mock_session.put.assert_not_called()
 
 
-@patch('arosia_oio.requests')
+@patch('arosia_oio.session')
 @patch('arosia_oio.lookup_indsats')
 def test_create_or_update_indsats_handles_create(
         mock_lookup: MagicMock,
-        mock_requests: MagicMock):
+        mock_session: MagicMock):
     # Arrange
     mock_lookup.return_value = '6e9908df-2b6b-472b-a2de-d58d79e59c33'
 
     # Act
-    arosia_oio.create_or_update_indsats('12', '34', '56',
+    arosia_oio.create_or_update_indsats('12', '34', '56', '78',
                                         datetime.datetime.now(),
-                                        datetime.datetime.now(), '78',
+                                        datetime.datetime.now(), '90',
                                         ['12', '34'])
 
     # Assert
-    mock_requests.put.assert_called_once_with(ANY, json=ANY)
-    mock_requests.post.assert_not_called()
+    mock_session.put.assert_called_once_with(ANY, json=ANY)
+    mock_session.post.assert_not_called()
 
 
-@patch('arosia_oio.requests')
+@patch('arosia_oio.session')
 @patch('arosia_oio.lookup_indsats')
 def test_create_or_update_indsats_handles_update(
         mock_lookup: MagicMock,
-        mock_requests: MagicMock):
+        mock_session: MagicMock):
     # Arrange
     mock_lookup.return_value = None
 
     # Act
-    arosia_oio.create_or_update_indsats('12', '34', '56',
+    arosia_oio.create_or_update_indsats('12', '34', '56', '78',
                                         datetime.datetime.now(),
-                                        datetime.datetime.now(), '78',
+                                        datetime.datetime.now(), '90',
                                         ['12', '34'])
 
     # Assert
-    mock_requests.post.assert_called_once_with(ANY, json=ANY)
-    mock_requests.put.assert_not_called()
+    mock_session.post.assert_called_once_with(ANY, json=ANY)
+    mock_session.put.assert_not_called()
 
 
-@patch('arosia_oio.requests')
+@patch('arosia_oio.session')
 @patch('arosia_oio.lookup_klasse')
 def test_create_or_update_klasse_handles_create(
         mock_lookup: MagicMock,
-        mock_requests: MagicMock):
+        mock_session: MagicMock):
     # Arrange
     mock_lookup.return_value = '6e9908df-2b6b-472b-a2de-d58d79e59c33'
 
@@ -344,15 +344,15 @@ def test_create_or_update_klasse_handles_create(
     arosia_oio.create_or_update_klasse('12', '34', '56')
 
     # Assert
-    mock_requests.put.assert_called_once_with(ANY, json=ANY)
-    mock_requests.post.assert_not_called()
+    mock_session.put.assert_called_once_with(ANY, json=ANY)
+    mock_session.post.assert_not_called()
 
 
-@patch('arosia_oio.requests')
+@patch('arosia_oio.session')
 @patch('arosia_oio.lookup_klasse')
 def test_create_or_update_klasse_handles_update(
         mock_lookup: MagicMock,
-        mock_requests: MagicMock):
+        mock_session: MagicMock):
     # Arrange
     mock_lookup.return_value = None
 
@@ -360,5 +360,5 @@ def test_create_or_update_klasse_handles_update(
     arosia_oio.create_or_update_klasse('12', '34', '56')
 
     # Assert
-    mock_requests.post.assert_called_once_with(ANY, json=ANY)
-    mock_requests.put.assert_not_called()
+    mock_session.post.assert_called_once_with(ANY, json=ANY)
+    mock_session.put.assert_not_called()

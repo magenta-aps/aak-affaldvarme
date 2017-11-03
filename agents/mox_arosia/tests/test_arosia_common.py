@@ -468,11 +468,13 @@ def test_handle_kundeaftale_extracts_parameters_as_expected(
         mock_create: MagicMock):
     # Arrange
     name = "Name"
+    invoice_address = "Invoice Address"
     start_date = "Startdate"
     end_date = "Enddate"
 
     row = {
         'ava_navn': name,
+        'ava_Kundeforholdname': invoice_address,
         'ava_Startdato': start_date,
         'ava_Slutdato': end_date,
     }
@@ -488,6 +490,7 @@ def test_handle_kundeaftale_extracts_parameters_as_expected(
     mock_create.assert_called_once_with(name=name,
                                         agreement_type=agreement_type,
                                         no_of_products=len(products),
+                                        invoice_address=invoice_address,
                                         start_date=start_date,
                                         end_date=end_date,
                                         customer_relation_uuid=cr_uuid,
