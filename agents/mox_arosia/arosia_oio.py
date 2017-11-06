@@ -698,7 +698,7 @@ def lookup_indsats(name, customer_relation_uuid):
 def create_or_update_indsats(name, agreement_type, no_of_products,
                              invoice_address, start_date, end_date,
                              customer_relation_uuid, product_uuids, note=""):
-    uuid = lookup_indsats(name, invoice_address)
+    uuid = lookup_indsats(name, customer_relation_uuid)
 
     indsats_dict = generate_indsats_dict(name, agreement_type, no_of_products,
                                          invoice_address,
