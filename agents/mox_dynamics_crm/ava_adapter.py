@@ -62,18 +62,20 @@ def ava_bruger(entity):
     # Convert family status code to CRM values
     civilstand = egenskaber.get("ava_civilstand")
 
-    # Missing
-    # L = længstlevende partner
-    # D = død
-    ava_family = {
-        "P": 0,  # P = registreret partnerskab
-        "F": 1,  # F = fraskilt
-        "G": 2,  # G = gift
-        "O": 3,  # O = ophævelse af registreret partnerskab
-        "E": 4,  # E = enke/enkemand
-        # "O": 5,
-        "U": 6,  # U = ugift
-    }
+    # Pending: family status code may not be needed
+    # # Missing
+    # # L = længstlevende partner
+    # # D = død
+
+    # ava_family = {
+    #     "P": 0,  # P = registreret partnerskab
+    #     "F": 1,  # F = fraskilt
+    #     "G": 2,  # G = gift
+    #     "O": 3,  # O = ophævelse af registreret partnerskab
+    #     "E": 4,  # E = enke/enkemand
+    #     # "O": 5,
+    #     "U": 6,  # U = ugift
+    # }
 
     # Fetch CPR ID from field value
     cpr_id = relationer["tilknyttedepersoner"][0]["urn"].split(":")
@@ -93,7 +95,8 @@ def ava_bruger(entity):
         "ava_adresse": dawa_address,
         "ava_eradressebeskyttet": egenskaber.get("ava_adressebeskyttelse"),
         "ava_modtag_sms_notifikation": egenskaber.get("ava_sms_notifikation"),
-        "familystatuscode": ava_family.get(civilstand),
+        # Pending: family status code may not be needed
+        # "familystatuscode": ava_family.get(civilstand),
         "ava_aegtefaelle_samlever": aegtefaelle,
         "ava_cpr_nummer": ava_cpr_id,
         "gendercode":  ava_gender.get(gender),
