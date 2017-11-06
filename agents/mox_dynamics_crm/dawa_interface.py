@@ -50,28 +50,14 @@ def get_address(uuid):
     kommunekode = data['kommunekode']
     adgangsadresseid = data['adgangsadresseid']
     kvhx = data['kvhx']
+
+    # According to the customer this does not consistently work
+    # Until further notice, values are set 1:1 with the DAR service
     koordinat_oest = data['etrs89koordinat_øst']
     koordinat_nord = data['etrs89koordinat_nord']
 
-    """
-    On 13 Sep 2017, at 11.40, Akelan Vaithilingam <akva@aarhus.dk> wrote:
-
-    Hej Steffen,
-     
-    Du skal vende koordinaterne om så du mapper  x til y og omvendt.
-    Vi Kører UMT32 koordinatsystem på vores giskort.
-     
-     
-    Mener vi har drøftet dette med Carsten tidligere, måske han ved det?
-     
-    Med venlig hilsen
-     
-    Akelan Vaithilingam
-    """
-    # breddegrad = data['wgs84koordinat_bredde']
-    # laengdegrad = data['wgs84koordinat_længde']
-    breddegrad = data['wgs84koordinat_længde']
     laengdegrad = data['wgs84koordinat_bredde']
+    breddegrad = data['wgs84koordinat_længde']
 
     land = 'Danmark'
 
