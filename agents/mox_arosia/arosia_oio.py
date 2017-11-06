@@ -576,7 +576,7 @@ def create_or_update_organisationfunktion(customer_number,
                                           customer_uuid,
                                           customer_relation_uuid,
                                           role, note=""):
-    uuid = lookup_organisationfunktion(customer_number, role)
+    uuid = lookup_organisationfunktion(role, customer_number)
     organisationfunktion_dict = generate_organisationfunktion_dict(
         customer_number,
         customer_uuid,
@@ -616,7 +616,7 @@ def generate_indsats_dict(name, agreement_type, no_of_products,
         "attributter": {
             "indsatsegenskaber": [
                 {
-                    "brugervendtnoegle": " ".join([name, invoice_address]),
+                    "brugervendtnoegle": name,
                     "beskrivelse": no_of_products,
                     "virkning": virkning
                 }
@@ -683,11 +683,11 @@ def generate_indsats_dict(name, agreement_type, no_of_products,
     return indsats_dict
 
 
-def lookup_indsats(name, invoice_address):
-    key = " ".join([name, invoice_address])
+def lookup_indsats(name, customer_relation_uuid):
+    # Use name and kundeforhold uuid to form unique key
     request_string = (
-        "{0}/indsats/indsats?bvn={1}".format(
-            BASE_URL, key
+        "{0}/indsats/indsats?bvn={1}&indsatsmodtager={2}".format(
+            BASE_URL, name, customer_relation_uuid
         )
     )
 
@@ -699,6 +699,7 @@ def create_or_update_indsats(name, agreement_type, no_of_products,
                              invoice_address, start_date, end_date,
                              customer_relation_uuid, product_uuids, note=""):
     uuid = lookup_indsats(name, invoice_address)
+
     indsats_dict = generate_indsats_dict(name, agreement_type, no_of_products,
                                          invoice_address,
                                          start_date, end_date,
