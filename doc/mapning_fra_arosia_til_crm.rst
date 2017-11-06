@@ -64,16 +64,13 @@ Kunderolle mappes til OrganisationFunktion i LoRa
 Kunderoller i AROSia har ikke noget navn. Derfor laves navnet som en
 kombination af rolle og kontakt.
 
-Nogle rækker har ikke ava_Kundeforhold, men derimod ava_Ejendom. Disse
-rækker ignoreres i denne omgang.
-
 Kunderoller i AROSia har intet navn, så navnet er en konkatenering af rollen
 (ava_Rolle) og kontaktens navn (ava_KontaktName).
 
 =======================     =======================     =======================
 CRM                         Arosia                      LoRa
 =======================     =======================     =======================
-Navn                        n/a                         rolle + kontaktnavn
+Navn                        ava_KontaktName             brugervendtnoegle ⁺⁺⁺
 Aktør                       ava_Kontakt ⁺               tilknyttedebrugere
 Kundeforhold                ava_Kundeforhold ⁺⁺         tilknyttedif
 Rolle                       ava_Rolle                   funktionsnavn
@@ -81,6 +78,7 @@ Rolle                       ava_Rolle                   funktionsnavn
 
 ⁺ Reference til aktør
 ⁺⁺ Reference til kundeforhold
+⁺⁺⁺ Nøglen er sammensat af rolle og kontaktnavn
 
 
 Kundeforhold
@@ -106,10 +104,13 @@ Aftale
 Aftale findes i AROSia i tabellen dbo.ava_kundeaftale
 Aftale mappes til Indsats i LoRa
 
+Aftaler i Arosia har ikke noget unikt navn, så brugervendtnoegle sammensættes af
+navn (ava_navn) og faktureringsadresse (ava_Kundeforholdname)
+
 =======================     =======================     =======================
 CRM                         Arosia                      LoRa
 =======================     =======================     =======================
-Navn                        ava_navn                    brugervendtnoegle
+Navn                        ava_navn                    brugervendtnoegle⁺⁺⁺⁺
 Kundeforhold                ava_kundeforhold⁺           indsatsmodtager
 Aftaletype                  "AFFALD"                    indsatstype
 Beskrivelse                 <Udfyldes ikke>             -
@@ -124,6 +125,7 @@ Slutdato                    ava_Slutdato                sluttidspunkt
 ⁺⁺ Antal referencer fra produkt til aftale
 ⁺⁺⁺ Indeholder referencer til produkter fra ava_placeretmateriel, indsat i
 LoRa som Klasse
+⁺⁺⁺⁺ Nøglen er sammensat af navn og faktureringsadresse
 
 
 Produkt

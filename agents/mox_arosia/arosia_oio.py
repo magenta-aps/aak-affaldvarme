@@ -235,7 +235,6 @@ def create_or_update_organisation(cvr_number, key, name, arosia_phone="",
                                                    arosia_id,
                                                    sms_notif)
     if uuid:
-        print("{0} already exists with UUID {1}".format(cvr_number, uuid))
         url = "{0}/organisation/organisation/{1}".format(BASE_URL, uuid)
         return session.put(url, json=organisation_dict)
     else:
@@ -439,7 +438,6 @@ def create_or_update_bruger(cpr_number, key, name, arosia_phone="",
     )
 
     if uuid:
-        print("{0} already exists with UUID {1}".format(cpr_number, uuid))
         url = "{0}/organisation/bruger/{1}".format(BASE_URL, uuid)
         return session.put(url, json=bruger_dict)
     else:

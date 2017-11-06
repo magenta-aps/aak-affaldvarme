@@ -205,7 +205,6 @@ def connect(server, database, username, password):
         connection = pymssql.connect(server=server, user=username,
                                      password=password, database=database)
     except Exception as e:
-        print(e)
         report_error(str(e))
         raise
     return connection

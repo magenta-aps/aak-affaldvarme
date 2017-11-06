@@ -23,6 +23,7 @@ SELECT top(100)
 KONTAKTROLLE_SQL = """
 SELECT top(100) 
         [ava_Kontakt],
+        [ava_KontaktName],
         [ava_Kundeforhold],
         [ava_Rolle] 
     FROM [arhafadm_MSCRM].[dbo].[ava_kontaktrolle]
@@ -77,6 +78,7 @@ SELECT top(100)
 KONTAKTROLLE_SQL_RECENT = """
 SELECT top(100) 
         [ava_Kontakt],
+        [ava_KontaktName],
         [ava_Kundeforhold],
         [ava_Rolle] 
     FROM [arhafadm_MSCRM].[dbo].[ava_kontaktrolle]

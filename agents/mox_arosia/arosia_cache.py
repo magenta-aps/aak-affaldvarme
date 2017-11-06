@@ -1,4 +1,5 @@
 class ArosiaCache:
+    # TODO: Implement an actual persistent cache, shared with other agents
     def add_contact(self, arosia_id: str, lora_id: str):
         self.CONTACT_MAP[arosia_id] = lora_id
 
