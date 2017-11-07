@@ -287,7 +287,7 @@ def import_all(connection):
         except:
             name_address = "KOMMER!"
             print("SP_CACHE mangler for ", id_number)
-        cr_name = "{0} {1}".format(VARME, name_address)
+        cr_name = "{0}, {1}".format(VARME, name_address)
         cr_type = VARME  # Always for KMD EE
         cr_uuid = create_customer_relation(customer_number, cr_name, cr_type)
 
