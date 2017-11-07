@@ -414,6 +414,7 @@ def ava_installation(entity):
 
     # Format CRM payload
     payload = {
+        "ava_name": ava_name,
         "ava_identifikation": ava_identifikation,
         "ava_aftale": ava_aftale,
         "ava_adresse": ava_adresse,
