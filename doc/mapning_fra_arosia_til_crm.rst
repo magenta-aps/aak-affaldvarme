@@ -104,13 +104,10 @@ Aftale
 Aftale findes i AROSia i tabellen dbo.ava_kundeaftale
 Aftale mappes til Indsats i LoRa
 
-Aftaler i Arosia har ikke noget unikt navn, så brugervendtnoegle sammensættes af
-navn (ava_navn) og faktureringsadresse (ava_Kundeforholdname)
-
 =======================     =======================     =======================
 CRM                         Arosia                      LoRa
 =======================     =======================     =======================
-Navn                        ava_navn                    brugervendtnoegle⁺⁺⁺⁺
+Navn                        ava_navn                    brugervendtnoegle
 Kundeforhold                ava_kundeforhold⁺           indsatsmodtager
 Aftaletype                  "AFFALD"                    indsatstype
 Beskrivelse                 <Udfyldes ikke>             -
@@ -125,7 +122,6 @@ Slutdato                    ava_Slutdato                sluttidspunkt
 ⁺⁺ Antal referencer fra produkt til aftale
 ⁺⁺⁺ Indeholder referencer til produkter fra ava_placeretmateriel, indsat i
 LoRa som Klasse
-⁺⁺⁺⁺ Nøglen er sammensat af navn og faktureringsadresse
 
 
 Produkt

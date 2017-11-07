@@ -34,7 +34,7 @@ KUNDEAFTALE_SQL = """
 SELECT top(100) 
         [ava_navn],
         [ava_kundeforhold],
-        [ava_KundeforholdName],
+        [ava_Kundeforholdname],
         [ava_Startdato], 
         [ava_Slutdato], 
         [ava_kundeaftaleId] 
@@ -46,7 +46,7 @@ SELECT top(100)
         [ava_navn],
         [ava_stregkode],
         [ava_Kundeaftale], 
-        [ava_affaldstypeName], 
+        [ava_affaldstypename], 
         [ava_placeretmaterielId] 
     FROM [arhafadm_MSCRM].[dbo].[ava_placeretmateriel]
 """

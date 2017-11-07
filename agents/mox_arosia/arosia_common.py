@@ -13,7 +13,7 @@ This file contains general functions for handling rows from the various tables
 of AROSia
 """
 
-logger = logging.getLogger('mox_arosia')
+logger = logging.getLogger('arosia_common')
 
 
 def handle_cpr(row, phone, email, sms_notif):
@@ -126,7 +126,7 @@ def handle_account(row):
 def handle_kontaktrolle(row, contact, account):
     logger.info('Handling kontaktrolle')
     name = row.get('ava_KontaktName')
-    role = row.get('ava_Rolle')
+    role = str(row.get('ava_Rolle'))
     response = create_or_update_organisationfunktion(
         customer_number=name,
         customer_uuid=contact,

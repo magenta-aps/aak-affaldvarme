@@ -29,3 +29,4 @@ class ArosiaCache:
         # Contains a map of Arosia Kundeaftale UUIDs to a list of their
         # associated # products as LoRa Klasse UUIDs
         self.AFTALE_PRODUCT_MAP = {}
+

@@ -1,8 +1,10 @@
+import logging
+
 from arosia_cache import ArosiaCache
-from arosia_sql import (ACCOUNT_SQL, CONTACT_SQL, KONTAKTROLLE_SQL,
-                        KUNDEAFTALE_SQL, PLACERETMATERIEL_SQL)
 from arosia_common import (handle_account, handle_contact, handle_kontaktrolle,
                            handle_kundeaftale, handle_placeretmateriel)
+from arosia_sql import (ACCOUNT_SQL, CONTACT_SQL, KONTAKTROLLE_SQL,
+                        KUNDEAFTALE_SQL, PLACERETMATERIEL_SQL)
 from services import connect, report_error
 
 CACHE = ArosiaCache()
@@ -15,6 +17,8 @@ We use internal caches of UUIDs of inserted items, to save ourselves from
 having to repeatedly perform lookups in LoRa when relating data.
 """
 
+logger = logging.getLogger('arosia_import')
+
 
 def import_contact(connection):
     """
@@ -25,7 +29,9 @@ def import_contact(connection):
     cursor.execute(CONTACT_SQL)
     rows = cursor.fetchall()
 
+    count = 0
     for row in rows:
+        count += 1
         lora_id = handle_contact(row)
         contact_id = row['ContactId']
         if lora_id and contact_id:
@@ -33,6 +39,7 @@ def import_contact(connection):
         else:
             report_error('Unable to import contact', error_object=row)
             continue
+    logger.info("Kunde: {} rows imported".format(count))
 
 
 def import_account(connection):
@@ -44,7 +51,9 @@ def import_account(connection):
     cursor.execute(ACCOUNT_SQL)
     rows = cursor.fetchall()
 
+    count = 0
     for row in rows:
+        count += 1
         lora_id = handle_account(row)
         account_id = row['AccountId']
         if lora_id and account_id:
@@ -52,6 +61,7 @@ def import_account(connection):
         else:
             report_error('Unable to import account', error_object=row)
             continue
+    logger.info("Kundeforhold: {} rows imported".format(count))
 
 
 def import_kontaktrolle(connection):
@@ -63,7 +73,9 @@ def import_kontaktrolle(connection):
     cursor.execute(KONTAKTROLLE_SQL)
     rows = cursor.fetchall()
 
+    count = 0
     for row in rows:
+        count += 1
         contact_id = row['ava_Kontakt']
         account_id = row['ava_Kundeforhold']
 
@@ -78,6 +90,7 @@ def import_kontaktrolle(connection):
         if not lora_id:
             report_error('Unable to import kontaktrolle', error_object=row)
             continue
+    logger.info("Kunderolle: {} rows imported".format(count))
 
 
 def import_placeretmateriel(connection):
@@ -89,7 +102,9 @@ def import_placeretmateriel(connection):
     cursor.execute(PLACERETMATERIEL_SQL)
     rows = cursor.fetchall()
 
+    count = 0
     for row in rows:
+        count += 1
         lora_id = handle_placeretmateriel(row)
         aftale_id = row.get('ava_Kundeaftale')
 
@@ -98,6 +113,7 @@ def import_placeretmateriel(connection):
         else:
             report_error('Unable to import placeretmateriel', error_object=row)
             continue
+    logger.info("Produkt: {} rows imported".format(count))
 
 
 def import_kundeaftale(connection):
@@ -109,7 +125,9 @@ def import_kundeaftale(connection):
     cursor.execute(KUNDEAFTALE_SQL)
     rows = cursor.fetchall()
 
+    count = 0
     for row in rows:
+        count += 1
         account_id = row.get('ava_kundeforhold')
         account = CACHE.get_account(account_id)
 
@@ -123,6 +141,7 @@ def import_kundeaftale(connection):
         if not lora_id:
             report_error('Unable to import kundeaftale', error_object=row)
             continue
+    logger.info("Aftale: {} rows imported".format(count))
 
 
 def import_all(connection):
