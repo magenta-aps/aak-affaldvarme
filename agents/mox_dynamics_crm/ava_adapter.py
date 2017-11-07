@@ -314,11 +314,8 @@ def ava_aftale(entity):
     relationer = data["relationer"]
     egenskaber = attributter["indsatsegenskaber"][0]
 
-    # Name is currently not set dynamically
-    # TODO: must be set dynamically
-    ava_name = "Fjernvarmeaftale"
-
     # Fetch references
+    ava_name = egenskaber.get("brugervendtnoegle")
     kundeforhold = relationer.get("indsatsmodtager")[0]
     ava_kundeforhold = kundeforhold.get("uuid")
 
