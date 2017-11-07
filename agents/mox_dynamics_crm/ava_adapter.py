@@ -219,18 +219,20 @@ def ava_kunderolle(entity):
     lookup_customer = egenskaber.get("brugervendtnoegle").split()
     ava_aktoer = lookup_customer[-1]
 
-    ava_rolle = egenskaber.get("funktionsnavn")
+    rolle_ref = egenskaber.get("funktionsnavn")
 
-    # Issue: KMDEE customers are classified as "Ligestillingskunde"
-    # Valid types are:
-    # Hovedejer = 915240000
-    # Ligestillingsejer = 915240001
-    # Administrator = 915240002
-    # Vicevært = 915240003
-    # Medejer = 915240005
-
-    # WORKAROUND: Forcing ava_rolle to be 915240001
-    ava_rolle = 915240001
+    # NOTE: KMDEE customers are classified as follows:
+    # Kunde or Ligestillingskunde
+    # All valid types are:
+    ava_rolle = {
+        "Kunde": 915240004,
+        "Ligestillingskunde": 915240006,
+        "Hovedejer": 915240000,
+        "Ligestillingsejer": 915240001,
+        "Administrator": 915240002,
+        "Vicevært": 915240003,
+        "Medejer": 915240005
+    }
 
     # This is a temporary value
     # At import this must be replaced with a CRM reference
@@ -241,7 +243,7 @@ def ava_kunderolle(entity):
     payload = {
         "ava_aktoer": ava_aktoer,
         "ava_kundeforhold": ava_kundeforhold,
-        "ava_rolle": ava_rolle,
+        "ava_rolle": ava_rolle.get(rolle_ref)
     }
 
     return payload
