@@ -286,8 +286,14 @@ def ava_account(entity):
         "name": account_name,
         "ava_kundenummer": ava_kundenummer,
         "ava_kundetype": ava_kundetype.get(type_ref),
-        # "ava_kundeforholdstype": ava_kundeforholdstype,  # Currently not in use
-        # "ava_ejendom": ava_ejendom,  # Currently not in use
+
+        # NOTE: no reference exists in Lora
+        # Address reference will be set at import
+        "ava_adresse": None,
+
+        # Currently not in use
+        # "ava_kundeforholdstype": ava_kundeforholdstype,
+        # "ava_ejendom": ava_ejendom,
     }
 
     return payload
