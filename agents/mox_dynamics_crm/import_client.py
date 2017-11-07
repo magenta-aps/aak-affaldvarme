@@ -291,8 +291,8 @@ def process_entity(entity):
     log.info("Lookup for contact created: {0}".format(lookup_crm_contact))
 
     # Kundeforhold (Account)
+    # Depends on: Address
     # NOTE: Will depend on "Ejendom" in the future
-    # Depends on: None
 
     # Prepare lookup reference fallback
     lookup_crm_account = None
@@ -300,6 +300,9 @@ def process_entity(entity):
     if kundeforhold:
         ava_kundenummer = kundeforhold["ava_kundenummer"]
         crm_account_guid = crm.get_account(ava_kundenummer)
+
+        # Resolve dependencies
+        kundeforhold["ava_adresse@odata.bind"] = lookup_crm_address
 
         if not crm_account_guid:
             log.info("Account does not exist in CRM")
