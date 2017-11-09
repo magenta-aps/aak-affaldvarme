@@ -82,6 +82,11 @@ def get_address(uuid):
 
     # AVA specific payload
     payload = {
+        # Hotfix:
+        # Adding redundant origin id
+        'origin_id': adresseid,
+
+        # Original payload
         'ava_dawa_uuid': adresseid,
         'ava_dawaadgangsadresseid': adgangsadresseid,
         'ava_name': search,
