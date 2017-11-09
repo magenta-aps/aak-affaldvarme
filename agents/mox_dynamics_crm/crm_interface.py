@@ -243,6 +243,12 @@ def store_address(payload):
     identifier = payload["origin_id"]
     payload.pop("origin_id", None)
 
+    # Check local cache before inserting
+    existing_guid = global_address.get(identifier, None)
+
+    if existing_guid:
+        return existing_guid
+
     # REST resource
     resource = "ava_adresses"
 
