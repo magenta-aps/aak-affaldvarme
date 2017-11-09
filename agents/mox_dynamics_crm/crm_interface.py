@@ -27,6 +27,17 @@ base_endpoint = "{resource}/{path}".format(
 # Temporary file containing token
 filename = "access_token.tmp"
 
+# Issue/Hotfix:
+# We are not able to reliably fetch CRM references before insert
+# As a temporary fix, we are storing CRM references in memory
+# A more long term solution for this problem is in the works
+global_address = {}
+global_contact = {}
+global_aftale = {}
+global_kunderolle = {}
+global_produkt = {}
+global_account = {}
+
 
 def get_token():
     """
@@ -227,6 +238,11 @@ def get_ava_address(dawa_uuid):
 def store_address(payload):
     """Address retrieved from DAWA"""
 
+    # Hotfix:
+    # Fetch origin id from payload
+    identifier = payload["origin_id"]
+    payload.pop("origin_id", None)
+
     # REST resource
     resource = "ava_adresses"
 
@@ -245,6 +261,10 @@ def store_address(payload):
         log.error("Status code: {0}".format(response.status_code))
         log.error(response.text)
         return False
+
+    # Hotfix:
+    # Store reference in local cache to avoid duplicate entries
+    global_address[identifier] = crm_guid
 
     return crm_guid
 
@@ -282,6 +302,17 @@ def store_contact(payload):
     Missing: Logging on events
     """
 
+    # Hotfix:
+    # Fetch origin id from payload
+    identifier = payload["origin_id"]
+    payload.pop("origin_id", None)
+
+    # Check local cache before inserting
+    existing_guid = global_contact.get(identifier, None)
+
+    if existing_guid:
+        return existing_guid
+
     # REST resource
     resource = "contacts"
 
@@ -306,6 +337,10 @@ def store_contact(payload):
         log.error("No contact GUID returned from CRM")
         return False
 
+    # Hotfix:
+    # Store reference in local cache to avoid duplicate entries
+    global_contact[identifier] = crm_guid
+
     return crm_guid
 
 
@@ -319,6 +354,17 @@ def get_kunderolle(identifier):
 
 def store_kunderolle(payload):
     """Organisationsfunktion"""
+
+    # Hotfix:
+    # Fetch origin id from payload
+    identifier = payload["origin_id"]
+    payload.pop("origin_id", None)
+
+    # Check local cache before inserting
+    existing_guid = global_kunderolle.get(identifier, None)
+
+    if existing_guid:
+        return existing_guid
 
     # REST resource
     resource = "ava_kunderolles"
@@ -348,6 +394,10 @@ def store_kunderolle(payload):
         log.error("No kunderolle GUID returned from CRM")
         return False
 
+    # Hotfix:
+    # Store reference in local cache (dict) to avoid duplicate CRM entries
+    global_kunderolle[identifier] = crm_guid
+
     return crm_guid
 
 
@@ -366,6 +416,17 @@ def store_account(payload):
     Returns GUID
     Missing: Logging on events
     """
+
+    # Hotfix:
+    # Fetch origin id from payload
+    identifier = payload["origin_id"]
+    payload.pop("origin_id", None)
+
+    # Check local cache before inserting
+    existing_guid = global_account.get(identifier, None)
+
+    if existing_guid:
+        return existing_guid
 
     # REST resource
     resource = "accounts"
@@ -392,6 +453,10 @@ def store_account(payload):
         log.error("No account GUID returned from CRM")
         return False
 
+    # Hotfix:
+    # Store reference in local cache (dict) to avoid duplicate CRM entries
+    global_account[identifier] = crm_guid
+
     return crm_guid
 
 
@@ -405,6 +470,17 @@ def get_aftale(identifier):
 
 def store_aftale(payload):
     """Indsats"""
+
+    # Hotfix:
+    # Fetch origin id from payload
+    identifier = payload["origin_id"]
+    payload.pop("origin_id", None)
+
+    # Check local cache before inserting
+    existing_guid = global_aftale.get(identifier, None)
+
+    if existing_guid:
+        return existing_guid
 
     # REST resource
     resource = "ava_aftales"
@@ -428,6 +504,10 @@ def store_aftale(payload):
         log.error("No aftale GUID returned from CRM")
         return False
 
+    # Hotfix:
+    # Store reference in local cache to avoid duplicate entries
+    global_aftale[identifier] = crm_guid
+
     return crm_guid
 
 
@@ -441,6 +521,17 @@ def get_produkt(identifier):
 
 def store_produkt(payload):
     """Klasse"""
+
+    # Hotfix:
+    # Fetch origin id from payload
+    identifier = payload["origin_id"]
+    payload.pop("origin_id", None)
+
+    # Check local cache before inserting
+    existing_guid = global_produkt.get(identifier, None)
+
+    if existing_guid:
+        return existing_guid
 
     # REST resource
     resource = "ava_installations"
@@ -464,15 +555,12 @@ def store_produkt(payload):
         log.error("No produkt GUID returned from CRM")
         return False
 
+    # Hotfix:
+    # Store reference in local cache to avoid duplicate entries
+    global_produkt[identifier] = crm_guid
+
     return crm_guid
 
-def get_produkt(identifier):
-    """MISSING: We have no reference for the CRM entity
-
-    TODO: May be resolved by creating CRM meta fields
-
-    """
-    return False
 
 # DO NOT USE THE DELETE FUNCTION
 # def delete_contact(uuid):

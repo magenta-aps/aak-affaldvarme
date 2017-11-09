@@ -86,8 +86,17 @@ def ava_bruger(entity):
     ava_parking_id = None
     aegtefaelle = None
 
+    # HOTFIX:
+    # Redundant identifier for linking Lora and CRM references
+    origin_id = entity["id"]
+
     # CRM formatted payload
     payload = {
+        # Adding origin identifier to the payload
+        # MUST be removed at the insert stage
+        "origin_id": origin_id,
+
+        # Original payload
         "ava_lora_uuid": ava_lora_uuid,
         "firstname": egenskaber.get("ava_fornavn"),
         "middlename": egenskaber.get("ava_mellemnavn"),
@@ -174,8 +183,17 @@ def ava_organisation(entity):
     ava_parking_id = None
     ava_kreditstatus = None
 
+    # HOTFIX:
+    # Redundant identifier for linking Lora and CRM references
+    origin_id = entity["id"]
+
     # Format CRM payload
     payload = {
+        # Adding origin identifier to the payload
+        # MUST be removed at the insert stage
+        "origin_id": origin_id,
+
+        # Original payload
         "ava_lora_uuid": ava_lora_uuid,
         "firstname": egenskaber.get("organisationsnavn"),
         "ava_adresse": dawa_address,
@@ -239,8 +257,17 @@ def ava_kunderolle(entity):
     kundeforhold = relationer.get("tilknyttedeinteressefaellesskaber")[0]
     ava_kundeforhold = kundeforhold.get("uuid")
 
+    # HOTFIX:
+    # Redundant identifier for linking Lora and CRM references
+    origin_id = entity["id"]
+
     # Format CRM payload
     payload = {
+        # Adding origin identifier to the payload
+        # MUST be removed at the insert stage
+        "origin_id": origin_id,
+
+        # Original payload
         "ava_aktoer": ava_aktoer,
         "ava_kundeforhold": ava_kundeforhold,
         "ava_rolle": ava_rolle.get(rolle_ref)
@@ -281,8 +308,17 @@ def ava_account(entity):
     ava_kundeforholdstype = None
     ava_ejendom = None
 
+    # HOTFIX:
+    # Redundant identifier for linking Lora and CRM references
+    origin_id = entity["id"]
+
     # Format CRM payload
     payload = {
+        # Adding origin identifier to the payload
+        # MUST be removed at the insert stage
+        "origin_id": origin_id,
+
+        # Original payload
         "name": account_name,
         "ava_kundenummer": ava_kundenummer,
         "ava_kundetype": ava_kundetype.get(type_ref),
@@ -349,8 +385,17 @@ def ava_aftale(entity):
     # Lora does not persist this information
     ava_beskrivelse = None
 
+    # HOTFIX:
+    # Redundant identifier for linking Lora and CRM references
+    origin_id = entity["id"]
+
     # Format CRM payload
     payload = {
+        # Adding origin identifier to the payload
+        # MUST be removed at the insert stage
+        "origin_id": origin_id,
+
+        # Original payload
         "ava_name": ava_name,
         "ava_kundeforhold": ava_kundeforhold,
         "ava_aftaletype": ava_aftaletype.get(type_ref),
@@ -415,8 +460,17 @@ def ava_installation(entity):
     ava_afhentningstype = None
     ava_beskrivelse = None
 
+    # HOTFIX:
+    # Redundant identifier for linking Lora and CRM references
+    origin_id = entity["id"]
+
     # Format CRM payload
     payload = {
+        # Adding origin identifier to the payload
+        # MUST be removed at the insert stage
+        "origin_id": origin_id,
+
+        # Original payload
         "ava_name": ava_name,
         "ava_identifikation": ava_identifikation,
         "ava_aftale": ava_aftale,
