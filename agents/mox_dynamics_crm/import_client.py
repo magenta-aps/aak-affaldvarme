@@ -303,6 +303,7 @@ def process_entity(entity):
 
         # Resolve dependencies
         kundeforhold["ava_adresse@odata.bind"] = lookup_crm_address
+        kundeforhold.pop("ava_adresse", None)
 
         if not crm_account_guid:
             log.info("Account does not exist in CRM")
