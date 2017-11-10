@@ -51,13 +51,23 @@ def get_address(uuid):
     adgangsadresseid = data['adgangsadresseid']
     kvhx = data['kvhx']
 
-    # According to the customer this does not consistently work
-    # Until further notice, values are set 1:1 with the DAR service
-    koordinat_oest = data['etrs89koordinat_øst']
-    koordinat_nord = data['etrs89koordinat_nord']
+    # According to the customer:
+    # koordinat_nord = laengdegrad
+    # Koordinat_oest = breddegrad
+    #
+    # example
+    # {
+    #     "ava_name": "Skoleparken 163, 8330 Beder",
+    #     "ava_koordinat_oest": "10.2106657",
+    #     "ava_koordinat_nord": "56.06605388",
+    #     "ava_laengdegrad": "6214092",
+    #     "ava_breddegrad": "575375.63"
+    # }
+    koordinat_nord = data['wgs84koordinat_bredde']
+    koordinat_oest = data['wgs84koordinat_længde']
 
-    laengdegrad = data['wgs84koordinat_bredde']
-    breddegrad = data['wgs84koordinat_længde']
+    laengdegrad = data['etrs89koordinat_nord']
+    breddegrad = data['etrs89koordinat_øst']
 
     land = 'Danmark'
 
