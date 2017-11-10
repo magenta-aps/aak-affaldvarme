@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import json
 import os
 import sys
+import time
+import json
 import adal
 import logging
 import requests
@@ -118,6 +119,9 @@ def get_request(resource, params):
         print("Generate a new token")
         request_token()
 
+        # Sleep 10 seconds
+        time.sleep(10)
+
         # Set new token into the auth header
         headers["Authorization"] = get_token()
 
@@ -165,6 +169,9 @@ def post_request(resource, payload):
 
         # Generate a new token
         request_token()
+
+        # Sleep 10 seconds
+        time.sleep(10)
 
         # Set new token into the auth header
         headers["Authorization"] = get_token()
