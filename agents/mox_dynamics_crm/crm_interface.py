@@ -517,6 +517,36 @@ def store_aftale(payload):
     return crm_guid
 
 
+def contact_and_aftale_link(aftale_guid, contact_guid):
+    """
+    Temporary solution to create a link between contact and aftale
+    NOTES: This should be replaced by the cache functionality
+    """
+
+    resource = "ava_aftale({guid})/ava_aktoerens_aftaler/$ref".format(
+        guid=aftale_guid
+    )
+
+    odata_id = "{base}/contacts({guid})".format(
+        base=base_endpoint,
+        guid=contact_guid
+    )
+
+    payload = {
+        "@odata.id": odata_id
+    }
+
+    response = post_request(resource, payload)
+
+    # Return False if not created
+    if response.status_code != 201:
+        log.error("Error creating link between contact and aftale")
+        log.error(response.text)
+        return False
+
+    return True
+
+
 def get_produkt(identifier):
     """
     MISSING: We have no reference for the CRM entity

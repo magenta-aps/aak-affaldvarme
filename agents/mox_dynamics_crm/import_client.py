@@ -368,6 +368,14 @@ def process_entity(entity):
         lookup_crm_aftale = "/ava_aftales({0})".format(crm_aftale_guid)
         log.info("Lookup for aftale created: {0}".format(lookup_crm_aftale))
 
+        # Hotfix: (temporary)
+        # NOTES: This will be replaced by the cache functionality
+        # Create link between Contact and Aftale
+        crm.contact_and_aftale_link(
+            aftale=crm_aftale_guid,
+            contact=crm_contact_guid
+        )
+
     # Product
     # Depends on: Aftale, Address
 
