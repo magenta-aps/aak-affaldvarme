@@ -358,6 +358,9 @@ def ava_aftale(entity):
     aftaletype = relationer.get("indsatstype")[0]
     type_ref = aftaletype.get("urn")[4:]
 
+    # Convert string value to int
+    ava_antal_produkter = int(egenskaber.get("beskrivelse"))
+
     # Convert type to literal
     ava_aftaletype = {
         "Varme": 915240001,
@@ -397,7 +400,7 @@ def ava_aftale(entity):
         "ava_name": ava_name,
         "ava_kundeforhold": ava_kundeforhold,
         "ava_aftaletype": ava_aftaletype.get(type_ref),
-        "ava_antal_produkter": egenskaber.get("beskrivelse"),
+        "ava_antal_produkter": ava_antal_produkter,
         "ava_faktureringsgrad": ava_faktureringsgrad,
         "ava_startdato": ava_startdato,
         "ava_slutdato": ava_slutdato,
