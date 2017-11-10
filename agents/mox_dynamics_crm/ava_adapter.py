@@ -44,6 +44,10 @@ def ava_bruger(entity):
             if "urn:mobile" in item["urn"]:
                 kmd_ee["phone"] = item["urn"].split(":")[-1]
 
+            # TODO: Add seperate mobile and landline fields
+            # if "urn:tel" in item["urn"]:
+            #     kmd_ee["phone"] = item["urn"].split(":")[-1]
+
             if "urn:email" in item["urn"]:
                 kmd_ee["email"] = item["urn"].split(":")[-1]
 
