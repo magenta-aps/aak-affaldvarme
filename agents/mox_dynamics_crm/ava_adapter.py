@@ -214,9 +214,9 @@ def ava_organisation(entity):
         "ava_emailmkdee": kmd_ee.get("email"),
 
         # Arosia
-        "telephone1": None,
-        "arosia_telephone": None,
-        "ava_arosiaid": None,
+        # "telephone1": None,
+        # "arosia_telephone": None,
+        # "ava_arosiaid": None,
     }
 
     return payload
