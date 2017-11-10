@@ -156,7 +156,7 @@ def run_import_all_org():
 
     # Batch generate fetches n amount of entities
     # Returns iterator
-    for entity in batch_generator(bruger, list_of_contacts):
+    for entity in batch_generator(org, list_of_contacts):
         # Format adapter
         exported = adapter.ava_organisation(entity)
 
