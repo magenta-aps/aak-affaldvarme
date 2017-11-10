@@ -118,7 +118,7 @@ def ava_bruger(entity):
         # AVA masterid currently appears to be missing from the CRM schema
         # "ava_masterid": egenskaber.get("brugervendtnoegle"),
         "ava_mobilkmdee": kmd_ee.get("mobile", None),
-        "ava_fastnetkmdee" kmd_ee.get("landline", None),
+        "ava_fastnetkmdee": kmd_ee.get("landline", None),
         "ava_emailkmdee": kmd_ee.get("email"),
 
 
