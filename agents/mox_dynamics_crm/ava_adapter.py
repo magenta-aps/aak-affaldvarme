@@ -164,11 +164,11 @@ def ava_organisation(entity):
 
     # Fetch contact mobile and email
     for item in other:
-        if "urn:mobile" in item["urn"]:
-            kmd_ee["phone"] = item["urn"].split(":")[-1]
+        if "urn:tel" in item["urn"]:
+            kmd_ee["landline"] = item["urn"].split(":")[-1]
 
-        if "urn:email" in item["urn"]:
-            kmd_ee["email"] = item["urn"].split(":")[-1]
+        if "urn:mobile" in item["urn"]:
+            kmd_ee["mobile"] = item["urn"].split(":")[-1]
 
     # Fetch CVR ID from field
     cvr_id = relationer.get("virksomhed")[0]["urn"].split(":")
@@ -209,9 +209,11 @@ def ava_organisation(entity):
         "ava_virksomhedsform": ava_virksomhedsform,
 
         # KMD EE
-        "ava_masterid": egenskaber.get("brugervendtnoegle"),
-        "ava_telefonkmdee": kmd_ee.get("phone"),
-        "ava_emailmkdee": kmd_ee.get("email"),
+        # AVA masterid currently appears to be missing from the CRM schema
+        # "ava_masterid": egenskaber.get("brugervendtnoegle"),
+        "ava_mobilkmdee": kmd_ee.get("mobile", None),
+        "ava_fastnetkmdee": kmd_ee.get("landline", None),
+        "ava_emailkmdee": kmd_ee.get("email"),
 
         # Arosia
         # "telephone1": None,
