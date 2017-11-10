@@ -383,10 +383,6 @@ def ava_aftale(entity):
     indsatsdokument = relationer.get("indsatsdokument")[0]
     ava_faktureringsgrad = indsatsdokument.get("uuid")
 
-    # Not set by this agent
-    # Lora does not persist this information
-    ava_beskrivelse = None
-
     # HOTFIX:
     # Redundant identifier for linking Lora and CRM references
     origin_id = entity["id"]
@@ -401,7 +397,6 @@ def ava_aftale(entity):
         "ava_name": ava_name,
         "ava_kundeforhold": ava_kundeforhold,
         "ava_aftaletype": ava_aftaletype.get(type_ref),
-        "ava_beskrivelse": ava_beskrivelse,
         "ava_antal_produkter": egenskaber.get("beskrivelse"),
         "ava_faktureringsgrad": ava_faktureringsgrad,
         "ava_startdato": ava_startdato,
