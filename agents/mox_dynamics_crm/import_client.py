@@ -127,6 +127,43 @@ def run_import_all():
         process_entity(exported)
 
 
+def run_import_all_org():
+    """
+    Import all org wrapper function
+    All organisations that belong to parent organisation (See settings)
+    """
+
+    # Use switch to determine resource path
+    org = resources["organisation"]
+
+    # Belgons to parent organisation
+    params = {
+        "tilhoerer": ORGANISATION_UUID
+    }
+
+    # Generate list of contacts (uuid)
+    log.info("Attempting to import all organisations")
+    list_of_contacts = oio.get_request(org, params)
+
+    # Debug:
+    total = len(list_of_contacts)
+    log.debug("{0} contacts found".format(total))
+
+    # TODO: Log error when nothing is returned
+    if not list_of_contacts:
+        log.error("No contacts found")
+        return None
+
+    # Batch generate fetches n amount of entities
+    # Returns iterator
+    for entity in batch_generator(bruger, list_of_contacts):
+        # Format adapter
+        exported = adapter.ava_organisation(entity)
+
+        # Process the entity
+        process_entity(exported)
+
+
 def process_entity(entity):
     """
     Process customer, requires a contact and address entity
@@ -442,6 +479,7 @@ if __name__ == "__main__":
 
     # Begin import
     run_import_all()
+    run_import_all_org()
 
     # Done
     print("Import procedure completed - Exiting")
