@@ -231,10 +231,10 @@ def get_agreement_address_uuid(connection, forbrugssted, id_number):
 
 
 def create_product(name, identification, installation_type, meter_number,
-                   start_date, end_date):
+                   meter_type, start_date, end_date):
     "Create a Klasse from this info and return UUID"
     result = create_klasse(name, identification, installation_type,
-                           meter_number, start_date, end_date)
+                           meter_number, meter_type, start_date, end_date)
     if result:
         return result.json()['uuid']
 
@@ -354,11 +354,12 @@ def import_all(connection):
             identification = p['InstalNummer']
             installation_type = VARME
             meter_number = p['Målernr']
+            meter_type = p['MaalerTypeBetegnel']
             start_date = p['DatoFra']
             end_date = p['DatoTil']
             product_uuid = create_product(
                 name, identification, installation_type, meter_number,
-                start_date, end_date
+                meter_type, start_date, end_date
             )
             if product_uuid:
                 product_uuids.append(product_uuid)

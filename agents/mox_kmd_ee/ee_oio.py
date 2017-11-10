@@ -429,7 +429,7 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
 
 @request
 def create_klasse(name, identification, installation_type,
-                  meter_number, start_date, end_date, note=""):
+                  meter_number, meter_type, start_date, end_date, note=""):
     virkning = create_virkning(start_date, end_date)
     klasse_dict = {
         "note": note,
@@ -439,6 +439,7 @@ def create_klasse(name, identification, installation_type,
                     "brugervendtnoegle": identification,
                     "titel": name,
                     "eksempel": meter_number,
+                    "beskrivelse": meter_type,
                     "virkning": virkning
                 }
             ]

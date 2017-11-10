@@ -23,8 +23,8 @@ config.prompt([
 ])
 config.save()
 
-service = Service('mox_kmd_ee.sh', user='mox_kmd_ee')
-service.install()
+# service = Service('mox_kmd_ee.sh', user='mox_kmd_ee')
+# service.install()
 
 settings_path = os.path.join(DIR, 'settings.py')
 
