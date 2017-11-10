@@ -371,12 +371,14 @@ def ava_aftale(entity):
     if produkter:
         ava_produkter = produkter[0].get("uuid")
 
-    virkning = egenskaber.get("virkning")
-    ava_startdato = virkning.get("from")
-    ava_slutdato = virkning.get("to")
+    # Hotfix:
+    # CRM does not support timestamps, we are passing the date ONLY
+    ava_startdato = egenskaber.get("starttidspunkt").split(" ")[0]
+    ava_slutdato = egenskaber.get("sluttidspunkt").split(" ")[0]
 
-    if ava_slutdato == "infinity":
-        ava_slutdato = None
+    # Deprecated:
+    # if ava_slutdato == "infinity":
+    #     ava_slutdato = None
 
     indsatsdokument = relationer.get("indsatsdokument")[0]
     ava_faktureringsgrad = indsatsdokument.get("uuid")
@@ -402,9 +404,8 @@ def ava_aftale(entity):
         "ava_beskrivelse": ava_beskrivelse,
         "ava_antal_produkter": egenskaber.get("beskrivelse"),
         "ava_faktureringsgrad": ava_faktureringsgrad,
-        # Date fields have been disabled due to formatting issues
-        # "ava_startdato": ava_startdato,
-        # "ava_slutdato": ava_slutdato,
+        "ava_startdato": ava_startdato,
+        "ava_slutdato": ava_slutdato,
         "ava_produkter": ava_produkter
     }
 
