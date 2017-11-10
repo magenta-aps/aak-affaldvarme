@@ -41,12 +41,11 @@ def ava_bruger(entity):
 
         # Set email and phone number
         for item in other:
-            if "urn:mobile" in item["urn"]:
-                kmd_ee["phone"] = item["urn"].split(":")[-1]
+            if "urn:tel" in item["urn"]:
+                kmd_ee["landline"] = item["urn"].split(":")[-1]
 
-            # TODO: Add seperate mobile and landline fields
-            # if "urn:tel" in item["urn"]:
-            #     kmd_ee["phone"] = item["urn"].split(":")[-1]
+            if "urn:mobile" in item["urn"]:
+                kmd_ee["mobile"] = item["urn"].split(":")[-1]
 
             if "urn:email" in item["urn"]:
                 kmd_ee["email"] = item["urn"].split(":")[-1]
@@ -118,7 +117,8 @@ def ava_bruger(entity):
         # KMD EE
         # AVA masterid currently appears to be missing from the CRM schema
         # "ava_masterid": egenskaber.get("brugervendtnoegle"),
-        "ava_telefonkmdee": kmd_ee.get("phone"),
+        "ava_mobilkmdee": kmd_ee.get("mobile", None),
+        "ava_fastnetkmdee" kmd_ee.get("landline", None),
         "ava_emailkmdee": kmd_ee.get("email"),
 
 
