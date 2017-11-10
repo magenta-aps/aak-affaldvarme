@@ -409,8 +409,8 @@ def process_entity(entity):
         # NOTES: This will be replaced by the cache functionality
         # Create link between Contact and Aftale
         crm.contact_and_aftale_link(
-            aftale=crm_aftale_guid,
-            contact=crm_contact_guid
+            aftale_guid=crm_aftale_guid,
+            contact_guid=crm_contact_guid
         )
 
     # Product
