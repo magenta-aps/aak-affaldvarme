@@ -530,7 +530,7 @@ def contact_and_aftale_link(aftale_guid, contact_guid):
     NOTES: This should be replaced by the cache functionality
     """
 
-    resource = "ava_aftale({guid})/ava_aktoerens_aftaler/$ref".format(
+    resource = "ava_aftales({guid})/ava_aktoerens_aftaler/$ref".format(
         guid=aftale_guid
     )
 
