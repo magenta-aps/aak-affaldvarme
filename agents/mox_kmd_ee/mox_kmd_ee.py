@@ -207,7 +207,7 @@ def get_agreement_address_uuid(connection, forbrugssted, id_number):
 
     # Hotfix:
     # Log if
-    if len(row) != 1:
+    if len(rows) != 1:
         # Send error to log:
         report_error(
             "Forbrugssted for {0} returnerer: {1}".format(
