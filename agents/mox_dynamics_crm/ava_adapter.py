@@ -433,7 +433,7 @@ def ava_installation(entity):
     # Fetch references
     ava_name = egenskaber.get("titel")
     ava_identifikation = egenskaber.get("brugervendtnoegle")
-
+    ava_maalertype = egenskaber.get("beskrivelse")
     installationstype = relationer.get("overordnetklasse")[0]
 
     # Convert type to literal
@@ -481,6 +481,7 @@ def ava_installation(entity):
         "ava_installationstype": ava_installationstype.get(type_ref),
         # "ava_afhentningstype": ava_afhentningstype,  # Currently not supported
         "ava_maalernummer": ava_maalernummer,
+        "ava_maalertype": ava_maalertype,
         # "ava_beskrivelse": ava_beskrivelse,  # Currently not supported
         "ava_kundenummer": ava_kundenummer
     }
