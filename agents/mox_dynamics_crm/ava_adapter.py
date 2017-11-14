@@ -441,8 +441,8 @@ def ava_installation(entity):
     # Convert type to literal
     type_ref = installationstype.get("urn").split(":")[-1]
     ava_installationstype = {
-        "Varme": 915240000,
-        "Affald": 915240001
+        "Affald": 915240000,
+        "Varme": 915240001
     }
 
     ava_maalernummer = egenskaber.get("eksempel")
