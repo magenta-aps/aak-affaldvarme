@@ -70,7 +70,7 @@ DATABASE_STRUCTURE = {
                 "brugernavn",
                 "brugertype",
                 "ava_fornavn",
-                "ava_mellenavn",
+                "ava_mellemnavn",
                 "ava_efternavn",
                 "ava_civilstand",
                 "ava_koen",
@@ -321,7 +321,7 @@ DATABASE_STRUCTURE = {
             "publiceret": ["Publiceret", "IkkePubliceret", "Normal"]
         },
         "relationer_nul_til_en": ["indsatsmodtager", "indsatstype"],
-                     
+
         "relationer_nul_til_mange": [
             "indsatskvalitet", "indsatsaktoer", "samtykke", "indsatssag",
             "indsatsdokument"
