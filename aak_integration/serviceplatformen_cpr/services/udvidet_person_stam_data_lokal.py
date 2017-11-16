@@ -106,6 +106,12 @@ def parse_cpr_person_lookup_xml_to_dict(soap_response_xml):
         key = k[4:]
         citizen_dict[key] = v
 
+    try:
+        not_living_in_dk = root['ns4:adresse']['ns4:udrejseoplysninger']
+        citizen_dict['udrejst'] = True
+    except KeyError as key_error:
+        citizen_dict['udrejst'] = False
+
     relations = root['ns4:relationer']
     citizen_dict['relationer'] = []
     for k, v in relations.items():

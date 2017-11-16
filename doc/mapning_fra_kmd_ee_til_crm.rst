@@ -218,6 +218,8 @@ Adresse                     <Redundant =               (findes på
 Installationstype           Varme                      overordnet_klasse
 Afhentningstype             <Udfyldes ikke>
 Målernummer                 TrefMaaler.Målernr         eksempel⁺
+Målertype                   TrefMaaler.MaalertypeBe    beskrivelse⁺
+                            tegnel
 Beskrivelse                 <Udfyldes ikke>
 Kundenummer                 <Redundant>                (findes på kunde-
                                                        forhold)

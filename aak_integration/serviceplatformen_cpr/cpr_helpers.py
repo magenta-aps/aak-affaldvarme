@@ -33,7 +33,7 @@ def get_cpr_data(cprnr):
 
 
 if __name__ == '__main__':
+    import sys
 
-    cprnr = '0123456789'
-    result = get_cpr_data(cprnr)
-    print(json.dumps(result))
+    for arg in sys.argv[1:]:
+        print(json.dumps(get_cpr_data(arg)))

@@ -35,7 +35,8 @@ def get_cvr_data(cvr_id, service_uuids, service_certificate):
     extracted = _extract_zeep_data(zeep_data)
 
     address = {}
-    address["vejnavn"] = extracted["vejnavn"]
+    # address["vejnavn"] = extracted["vejnavn"]
+    address["vejkode"] = extracted["vejkode"]
     address["husnr"] = extracted["husnummer"]
     address["etage"] = extracted["etage"]
     address["dør"] = extracted["doer"]

@@ -11,7 +11,7 @@ from setuptools import setup
 setup(
     name='aak_integration',
     version='0.1',
-    decription='integration til serviceplatformen',
+    description='integration til serviceplatformen',
     author='Heini Leander Ovason',
     author_email='heini@magenta.dk',
     license="MPL 2.0",

@@ -17,6 +17,7 @@ from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL, FORBRUGSSTED_ADRESSE_SQL
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_oio import create_klasse, lookup_bruger, lookup_organisation
+from ee_utils import cpr_cvr, is_cpr, is_cvr, connect
 
 from service_clients import get_address_uuid, fuzzy_address_uuid, get_cvr_data
 from service_clients import report_error
@@ -37,104 +38,106 @@ SP_ADDRESS_CACHE = {}
 def create_customer(id_number, key, name, phone="", email="",
                     mobile="", fax="", note=""):
 
-        if is_cvr(id_number):
+    if is_cvr(id_number):
 
-            # Collect info from SP and include in call creating user.
-            # Avoid getting throttled by SP
+        # Collect info from SP and include in call creating user.
+        # Avoid getting throttled by SP
+        try:
+            company_dir = get_cvr_data(id_number)
+        except Exception as e:
+            # Retry *once* after sleeping
+            time.sleep(40)
             try:
                 company_dir = get_cvr_data(id_number)
             except Exception as e:
-                # Retry *once* after sleeping
-                time.sleep(40)
-                try:
-                    company_dir = get_cvr_data(id_number)
-                except Exception as e:
-                    report_error(
-                        "CVR number not found: {0}".format(id_number)
-                    )
-                    return None
+                report_error(
+                    "CVR number not found: {0}".format(id_number)
+                )
+                return None
 
-            name = company_dir['organisationsnavn']
-            address_uuid = company_dir['dawa_uuid']
-            company_type = company_dir['virksomhedsform']
-            industry_code = company_dir['branchekode']
-            address_string = "{0} {1}, {2}".format(
-                company_dir['vejnavn'], company_dir['husnummer'],
-                company_dir['postnummer']
-            )
+        name = company_dir['organisationsnavn']
+        address_uuid = company_dir['dawa_uuid']
+        company_type = company_dir['virksomhedsform']
+        industry_code = company_dir['branchekode']
+        address_string = "{0} {1}, {2}".format(
+            company_dir['vejnavn'], company_dir['husnummer'],
+            company_dir['postnummer']
+        )
 
-            result = create_organisation(
-                id_number, key, name, phone, email, mobile, fax, address_uuid,
-                company_type, industry_code, note
-            )
-        elif is_cpr(id_number):
-            # This is a CPR number
+        result = create_organisation(
+            id_number, key, name, phone, email, mobile, fax, address_uuid,
+            company_type, industry_code, note
+        )
+    elif is_cpr(id_number):
+        # This is a CPR number
 
-            # Collect info from SP and include in call creating user.
-            # Avoid getting throttled by SP
+        # Collect info from SP and include in call creating user.
+        # Avoid getting throttled by SP
+        try:
+            person_dir = get_cpr_data(id_number)
+        except Exception as e:
+            report_error(traceback.format_exc())
+
+            # Retry *once* after sleeping
+            time.sleep(40)
             try:
                 person_dir = get_cpr_data(id_number)
             except Exception as e:
-                # Retry *once* after sleeping
-                time.sleep(40)
-                try:
-                    person_dir = get_cpr_data(id_number)
-                except Exception as e:
-                    report_error(
-                        "CPR number not found: {0}".format(id_number)
-                    )
-                    return None
-
-            first_name = person_dir['fornavn']
-            middle_name = person_dir.get('mellemnavn', '')
-            last_name = person_dir['efternavn']
-
-            # Address related stuff
-            address = {
-                "vejnavn": person_dir["vejnavn"],
-                "postnr": person_dir["postnummer"]
-            }
-            if "etage" in person_dir:
-                address["etage"] = person_dir["etage"].lstrip('0')
-            if "sidedoer" in person_dir:
-                address["dør"] = person_dir["sidedoer"].lstrip('0')
-            if "husnummer" in person_dir:
-                address["husnr"] = person_dir["husnummer"]
-
-            try:
-                address_uuid = get_address_uuid(address)
-            except Exception as e:
                 report_error(
-                    "Unable to lookup address for customer: {0}".format(
-                        id_number
-                    ), error_stack=None, error_object=address
+                    "CPR number not found: {0}".format(id_number)
                 )
-                address_uuid = None
+                return None
 
-            # Cache address for customer relation
-            address_string = "{0}, {1}".format(
-                person_dir['standardadresse'], person_dir['postnummer']
+        first_name = person_dir['fornavn']
+        middle_name = person_dir.get('mellemnavn', '')
+        last_name = person_dir['efternavn']
+
+        # Address related stuff
+        address = {
+            "vejnavn": person_dir["vejnavn"],
+            "postnr": person_dir["postnummer"]
+        }
+        if "etage" in person_dir:
+            address["etage"] = person_dir["etage"].lstrip('0')
+        if "sidedoer" in person_dir:
+            address["dør"] = person_dir["sidedoer"].lstrip('0')
+        if "husnummer" in person_dir:
+            address["husnr"] = person_dir["husnummer"]
+
+        try:
+            address_uuid = get_address_uuid(address)
+        except Exception as e:
+            report_error(
+                "Unable to lookup address for customer: {0}".format(
+                    id_number
+                ), error_stack=None, error_object=address
             )
-            gender = person_dir['koen']
-            marital_status = person_dir['civilstand']
-            address_protection = person_dir['adressebeskyttelse']
+            address_uuid = None
 
-            result = create_bruger(
-                id_number, key, name, phone, email, mobile, fax, first_name,
-                middle_name, last_name, address_uuid, gender, marital_status,
-                address_protection, note
-            )
-        else:
-            report_error("Forkert CPR/SE-nr for {0}: {1}".format(
-                name, id_number)
-            )
-            # Invalid customer
-            return None
+        # Cache address for customer relation
+        address_string = "{0}, {1}".format(
+            person_dir['standardadresse'], person_dir['postnummer']
+        )
+        gender = person_dir['koen']
+        marital_status = person_dir['civilstand']
+        address_protection = person_dir['adressebeskyttelse']
 
-        if result:
+        result = create_bruger(
+            id_number, key, name, phone, email, mobile, fax, first_name,
+            middle_name, last_name, address_uuid, gender, marital_status,
+            address_protection, note
+        )
+    else:
+        report_error("Forkert CPR/SE-nr for {0}: {1}".format(
+            name, id_number)
+        )
+        # Invalid customer
+        return None
 
-            SP_ADDRESS_CACHE[id_number] = address_string
-            return result.json()['uuid']
+    if result:
+
+        SP_ADDRESS_CACHE[id_number] = address_string
+        return result.json()['uuid']
 
 
 def lookup_customer(id_number):
@@ -192,7 +195,28 @@ def get_agreement_address_uuid(connection, forbrugssted, id_number):
     cursor = connection.cursor(as_dict=True)
     cursor.execute(FORBRUGSSTED_ADRESSE_SQL.format(forbrugssted))
     rows = cursor.fetchall()
-    assert(len(rows) == 1)
+
+    # Hotfix:
+    # Some lookups will return 0
+    # Removing the assert as it breaks the import flow
+    # TODO:
+    # We must investigate the circumstances which cause this issue
+    # In theory forbrugssted should not be returned as 0
+
+    # assert(len(rows) == 1)
+
+    # Hotfix:
+    # Log if
+    if len(rows) != 1:
+        # Send error to log:
+        report_error(
+            "Forbrugssted for {0} returnerer: {1}".format(
+                id_number, forbrugssted
+            )
+        )
+
+        return None
+
     frbrst_addr = rows[0]
     # Lookup addres
     vejnavn = frbrst_addr['ForbrStVejnavn']
@@ -228,47 +252,12 @@ def get_agreement_address_uuid(connection, forbrugssted, id_number):
 
 
 def create_product(name, identification, installation_type, meter_number,
-                   start_date, end_date):
+                   meter_type, start_date, end_date):
     "Create a Klasse from this info and return UUID"
     result = create_klasse(name, identification, installation_type,
-                           meter_number, start_date, end_date)
+                           meter_number, meter_type, start_date, end_date)
     if result:
         return result.json()['uuid']
-
-
-# CPR/CVR helper function
-
-
-def cpr_cvr(val):
-    if type(val) == float:
-        val = str(int(val))
-        if not (8 <= len(val) <= 10):
-            pass
-        if len(val) == 9:
-            val = '0' + val
-    return val
-
-
-def is_cpr(val):
-    return len(val) == 10 and val.isdigit()
-
-
-def is_cvr(val):
-    return len(val) == 8 and val.isdigit()
-
-
-def connect(server, database, username, password):
-    driver1 = '{SQL Server}'
-    driver2 = '{ODBC Driver 13 for SQL Server}'
-    cnxn = None
-    try:
-        cnxn = pymssql.connect(server=server, user=username,
-                               password=password, database=database)
-    except Exception as e:
-        print(e)
-        report_error(str(e))
-        raise
-    return cnxn
 
 
 def import_all(connection):
@@ -306,9 +295,9 @@ def import_all(connection):
                 n += 1
             else:
                 # No customer created or found.
-                report_error("No customer created:" +
-                             row['KundeNavn'] +
-                             str(row['PersonnrSEnr']))
+                report_error("No customer created: %s %s" % (
+                             row['KundeNavn'],
+                             row['PersonnrSEnr']))
                 continue
 
         # Create customer relation
@@ -386,11 +375,12 @@ def import_all(connection):
             identification = p['InstalNummer']
             installation_type = VARME
             meter_number = p['Målernr']
+            meter_type = p['MaalerTypeBetegnel']
             start_date = p['DatoFra']
             end_date = p['DatoTil']
             product_uuid = create_product(
                 name, identification, installation_type, meter_number,
-                start_date, end_date
+                meter_type, start_date, end_date
             )
             if product_uuid:
                 product_uuids.append(product_uuid)

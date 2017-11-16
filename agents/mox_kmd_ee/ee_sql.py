@@ -12,7 +12,7 @@
 # Only relevant fields (please).
 
 CUSTOMER_SQL = """
-SELECT top(100)  [PersonnrSEnr]
+SELECT [PersonnrSEnr]
       ,[KundeCprnr]
       ,[LigestPersonnr]
       ,[Tilflytningsdato]
@@ -40,6 +40,7 @@ TREFINSTALLATION_SQL = """SELECT *
     AND a.InstallationID = b.InstallationID
     AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
     """
+
 FORBRUGSSTED_ADRESSE_SQL = """SELECT [Husnr],
                                      [ForbrStVejnavn],
                                      [Postdistrikt],
@@ -49,4 +50,42 @@ FORBRUGSSTED_ADRESSE_SQL = """SELECT [Husnr],
                                      [Sidedørnr]
                             FROM Forbrugssted
                             WHERE ForbrugsstedID = {0}
-                            """
+                          """
+
+
+CUSTOMER_AND_FORBRUGSSTED_SQL = """
+SELECT   [PersonnrSEnr]
+      ,[KundeCprnr]
+      ,[LigestPersonnr]
+      ,[Tilflytningsdato]
+      ,[Fraflytningsdato]
+      ,[EmailKunde]
+      ,[MobilTlf]
+      ,[KundeID]
+      ,[Kundenr]
+      ,[Status]
+      ,[Telefonnr]
+      ,[FasadministratorID]
+      ,[BoligadminID]
+      ,[KundeNavn]
+      ,[VejNavn]
+      ,[Kunde].[Postdistrikt]
+      ,[Kunde].[ForbrugsstedID]
+      ,[Forbrugssted].[Husnr]
+      ,[Forbrugssted].[ForbrStVejnavn]
+      ,[Forbrugssted].[Postdistrikt]
+      ,[Forbrugssted].[Postnr]
+      ,[Forbrugssted].[Bogstav]
+      ,[Forbrugssted].[Etage]
+      ,[Forbrugssted].[Sidedørnr]
+  FROM Kunde, Forbrugssted
+  WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE() AND
+  [Kunde].[ForbrugsstedID] = [Forbrugssted].[ForbrugsstedID]
+"""
+
+TREFINSTALLATION_ALL_SQL = """SELECT Målertypefabrikat, MaalertypeBetegnel,
+Instalnummer, Målernr, DatoFra, DatoTil
+    FROM TrefInstallation a, TrefMaaler b
+    WHERE  a.InstallationID = b.InstallationID
+    AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
+    """

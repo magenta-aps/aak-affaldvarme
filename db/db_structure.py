@@ -70,7 +70,7 @@ DATABASE_STRUCTURE = {
                 "brugernavn",
                 "brugertype",
                 "ava_fornavn",
-                "ava_mellenavn",
+                "ava_mellemnavn",
                 "ava_efternavn",
                 "ava_civilstand",
                 "ava_koen",
