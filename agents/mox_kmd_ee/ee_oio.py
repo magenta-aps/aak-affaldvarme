@@ -260,7 +260,7 @@ def lookup_bruger(id_number):
 
 
 def create_interessefaellesskab(customer_number, customer_relation_name,
-                                customer_type, note=""):
+                                customer_type, address_uuid, note=""):
     virkning = create_virkning()
     interessefaellesskab_dict = {
         "note": note,
@@ -290,6 +290,14 @@ def create_interessefaellesskab(customer_number, customer_relation_name,
             ],
         }
     }
+
+    if address_uuid:
+        interessefaellesskab_dict['relationer']['adresser'] = [
+            {
+                "uuid": address_uuid,
+                "virkning": virkning
+            }
+        ]
 
     url = "{0}/organisation/interessefaellesskab".format(BASE_URL)
     response = session.post(url, json=interessefaellesskab_dict)
@@ -349,7 +357,7 @@ def create_organisationfunktion(customer_number,
 
 @request
 def create_indsats(name, agreement_type, no_of_products, invoice_address,
-                   address, start_date, end_date, location,
+                   start_date, end_date, location,
                    customer_relation_uuid, product_uuids, note=""):
     virkning = create_virkning()
     tz = pytz.timezone('Europe/Copenhagen')
@@ -412,15 +420,7 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
                 "virkning": virkning
             }
         ]
-    """
-    if address:
-        indsats_dict['relationer']['indsatssag'] = [
-            {
-                "uuid": address,
-                "virkning": virkning
-            }
-        ]
-    """
+
     url = "{0}/indsats/indsats".format(BASE_URL)
     response = session.post(url, json=indsats_dict)
 

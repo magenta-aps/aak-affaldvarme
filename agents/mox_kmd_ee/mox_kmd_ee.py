@@ -32,8 +32,6 @@ LIGESTILLINGSKUNDE = "Ligestillingskunde"
 # This is used to cache customer's addresses from SP for use when creating
 # names for customer roles.
 
-SP_ADDRESS_CACHE = {}
-
 
 def create_customer(id_number, key, name, phone="", email="",
                     mobile="", fax="", note=""):
@@ -136,7 +134,6 @@ def create_customer(id_number, key, name, phone="", email="",
 
     if result:
 
-        SP_ADDRESS_CACHE[id_number] = address_string
         return result.json()['uuid']
 
 
@@ -162,21 +159,24 @@ def create_customer_role(customer_number, customer_uuid,
 
 
 def create_customer_relation(customer_number, customer_relation_name,
-                             customer_type):
+                             customer_type, address_uuid):
     "Create an Interessefællesskab from this info and return UUID"
-    result = create_interessefaellesskab(customer_number,
-                                         customer_relation_name,
-                                         customer_type)
+    result = create_interessefaellesskab(
+        customer_number,
+        customer_relation_name,
+        customer_type,
+        address_uuid
+    )
     if result:
         return result.json()['uuid']
 
 
 def create_agreement(name, agreement_type, no_of_products, invoice_address,
-                     address, start_date, end_date, location,
+                     start_date, end_date, location,
                      customer_role_uuid, product_uuids):
     "Create an Indsats from this info and return UUID"
     result = create_indsats(name, agreement_type, no_of_products,
-                            invoice_address, address, start_date, end_date,
+                            invoice_address, start_date, end_date,
                             location, customer_role_uuid, product_uuids)
     if result:
         return result.json()['uuid']
@@ -221,11 +221,16 @@ def get_agreement_address_uuid(connection, forbrugssted, id_number):
     # Lookup addres
     vejnavn = frbrst_addr['ForbrStVejnavn']
     postnr = frbrst_addr['Postnr']
+    postdistrikt = frbrst_addr['Postdistrikt']
     husnummer = str(frbrst_addr['Husnr'])
     if frbrst_addr['Bogstav']:
         husnummer += frbrst_addr['Bogstav']
     etage = frbrst_addr['Etage']
     doer = frbrst_addr['Sidedørnr']
+
+    address_string = "{0} {1}{2}{3}, {4}".format(
+        vejnavn, husnummer, etage, doer, postdistrikt
+    )
 
     address = {
         "vejnavn": vejnavn,
@@ -248,7 +253,7 @@ def get_agreement_address_uuid(connection, forbrugssted, id_number):
         )
         address_uuid = None
 
-    return address_uuid
+    return (address_string, address_uuid)
 
 
 def create_product(name, identification, installation_type, meter_number,
@@ -303,14 +308,27 @@ def import_all(connection):
         # Create customer relation
         # NOTE: In KMD EE, there's always one customer relation for each row in
         # the Kunde table.
+
+        # Get Forbrugsstedadresse
+        forbrugssted = row['ForbrugsstedID']
+
+        (forbrugssted_addres,
+         forbrugssted_address_uuid) = get_forbrugssted_address_uuid(
+            connection,
+            forbrugssted,
+            id_number
+        )
         try:
-            name_address = SP_ADDRESS_CACHE[id_number]
+            name_address = forbrugssted_address
         except:
             name_address = "KOMMER!"
             print("SP_CACHE mangler for ", id_number)
         cr_name = "{0}, {1}".format(VARME, name_address)
         cr_type = VARME  # Always for KMD EE
-        cr_uuid = create_customer_relation(customer_number, cr_name, cr_type)
+        cr_address_uuid = forbrugssted_address_uuid
+        cr_uuid = create_customer_relation(
+            customer_number, cr_name, cr_type, cr_address_uuid
+        )
 
         assert(cr_uuid)
 
@@ -357,13 +375,6 @@ def import_all(connection):
 
         customer_id = row['KundeID']
 
-        forbrugssted = row['ForbrugsstedID']
-
-        agreement_address_uuid = get_agreement_address_uuid(
-            connection,
-            forbrugssted,
-            id_number
-        )
         products = get_products_for_location(connection, forbrugssted)
 
         no_of_products = len(products)
@@ -387,7 +398,7 @@ def import_all(connection):
 
         agreement_uuid = create_agreement(
             name, agreement_type, no_of_products, invoice_address_uuid,
-            agreement_address_uuid, start_date, end_date, forbrugssted,
+            start_date, end_date, forbrugssted,
             cr_uuid, product_uuids
         )
         assert(agreement_uuid)
