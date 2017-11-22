@@ -190,7 +190,7 @@ def get_products_for_location(connection, forbrugssted):
     return rows
 
 
-def get_agreement_address_uuid(connection, forbrugssted, id_number):
+def get_forbrugssted_address_uuid(connection, forbrugssted, id_number):
     "Get UUID of the address for this Forbrugssted"
     cursor = connection.cursor(as_dict=True)
     cursor.execute(FORBRUGSSTED_ADRESSE_SQL.format(forbrugssted))
@@ -219,7 +219,7 @@ def get_agreement_address_uuid(connection, forbrugssted, id_number):
 
     frbrst_addr = rows[0]
     # Lookup addres
-    vejnavn = frbrst_addr['ForbrStVejnavn']
+    vejkode = frbrst_addr['Vejkode']
     postnr = frbrst_addr['Postnr']
     postdistrikt = frbrst_addr['Postdistrikt']
     husnummer = str(frbrst_addr['Husnr'])
@@ -233,7 +233,7 @@ def get_agreement_address_uuid(connection, forbrugssted, id_number):
     )
 
     address = {
-        "vejnavn": vejnavn,
+        "vejkode": vejkode,
         "postnr": postnr
     }
     if etage:
