@@ -4,7 +4,7 @@ import time
 
 import pika
 import requests
-from serviceplatformen_cpr.services import get_citizen as _get_cpr_data
+from serviceplatformen_cpr import get_cpr_data
 from serviceplatformen_cvr import get_cvr_data as _get_cvr_data
 
 from settings import (CPR_CERTIFICATE_FILE, CPR_SP_UUIDS, CVR_CERTIFICATE_FILE,
@@ -21,6 +21,9 @@ def report_error(error_message, error_stack=None, error_object=None):
     }
 
     # TODO: Remove this
+    # if not (error_message.startswith('CVR number not found') or
+    #        error_message in ['Unable to import contact',]):
+    #    raise RuntimeError(error_msg)
     print(error_msg)
     return
 
@@ -35,84 +38,6 @@ def report_error(error_message, error_stack=None, error_object=None):
     )
     connection.close()
 
-
-def get_cpr_data(id_number):
-    # TODO: Remove this
-    # return {
-    #     "statsborgerskab": "5100",
-    #     "efternavn": "Jensen",
-    #     "postdistrikt": "Næstved",
-    #     "foedselsregistreringssted": "Myndighedsnavn for landekode: 5902",
-    #     "boernUnder18": "false",
-    #     "civilstandsdato": "1991-03-21+01:00",
-    #     "adresseringsnavn": "Jens Jensner Jensen",
-    #     "fornavn": "Jens Jensner",
-    #     "tilflytningsdato": "2001-12-01+01:00",
-    #     "markedsfoeringsbeskyttelse": "true",
-    #     "vejkode": "1759",
-    #     "standardadresse": "Sterkelsvej 17 A,2",
-    #     "etage": "02",
-    #     "koen": "M",
-    #     "status": "80",
-    #     "foedselsdato": "1978-04-27+01:00",
-    #     "vejnavn": "Sterkelsvej",
-    #     "statsborgerskabdato": "1991-09-23+02:00",
-    #     "adressebeskyttelse": "false",
-    #     "stilling": "Sygepl ske",
-    #     "gaeldendePersonnummer": "2704785263",
-    #     "vejadresseringsnavn": "Sterkelsvej",
-    #     "civilstand": "G",
-    #     "alder": "59",
-    #     "relationer": [
-    #         {
-    #             "cprnr": "0123456780",
-    #             "relation": "aegtefaelle"
-    #         },
-    #         {
-    #             "cprnr": "1123456789",
-    #             "relation": "barn"
-    #         },
-    #         {
-    #             "cprnr": "2123456789",
-    #             "relation": "barn"
-    #         },
-    #         {
-    #             "cprnr": "3123456789",
-    #             "relation": "barn"
-    #         },
-    #         {
-    #             "cprnr": "0000000000",
-    #             "relation": "mor"
-    #         },
-    #         {
-    #             "cprnr": "0000000000",
-    #             "relation": "far"
-    #         }
-    #     ],
-    #     "postnummer": "4700",
-    #     "husnummer": "017A",
-    #     "vejviserbeskyttelse": "true",
-    #     "kommunekode": "370"
-    # }
-
-    # Avoid getting throttled by SP
-    try:
-        person_dir = _get_cpr_data(service_uuids=CPR_SP_UUIDS,
-                                   certificate=CPR_CERTIFICATE_FILE,
-                                   cprnr=id_number)
-    except Exception as e:
-        # Retry *once* after sleeping
-        time.sleep(40)
-        try:
-            person_dir = _get_cpr_data(service_uuids=CPR_SP_UUIDS,
-                                       certificate=CPR_CERTIFICATE_FILE,
-                                       cprnr=id_number)
-        except Exception as e:
-            report_error(
-                "CPR number not found: {0}".format(id_number)
-            )
-            return None
-    return person_dir
 
 
 def get_cvr_data(id_number):
@@ -136,6 +61,11 @@ def get_cvr_data(id_number):
     try:
         company_dir = _get_cvr_data(id_number, CVR_SP_UUIDS,
                                     CVR_CERTIFICATE_FILE)
+    except (TypeError, IndexError, KeyError) as e:
+        report_error(
+            "CVR number not found: {0}: {1}".format(id_number, str(e))
+        )
+        return None
     except Exception as e:
         # Retry *once* after sleeping
         time.sleep(40)
@@ -144,7 +74,7 @@ def get_cvr_data(id_number):
                                         CVR_CERTIFICATE_FILE)
         except Exception as e:
             report_error(
-                "CVR number not found: {0}".format(id_number)
+            "CVR number not found: {0}: {1}".format(id_number, str(e))
             )
             return None
     return company_dir

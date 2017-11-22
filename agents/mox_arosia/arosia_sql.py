@@ -1,5 +1,5 @@
 CONTACT_SQL = """
-SELECT top(100) 
+SELECT 
         [ava_CPRnummer],
         [ava_CVRnummer],
         [MobilePhone], 
@@ -12,7 +12,7 @@ SELECT top(100)
 """
 
 ACCOUNT_SQL = """
-SELECT top(100) 
+SELECT
         [Name],
         [AccountNumber],
         [ava_Kundeforholdstype], 
@@ -21,7 +21,7 @@ SELECT top(100)
 """
 
 KONTAKTROLLE_SQL = """
-SELECT top(100) 
+SELECT 
         [ava_Kontakt],
         [ava_KontaktName],
         [ava_Kundeforhold],

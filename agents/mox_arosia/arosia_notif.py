@@ -1,4 +1,4 @@
-from arosia_oio import (lookup_account_arosia_id, lookup_contact_by_arosia_id,
+from arosia_oio import (lookup_account_by_arosia_id, lookup_contact_by_arosia_id,
                         lookup_products_by_aftale_id)
 from arosia_sql import (ACCOUNT_SQL_RECENT, CONTACT_SQL_RECENT,
                         KONTAKTROLLE_SQL_RECENT, KUNDEAFTALE_SQL_RECENT,
@@ -59,7 +59,7 @@ def update_kontaktrolle(connection):
         account_id = row['ava_Kundeforhold']
 
         contact = lookup_contact_by_arosia_id(contact_id)
-        account = lookup_account_arosia_id(account_id)
+        account = lookup_account_by_arosia_id(account_id)
         if not account or not contact:
             report_error('Unknown contact_id ({0}) or account_id ({1})'.format(
                 contact_id, account_id))
@@ -101,7 +101,7 @@ def update_kundeaftale(connection):
 
     for row in rows:
         account_id = row.get('ava_kundeforhold')
-        account = lookup_account_arosia_id(account_id)
+        account = lookup_account_by_arosia_id(account_id)
 
         aftale_id = row.get('ava_kundeaftaleId')
         products = lookup_products_by_aftale_id(aftale_id)

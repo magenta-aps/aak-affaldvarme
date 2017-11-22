@@ -77,6 +77,9 @@ def extract_cvr_and_update_lora(id_number, key="", phone="", email="", note="",
     # Collect info from SP and include in call creating user.
     # Avoid getting throttled by SP
     company_dir = get_cvr_data(id_number)
+    if not company_dir:
+        print("CVR Number not found", id_number)
+        return
 
     name = company_dir['organisationsnavn']
     address_uuid = company_dir['dawa_uuid']
@@ -225,6 +228,7 @@ def create_or_update_organisation(cvr_number, key, name, arosia_phone="",
                                   company_type="", industry_code="", note="",
                                   arosia_id="", sms_notif=""):
     uuid = lookup_organisation(cvr_number)
+
     organisation_dict = generate_organisation_dict(cvr_number, key, name,
                                                    arosia_phone,
                                                    arosia_email,
@@ -245,7 +249,12 @@ def create_or_update_organisation(cvr_number, key, name, arosia_phone="",
 def extract_cpr_and_update_lora(id_number, key="", name="", phone="", email="",
                                 note="", arosia_id="", sms_notif=""):
     # Collect info from SP and include in call creating user.
-    person_dir = get_cpr_data(id_number)
+    try:
+        person_dir = get_cpr_data(id_number)
+    except Exception as e:
+        report_error("Unable to lookup CPR {0}: {1}", id_number, str(e))
+        person_dir = None
+
     if not person_dir:
         return
 
@@ -254,10 +263,11 @@ def extract_cpr_and_update_lora(id_number, key="", name="", phone="", email="",
     last_name = person_dir['efternavn']
 
     # Address related stuff
-    address = {
-        "vejnavn": person_dir["vejnavn"],
-        "postnr": person_dir["postnummer"]
-    }
+    address = {}
+    if "vejnavn" in person_dir:
+        address["vejnavn"] = person_dir["vejnavn"]
+    if "postnummer" in person_dir:
+        address["postnr"] = person_dir["postnummer"]
     if "etage" in person_dir:
         address["etage"] = person_dir["etage"].lstrip('0')
     if "sidedoer" in person_dir:
@@ -394,7 +404,7 @@ def generate_bruger_dict(cpr_number, key, name, arosia_phone="",
                 "virkning": virkning
             }
         )
-
+    
     return bruger_dict
 
 
@@ -416,6 +426,9 @@ def create_or_update_bruger(cpr_number, key, name, arosia_phone="",
                             address_protection="", note="", arosia_id="",
                             sms_notif=""):
     uuid = lookup_bruger(cpr_number)
+
+    if uuid:
+        return uuid
 
     bruger_dict = generate_bruger_dict(
         cpr_number=cpr_number,
@@ -500,6 +513,9 @@ def create_or_update_interessefaellesskab(customer_number,
                                           customer_relation_name,
                                           customer_type, arosia_id="", note=""):
     uuid = lookup_interessefaellesskab(customer_number)
+
+    if uuid:
+        return uuid
 
     interessefaellesskab_dict = generate_interessefaellesskab_dict(
         customer_number, customer_relation_name, customer_type, arosia_id, note)
@@ -822,7 +838,7 @@ def lookup_contact_by_arosia_id(contact_id):
     return uuid
 
 
-def lookup_account_arosia_id(account_id):
+def lookup_account_by_arosia_id(account_id):
     request_string = (
         "{0}/organisation/interessefaellesskab?ava_arosia_id=urn:arosia_id:{1}".format(
             BASE_URL, account_id

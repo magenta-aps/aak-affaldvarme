@@ -5,7 +5,11 @@ from arosia_oio import (create_or_update_indsats,
                         create_or_update_klasse,
                         create_or_update_organisationfunktion,
                         extract_cpr_and_update_lora,
-                        extract_cvr_and_update_lora)
+                        extract_cvr_and_update_lora, 
+                        lookup_bruger,
+                        lookup_organisation,
+                        lookup_organisationfunktion,
+                        lookup_interessefaellesskab)
 from services import fuzzy_address_uuid
 
 """
@@ -25,7 +29,10 @@ def handle_cpr(row, phone, email, sms_notif):
                                            arosia_id=arosia_id,
                                            sms_notif=sms_notif)
     if response:
-        lora_id = response.json()['uuid']
+        try:
+            lora_id = response.json()['uuid']
+        except AttributeError:
+            lora_id = response
         return lora_id
 
 
@@ -55,10 +62,17 @@ def handle_contact(row):
     phone = mobile_phone or telephone
 
     if cpr:
-        return handle_cpr(row, phone, email, sms_notif)
+        lora_id = lookup_bruger(cpr)
+        if not lora_id:
+            lora_id = handle_cpr(row, phone, email, sms_notif)
     elif cvr:
-        return handle_cvr(row, phone, email, sms_notif)
-
+        lora_id = lookup_organisation(cvr)
+        if not lora_id:
+            lora_id = handle_cvr(row, phone, email, sms_notif)
+    else:
+        # Empty row
+        lora_id = None
+    return lora_id
 
 def handle_kundeaftale(row, account, products):
     logger.info('Handling kundeaftale')
@@ -119,14 +133,20 @@ def handle_account(row):
         customer_type=customer_type,
         arosia_id=arosia_id)
     if response:
-        lora_id = response.json()['uuid']
+        try:
+            lora_id = response.json()['uuid']
+        except AttributeError:
+            lora_id = response
         return lora_id
 
 
 def handle_kontaktrolle(row, contact, account):
     logger.info('Handling kontaktrolle')
-    name = row.get('ava_KontaktName')
+    name = str(row.get('ava_KontaktName'))
     role = str(row.get('ava_Rolle'))
+    uuid = lookup_organisationfunktion(role, name)
+    if uuid:
+        return uuid
     response = create_or_update_organisationfunktion(
         customer_number=name,
         customer_uuid=contact,
