@@ -219,6 +219,7 @@ def get_forbrugssted_address_uuid(connection, forbrugssted, id_number):
 
     frbrst_addr = rows[0]
     # Lookup addres
+    vejnavn = frbrst_addr['ForbrStVejnavn']
     vejkode = frbrst_addr['Vejkode']
     postnr = frbrst_addr['Postnr']
     postdistrikt = frbrst_addr['Postdistrikt']
@@ -228,7 +229,7 @@ def get_forbrugssted_address_uuid(connection, forbrugssted, id_number):
     etage = frbrst_addr['Etage']
     doer = frbrst_addr['Sidedørnr']
 
-    address_string = "{0} {1}{2}{3}, {4}".format(
+    address_string = "{0} {1} {2} {3}, {4}".format(
         vejnavn, husnummer, etage, doer, postdistrikt
     )
 
@@ -248,7 +249,7 @@ def get_forbrugssted_address_uuid(connection, forbrugssted, id_number):
     except Exception as e:
         report_error(
             "Forbrugsadresse fejler for kunde {0}: {1}".format(
-                id_number, address
+                id_number, address_string
             ), error_stack=None, error_object=address
         )
         address_uuid = None
@@ -312,17 +313,16 @@ def import_all(connection):
         # Get Forbrugsstedadresse
         forbrugssted = row['ForbrugsstedID']
 
-        (forbrugssted_addres,
+        (forbrugssted_address,
          forbrugssted_address_uuid) = get_forbrugssted_address_uuid(
             connection,
             forbrugssted,
             id_number
         )
-        try:
-            name_address = forbrugssted_address
-        except:
-            name_address = "KOMMER!"
-            print("SP_CACHE mangler for ", id_number)
+
+        name_address = forbrugssted_address
+        if not forbrugssted_address_uuid:
+            report_error(forbrugssted_address)
         cr_name = "{0}, {1}".format(VARME, name_address)
         cr_type = VARME  # Always for KMD EE
         cr_address_uuid = forbrugssted_address_uuid

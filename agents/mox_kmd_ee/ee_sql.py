@@ -12,7 +12,7 @@
 # Only relevant fields (please).
 
 CUSTOMER_SQL = """
-SELECT [PersonnrSEnr]
+SELECT top(100) [PersonnrSEnr]
       ,[KundeCprnr]
       ,[LigestPersonnr]
       ,[Tilflytningsdato]
@@ -43,6 +43,7 @@ TREFINSTALLATION_SQL = """SELECT *
 
 FORBRUGSSTED_ADRESSE_SQL = """SELECT [Husnr],
                                      [ForbrStVejnavn],
+                                     [Vejkode],
                                      [Postdistrikt],
                                      [Postnr],
                                      [Bogstav],
