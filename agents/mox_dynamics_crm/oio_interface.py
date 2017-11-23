@@ -46,7 +46,7 @@ def fetch_relation(identifier):
     # Reference uuid
     reference = query[0]
 
-    return fetch_entity("organisationfunktion", reference)
+    return query
 
 
 def fetch_relation_indsats(identifier):
@@ -74,6 +74,10 @@ def fetch_relation_indsats(identifier):
 
     # Reference uuid
     reference = query[0]
+
+    # Check for entities with more than one result
+    if len(query) > 1:
+        print("AFTALE: {}".format(query))
 
     return fetch_entity("indsats", reference)
 
