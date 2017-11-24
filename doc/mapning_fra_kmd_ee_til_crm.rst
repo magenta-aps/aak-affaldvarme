@@ -120,7 +120,19 @@ Med denned definition bliver kunderollens
 * *Kundeforhold* et opslag til det relevante Kundeforhold
 * *Rolle* en relation til klassifikation angivet som URN, altså f.eks.
   ``915.240.000``.
+* Den numeriske nøgle bruges også som brugervendt nøgle for objektet.
 
+Mapningen bliver hermed: 
+
+=======================    =================     
+CRM                        LoRa
+=======================    =================     
+Navn                       funktionsnavn
+Aktør                      tilknyttedebrugere
+Kundeforhold               tilknyttedeinte-
+                           ressefællesskaber
+Rolle                      brugervendtnoegle
+=======================    =================       
 
 Kundeforhold
 ------------

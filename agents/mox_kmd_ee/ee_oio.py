@@ -317,8 +317,8 @@ def create_organisationfunktion(customer_uuid,
         "attributter": {
             "organisationfunktionegenskaber": [
                 {
-                    "brugervendtnoegle": role,
-                    "funktionsnavn": numeric_role,
+                    "brugervendtnoegle": numeric_role,
+                    "funktionsnavn": role,
                     "virkning": virkning
                 }
             ]
