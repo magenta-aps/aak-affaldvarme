@@ -17,6 +17,8 @@ from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL, FORBRUGSSTED_ADRESSE_SQL
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_oio import create_klasse, lookup_bruger, lookup_organisation
+from ee_oio import KUNDE, LIGESTILLINGSKUNDE
+
 from ee_utils import cpr_cvr, is_cpr, is_cvr, connect
 
 from service_clients import get_address_uuid, fuzzy_address_uuid, get_cvr_data
@@ -25,10 +27,6 @@ from service_clients import report_error
 # Definition of strings used for Klassifikation URNs
 
 VARME = "Varme"
-KUNDE = "Kunde"
-LIGESTILLINGSKUNDE = "Ligestillingskunde"
-
-ROLE_MAP = {KUNDE: "915240004", LIGESTILLINGSKUNDE: "915240006"}
 
 # This is used to cache customer's addresses from SP for use when creating
 # names for customer roles.
@@ -350,7 +348,7 @@ def import_all(connection):
 
             if ligest_uuid:
                 create_customer_role(
-                    customer_number, ligest_uuid, cr_uuid, LIGESTILLINGSKUNDE
+                    ligest_uuid, cr_uuid, LIGESTILLINGSKUNDE
                 )
 
         # Create agreement

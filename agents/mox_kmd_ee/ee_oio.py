@@ -12,7 +12,12 @@ import requests
 from dateutil import parser
 
 from settings import SYSTEM_USER, AVA_ORGANISATION, BASE_URL
-from mox_kmd_ee import ROLE_MAP
+
+KUNDE = "Kunde"
+LIGESTILLINGSKUNDE = "Ligestillingskunde"
+
+ROLE_MAP = {KUNDE: "915240004", LIGESTILLINGSKUNDE: "915240006"}
+
 
 session = requests.Session()
 session.verify = '/etc/ssl/certs/ca-certificates.crt'
