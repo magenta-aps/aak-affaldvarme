@@ -28,7 +28,6 @@ ROLE_MAP = {
 }
 
 
-
 session = requests.Session()
 
 
@@ -415,7 +414,7 @@ def generate_bruger_dict(cpr_number, key, name, arosia_phone="",
                 "virkning": virkning
             }
         )
-    
+
     return bruger_dict
 
 
@@ -522,17 +521,22 @@ def lookup_interessefaellesskab(customer_number):
 
 def create_or_update_interessefaellesskab(customer_number,
                                           customer_relation_name,
-                                          customer_type, arosia_id="", note=""):
+                                          customer_type,
+                                          arosia_id="",
+                                          note=""):
     uuid = lookup_interessefaellesskab(customer_number)
 
     if uuid:
         return uuid
 
     interessefaellesskab_dict = generate_interessefaellesskab_dict(
-        customer_number, customer_relation_name, customer_type, arosia_id, note)
+        customer_number, customer_relation_name, customer_type, arosia_id, note
+    )
 
     if uuid:
-        url = "{0}/organisation/interessefaellesskab/{1}".format(BASE_URL, uuid)
+        url = (
+            "{0}/organisation/interessefaellesskab/{1}".format(BASE_URL, uuid)
+        )
         response = session.put(url, json=interessefaellesskab_dict)
     else:
         url = "{0}/organisation/interessefaellesskab".format(BASE_URL)
@@ -541,9 +545,8 @@ def create_or_update_interessefaellesskab(customer_number,
     return response
 
 
-def generate_organisationfunktion_dict(customer_number, customer_uuid,
-                                       customer_relation_uuid, numeric_role,
-                                       note):
+def generate_organisationfunktion_dict(customer_uuid, customer_relation_uuid,
+                                       numeric_role, note):
     virkning = create_virkning()
 
     role = ROLE_MAP[numeric_role]
@@ -552,8 +555,8 @@ def generate_organisationfunktion_dict(customer_number, customer_uuid,
         "attributter": {
             "organisationfunktionegenskaber": [
                 {
-                    "brugervendtnoegle": " ".join([role, customer_number]),
-                    "funktionsnavn": numeric_role,
+                    "brugervendtnoegle": numeric_role,
+                    "funktionsnavn": role,
                     "virkning": virkning
                 }
             ]
@@ -589,13 +592,12 @@ def generate_organisationfunktion_dict(customer_number, customer_uuid,
     return organisationfunktion_dict
 
 
-def lookup_organisationfunktion(numeric_role, customer_number):
-
-    role = ROLE_MAP[numeric_role]
-    key = " ".join([role, customer_number])
+def lookup_organisationfunktion(customer_uuid, customer_relation_uuid):
+    # TODO: Very likely we don't need this.
     request_string = (
-        "{0}/organisation/organisationfunktion?bvn={1}".format(
-            BASE_URL, key
+        "{0}/organisation/organisationfunktion" +
+        "?tilknyttedebrugere={1}&tilknyttedeinteressefaellesskaber={2}".format(
+            BASE_URL, customer_uuid, customer_relation_uuid
         )
     )
 
@@ -603,19 +605,19 @@ def lookup_organisationfunktion(numeric_role, customer_number):
 
 
 @request
-def create_or_update_organisationfunktion(customer_number,
-                                          customer_uuid,
+def create_or_update_organisationfunktion(customer_uuid,
                                           customer_relation_uuid,
-                                          role, note=""):
+                                          numeric_role, note=""):
+    # TODO: Fix this for when handling notifications.
     uuid = lookup_organisationfunktion(role, customer_number)
     organisationfunktion_dict = generate_organisationfunktion_dict(
-        customer_number,
-        customer_uuid,
-        customer_relation_uuid,
-        role, note)
+        customer_uuid, customer_relation_uuid, numeric_role, note
+    )
 
     if uuid:
-        url = "{0}/organisation/organisationfunktion/{1}".format(BASE_URL, uuid)
+        url = "{0}/organisation/organisationfunktion/{1}".format(
+            BASE_URL, uuid
+        )
         return session.put(url, json=organisationfunktion_dict)
     else:
         url = "{0}/organisation/organisationfunktion".format(BASE_URL)
@@ -855,7 +857,8 @@ def lookup_contact_by_arosia_id(contact_id):
 
 def lookup_account_by_arosia_id(account_id):
     request_string = (
-        "{0}/organisation/interessefaellesskab?ava_arosia_id=urn:arosia_id:{1}".format(
+        "{0}/organisation/interessefaellesskab" +
+        "?ava_arosia_id=urn:arosia_id:{1}".format(
             BASE_URL, account_id
         )
     )

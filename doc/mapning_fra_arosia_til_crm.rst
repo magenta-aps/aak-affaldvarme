@@ -58,27 +58,26 @@ Adresse-UUID                <CVR>                       adresse
 
 Kunderolle
 ----------
-Kunderolle findes i AROSia i tabellen dbo.ava_kontaktrolle
-Kunderolle mappes til OrganisationFunktion i LoRa
+Kunderolle findes i AROSia i tabellen dbo.ava_kontaktrolle.
+Kunderolle mappes til OrganisationFunktion i LoRa.
 
-Kunderoller i AROSia har ikke noget navn. Derfor laves navnet som en
-kombination af rolle og kontakt.
-
-Kunderoller i AROSia har intet navn, så navnet er en konkatenering af rollen
-(ava_Rolle) og kontaktens navn (ava_KontaktName).
+Kunderoller i AROSia har intet navn. I CRM-systemet får rollerne navn
+efter rollen selv, dvs. f.eks. "Kunde" eller "Hovedejer" - fra feltet
+ava_roller, men display-værdien (teksværdien), ikke den numeriske værdi.
 
 =======================     =======================     =======================
 CRM                         Arosia                      LoRa
 =======================     =======================     =======================
-Navn                        ava_KontaktName             brugervendtnoegle ⁺⁺⁺
+Navn                        ava_Rolle                   brugervendtnoegle
 Aktør                       ava_Kontakt ⁺               tilknyttedebrugere
 Kundeforhold                ava_Kundeforhold ⁺⁺         tilknyttedif
-Rolle                       ava_Rolle                   funktionsnavn
+Rolle                       ava_Rolle                   funktionsnavn⁺⁺⁺
 
 
 ⁺ Reference til aktør
 ⁺⁺ Reference til kundeforhold
-⁺⁺⁺ Nøglen er sammensat af rolle og kontaktnavn
+⁺⁺⁺ Display-værdien. Sættes også som URN på relationen
+"organisatoriskfunktionstype".
 
 
 Kundeforhold
