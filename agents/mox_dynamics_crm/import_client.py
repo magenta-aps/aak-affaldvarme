@@ -13,7 +13,6 @@ import requests
 
 # Local modules
 import crm_interface as crm
-# import crm_mock as crm
 import oio_interface as oio
 import ava_adapter as adapter
 import dawa_interface as dawa
@@ -189,101 +188,9 @@ def process_entity(entity):
         log.info("Contact: {0} has no address - Exiting".format(entity_uuid))
         return False
 
-    # Attempt to get related kunderolle
-    # Set empty object
-    kunderolle = None
-
-    # Attempt to fetch the reference (uuid) for kundeforhold
-    reference_kundeforhold = None
-
-    try:
-        kunderolle_entity = oio.fetch_relation(entity_uuid)
-        log.info("Kunderolle found")
-
-        kunderolle = adapter.ava_kunderolle(kunderolle_entity)
-
-        # This must be replaced with a CRM reference
-        # Just in case something fails when inserting contact
-        # At least we have a reference to the contact
-        kunderolle["ava_aktoer"] = entity_uuid
-
-        # This must be replaced with a CRM reference
-        # kunderolle["ava_kundeforhold"] = ?
-
-        reference_kundeforhold = kunderolle["ava_kundeforhold"]
-        log.info("Setting reference_kundeforhold")
-
-    except:
-        log.error("Kunderolle not found: ")
-        log.error("Kunderolle: {0}".format(entity_uuid))
-
-    # Attempt to fetch the kundeforhold entity
-    kundeforhold = None
-
-    if reference_kundeforhold:
-        kundeforhold_entity = oio.fetch_entity(
-            "interessefaellesskab",
-            reference_kundeforhold
-        )
-
-        kundeforhold = adapter.ava_account(kundeforhold_entity)
-        log.info("Setting kundeforhold")
-
-    # Attempt to fetch the kundeforhold entity
-    aftale = None
-
-    if reference_kundeforhold:
-        aftale_entity = oio.fetch_relation_indsats(reference_kundeforhold)
-        aftale = adapter.ava_aftale(aftale_entity)
-        log.info("Setting aftale")
-
-    try:
-        ava_faktureringsgrad = aftale["ava_faktureringsgrad"]
-        log.info("Setting ava_faktureringsgrad")
-    except:
-        log.error('Aftale not found')
-
-    finally:
-        # TODO:
-        # search_crm_address(ava_faktureringsgrad)
-        pass
-
-    # Attempt to get the product
-    # This depends on aftale
-    produkt = None
-    produkt_reference = None
-
-    if aftale:
-        produkt_reference = aftale.get("ava_produkter")
-
-    try:
-        produkt_entity = oio.fetch_entity("klasse", produkt_reference)
-        produkt = adapter.ava_installation(produkt_entity)
-
-        # All following references
-        # MUST be replaced with their CRM counterparts
-        produkt["ava_adresse"] = aftale["ava_faktureringsgrad"]
-        produkt["ava_aftale"] = aftale["ava_faktureringsgrad"]
-        produkt["ava_kundenummer"] = kundeforhold["ava_kundenummer"]
-
-    except:
-        if aftale:
-            log.error("Product not found")
-            log.error("Customer: {0}".format(entity_uuid))
-            log.error("Aftale: {0}".format(aftale))
-
-    # Last log entry before adding things to CRM
-    log.info("Export: {0} to CRM".format(entity_uuid))
-
-    #################################
-    # CRM INSERT/UPDATE BEGINS HERE #
-    #################################
-
+    # CRM INSERT ADDRESS
     # Adresse
     # Depends on: None
-
-    # Prepare lookup reference fallback
-    lookup_crm_address = None
 
     # Check and return reference (GUID) if address exists in CRM
     crm_address_guid = crm.get_ava_address(address_uuid)
@@ -302,6 +209,7 @@ def process_entity(entity):
     lookup_crm_address = "/ava_adresses({0})".format(crm_address_guid)
     log.info("Lookup created: {0}".format(lookup_crm_address))
 
+    # CRM INSERT CONTACT
     # Contact
     # Depends on: Address
 
@@ -327,14 +235,44 @@ def process_entity(entity):
     lookup_crm_contact = "/contacts({0})".format(crm_contact_guid)
     log.info("Lookup for contact created: {0}".format(lookup_crm_contact))
 
-    # Kundeforhold (Account)
-    # Depends on: Address
-    # NOTE: Will depend on "Ejendom" in the future
+    # ABSTRACTED KUNDEROLLE
 
-    # Prepare lookup reference fallback
-    lookup_crm_account = None
+    # List of related "kunderoller" (belongs to contact)
+    kunderolle_uuids = oio.fetch_relation(entity_uuid)
 
-    if kundeforhold:
+    if not kunderolle_uuids:
+        log.error("Kunderolle not found: ")
+        log.error("No kunderoller found for: {0}".format(entity_uuid))
+
+    for kunderolle_uuid in kunderolle_uuids:
+        log.info("Kunderolle found: {0}".format(kunderolle_uuid))
+
+        kunderolle_entity = oio.fetch_entity(
+            "organisationfunktion",
+            kunderolle_uuid
+        )
+
+        kunderolle = adapter.ava_kunderolle(kunderolle_entity)
+
+        # Append "kundeforhold" reference to the list
+        reference_kundeforhold = kunderolle["ava_kundeforhold"]
+
+        kundeforhold_entity = oio.fetch_entity(
+            "interessefaellesskab",
+            reference_kundeforhold
+        )
+
+        kundeforhold = adapter.ava_account(kundeforhold_entity)
+        log.info("Setting kundeforhold")
+
+        if not kundeforhold:
+            log.info("Kundeforhold not found for {0}".format(entity_uuid))
+            return False
+
+        # Kundeforhold (Account)
+        # Depends on: Address
+        # NOTE: Will depend on "Ejendom" in the future
+
         ava_kundenummer = kundeforhold["ava_kundenummer"]
         crm_account_guid = crm.get_account(ava_kundenummer)
 
@@ -348,15 +286,15 @@ def process_entity(entity):
 
         # Update lookup reference
         lookup_crm_account = "/accounts({0})".format(crm_account_guid)
-        log.info("Lookup for account created: {0}".format(lookup_crm_account))
+        log.info("Lookup for account created: {0}".format(
+            lookup_crm_account))
 
-    # Kunderolle
-    # Depends on: Contact, Account
+        # Kunderolle
+        # Depends on: Contact, Account
 
-    # Prepare lookup reference fallback
-    lookup_crm_kunderolle = None
+        # Prepare lookup reference fallback
+        lookup_crm_kunderolle = None
 
-    if kunderolle:
         # Resolve dependencies for Kunderolle
         kunderolle["ava_aktoer@odata.bind"] = lookup_crm_contact
         kunderolle["ava_kundeforhold@odata.bind"] = lookup_crm_account
@@ -377,13 +315,50 @@ def process_entity(entity):
         log.info("Lookup for kunderolle created: {0}".format(
             lookup_crm_kunderolle))
 
-    # Aftale
-    # Depends on: Account, Address (Fakturering)
+        # AFTALE
+        # Attempt to fetch the kundeforhold entity
+        aftale_entity = oio.fetch_relation_indsats(reference_kundeforhold)
+        aftale = adapter.ava_aftale(aftale_entity)
+        log.info("Setting aftale")
 
-    # Prepare lookup reference fallback
-    lookup_crm_aftale = None
+        if not aftale:
+            log.error('Aftale not found')
+            return False
 
-    if aftale:
+        ava_faktureringsgrad = aftale["ava_faktureringsgrad"]
+        produkt_reference = aftale.get("ava_produkter")
+
+        log.info("Setting ava_faktureringsgrad")
+
+        # TODO:
+        # We are currently not sure how to pass the product address
+
+        # PRODUCT ADDRESSS
+        # Check and return reference (GUID) if address exists in CRM
+        crm_product_address_guid = crm.get_ava_address(ava_faktureringsgrad)
+
+        # Create address in CRM if it does not exist
+        if not crm_product_address_guid:
+            log.info("Product address does not exist in CRM")
+
+            # GET ADDRESS ENTITY HERE
+            product_address = dawa.get_address(ava_faktureringsgrad)
+
+            # Store in CRM
+            crm_product_address_guid = crm.store_address(product_address)
+
+        # Update lookup reference
+        lookup_crm_product_address = "/ava_adresses({0})".format(
+            crm_product_address_guid
+        )
+        log.info("Product address created")
+
+        # END PRODUCT ADDRESS
+
+        # INSERT AFTALE INTO CRM
+        # Aftale
+        # Depends on: Account, Address (Fakturering)
+
         # Lookup aftale by account identifier (Missing)
         crm_aftale_guid = crm.get_aftale(lookup_crm_account)
 
@@ -413,13 +388,36 @@ def process_entity(entity):
             contact_guid=crm_contact_guid
         )
 
-    # Product
-    # Depends on: Aftale, Address
+        # Attempt to get the product
+        # This depends on aftale
 
-    # Prepare lookup reference fallback
-    lookup_crm_produkt = None
+        if not produkt_reference:
+            log.error(
+                "No product reference found for: {0}".format(
+                    entity_uuid
+                )
+            )
+            return False
 
-    if produkt:
+        produkt_entity = oio.fetch_entity("klasse", produkt_reference)
+        produkt = adapter.ava_installation(produkt_entity)
+
+        if not produkt:
+            log.error("Product not found")
+            log.error("Customer: {0}".format(entity_uuid))
+            log.error("Aftale: {0}".format(aftale))
+            return False
+
+        # All following references
+        # MUST be replaced with their CRM counterparts
+        produkt["ava_adresse"] = ava_faktureringsgrad
+        produkt["ava_aftale"] = ava_faktureringsgrad
+        produkt["ava_kundenummer"] = kundeforhold["ava_kundenummer"]
+
+        # INSERT PRODUKT INTO CRM
+        # Product
+        # Depends on: Aftale, Address
+
         # Lookup produkt by "ava_maalernummer"
         produkt_identifier = produkt["ava_maalernummer"]
         crm_produkt_guid = crm.get_produkt(produkt_identifier)
@@ -427,10 +425,10 @@ def process_entity(entity):
         if not crm_produkt_guid:
             log.info("Produkt does not exist in CRM")
 
+            # Resolve dependencies
             log.info("Resolving dependencies for produkt")
-            # Insert dependencies
             produkt["ava_aftale@odata.bind"] = lookup_crm_aftale
-            produkt["ava_adresse@odata.bind"] = lookup_crm_address
+            produkt["ava_adresse@odata.bind"] = lookup_crm_product_address
 
             # Remove temporary address key
             produkt.pop("ava_aftale", None)
@@ -438,37 +436,11 @@ def process_entity(entity):
 
             # Call function to insert object into CRM
             crm_produkt_guid = crm.store_produkt(produkt)
-        else:
-            log.info("Produkt truly does exist in CRM")
 
-        # No need to create a lookup reference
-        # lookup_crm_produkt = crm_produkt_guid ?
+        # Finished inserting product
 
+    # Finished processing entity
     log.info("Finished processing entity: {0}".format(entity_uuid))
-
-
-#####################
-# OUTSTANDING TASKS #
-#####################
-
-# def import_all_organisation():
-
-#     # Switch
-#     organisation = resources["organisation"]
-
-#     # Get all brugere
-#     list_of_contacts = list_all(organisation)
-
-#     # TODO: Log error when nothing is returned
-#     if not list_of_contacts:
-#         return None
-
-#     for entity in batch_generator(organisation, list_of_contacts):
-#         exported = adapter.ava_organisation(entity)
-
-#         # Mock
-#         to_json = json.dumps(exported)
-#         print(to_json)
 
 
 # RUN THE CLIENT

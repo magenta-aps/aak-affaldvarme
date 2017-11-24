@@ -18,6 +18,17 @@ from settings import AVA_ORGANISATION, BASE_URL, SYSTEM_USER
 Contains all logic of interacting with LoRa
 """
 
+ROLE_MAP = {
+    '915240001', 'Ligestillingsejer',
+    '915240002', 'Administrator',
+    '915240000', 'Hovedejer',
+    '915240005', 'Vicevært',
+    '915240004', 'Kunde',
+    '915240006', 'Ligestillingskunde'
+}
+
+
+
 session = requests.Session()
 
 
@@ -531,16 +542,18 @@ def create_or_update_interessefaellesskab(customer_number,
 
 
 def generate_organisationfunktion_dict(customer_number, customer_uuid,
-                                       customer_relation_uuid, role, note):
+                                       customer_relation_uuid, numeric_role,
+                                       note):
     virkning = create_virkning()
 
+    role = ROLE_MAP[numeric_role]
     organisationfunktion_dict = {
         "note": note,
         "attributter": {
             "organisationfunktionegenskaber": [
                 {
                     "brugervendtnoegle": " ".join([role, customer_number]),
-                    "funktionsnavn": role,
+                    "funktionsnavn": numeric_role,
                     "virkning": virkning
                 }
             ]
@@ -554,7 +567,7 @@ def generate_organisationfunktion_dict(customer_number, customer_uuid,
         "relationer": {
             "organisatoriskfunktionstype": [
                 {
-                    "urn": "urn:{0}".format(role),
+                    "urn": "urn:{0}".format(numeric_role),
                     "virkning": virkning
                 }
             ],
@@ -576,7 +589,9 @@ def generate_organisationfunktion_dict(customer_number, customer_uuid,
     return organisationfunktion_dict
 
 
-def lookup_organisationfunktion(role, customer_number):
+def lookup_organisationfunktion(numeric_role, customer_number):
+
+    role = ROLE_MAP[numeric_role]
     key = " ".join([role, customer_number])
     request_string = (
         "{0}/organisation/organisationfunktion?bvn={1}".format(
