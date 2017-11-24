@@ -596,10 +596,8 @@ def lookup_organisationfunktion(customer_uuid, customer_relation_uuid):
     # TODO: Very likely we don't need this.
     request_string = (
         "{0}/organisation/organisationfunktion" +
-        "?tilknyttedebrugere={1}&tilknyttedeinteressefaellesskaber={2}".format(
-            BASE_URL, customer_uuid, customer_relation_uuid
-        )
-    )
+        "?tilknyttedebrugere={1}&tilknyttedeinteressefaellesskaber={2}"
+    ).format(BASE_URL, customer_uuid, customer_relation_uuid)
 
     return lookup_unique(request_string)
 
@@ -609,7 +607,7 @@ def create_or_update_organisationfunktion(customer_uuid,
                                           customer_relation_uuid,
                                           numeric_role, note=""):
     # TODO: Fix this for when handling notifications.
-    uuid = lookup_organisationfunktion(role, customer_number)
+    uuid = None  # lookup_organisationfunktion(role, customer_number)
     organisationfunktion_dict = generate_organisationfunktion_dict(
         customer_uuid, customer_relation_uuid, numeric_role, note
     )
@@ -858,10 +856,8 @@ def lookup_contact_by_arosia_id(contact_id):
 def lookup_account_by_arosia_id(account_id):
     request_string = (
         "{0}/organisation/interessefaellesskab" +
-        "?ava_arosia_id=urn:arosia_id:{1}".format(
-            BASE_URL, account_id
-        )
-    )
+        "?ava_arosia_id=urn:arosia_id:{1}"
+    ).format(BASE_URL, account_id)
     return lookup_unique(request_string)
 
 

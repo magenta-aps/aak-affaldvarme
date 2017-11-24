@@ -148,7 +148,9 @@ def handle_account(row):
 def handle_kontaktrolle(row, contact, account):
     logger.info('Handling kontaktrolle')
     role = str(row.get('ava_Rolle'))
-    # It's not necessary to look up the role when we're only doing imports.
+    uuid = lookup_organisationfunktion(contact, account)
+    if uuid:
+        return uuid
     response = create_or_update_organisationfunktion(
         customer_uuid=contact,
         customer_relation_uuid=account,

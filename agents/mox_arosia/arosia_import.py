@@ -166,8 +166,8 @@ def import_all(connection):
     """
     # import_contact(connection)
     # import_account(connection)
-    # import_kontaktrolle(connection)
-    import_placeretmateriel(connection)
+    import_kontaktrolle(connection)
+    # import_placeretmateriel(connection)
     # import_kundeaftale(connection)
 
 
