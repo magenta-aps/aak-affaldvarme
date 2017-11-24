@@ -42,7 +42,7 @@ SELECT top(100)
 """
 
 PLACERETMATERIEL_SQL = """
-SELECT top(100) 
+SELECT
         [ava_navn],
         [ava_stregkode],
         [ava_Kundeaftale], 

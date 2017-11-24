@@ -7,6 +7,7 @@ from arosia_oio import (create_or_update_indsats,
                         extract_cpr_and_update_lora,
                         extract_cvr_and_update_lora, 
                         lookup_bruger,
+                        lookup_klasse,
                         lookup_organisation,
                         lookup_organisationfunktion,
                         lookup_interessefaellesskab)
@@ -109,6 +110,9 @@ def handle_placeretmateriel(row):
     arosia_id = row.get('ava_placeretmaterielId')
     aftale_id = row.get('ava_Kundeaftale')
 
+    uuid = lookup_klasse(identification)
+    if uuid:
+        return uuid
     response = create_or_update_klasse(name=name,
                                        identification=identification,
                                        installation_type=installation_type,
