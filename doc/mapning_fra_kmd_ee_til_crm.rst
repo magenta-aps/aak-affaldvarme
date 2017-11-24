@@ -135,16 +135,17 @@ repræsenterer forkortelsen "ifnavn" det rigtige, som er
 =======================    =======================    =================     
 CRM                        KMD EE                     LoRa
 =======================    =======================    =================     
-Kundeforhold               <Varme + kundens adres-    ifnavn
+Kundeforhold               <Varme + forbrugsadres-    ifnavn
                            se som i LoRa/CRM>
 Kundenummer                Kundenr                    brugervendtnoegle
 Kundetype                  Varme                      iftype
 Kundeforholdstype          <Udfyldes ikke>
+Adresse                    Forbrugssted.Adresse       adresser
 =======================    =======================    =================       
 
 Feltet "Kundeforhold" er det felt, der på de fleste andre elementer
 hedder Navn. Adressen i dette navnefelt forstås som kundens
-folkeregisteradresse, ikke Forbrugssted.Adresse.
+forbrugsstedets adresse, altså Forbrugssted.Adresse.
 
 
 Aftale
@@ -179,7 +180,6 @@ Produkter                   <Målere fra TrefMaaler>    indsatskvalitet
 Faktureringsadresse         <DAR-adresse fundet fra    indsatsdokument⁺⁺
                             Kunde.vejnavn +
                             Kunde.postdistrikt>
-Adresse                     Forbrugssted.Adresse       indsatssag⁺⁺
 Ejendom                     Forbrugsted.Ejendomsnr⁺
 Startdato                   Kunde.Tilflytningsdato     starttidspunkt
 Slutdato                    Kunde.fraflytningsdato     sluttidspunkt

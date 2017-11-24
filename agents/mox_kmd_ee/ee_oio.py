@@ -12,6 +12,7 @@ import requests
 from dateutil import parser
 
 from settings import SYSTEM_USER, AVA_ORGANISATION, BASE_URL
+from mox_kmd_ee import ROLE_MAP
 
 session = requests.Session()
 session.verify = '/etc/ssl/certs/ca-certificates.crt'
@@ -305,18 +306,19 @@ def create_interessefaellesskab(customer_number, customer_relation_name,
     return response
 
 
-def create_organisationfunktion(customer_number,
-                                customer_uuid,
+def create_organisationfunktion(customer_uuid,
                                 customer_relation_uuid,
                                 role, note=""):
     virkning = create_virkning()
+    numeric_role = ROLE_MAP[role]
+
     organisationfunktion_dict = {
         "note": note,
         "attributter": {
             "organisationfunktionegenskaber": [
                 {
-                    "brugervendtnoegle": " ".join([role, customer_number]),
-                    "funktionsnavn": role,
+                    "brugervendtnoegle": role,
+                    "funktionsnavn": numeric_role,
                     "virkning": virkning
                 }
             ]
@@ -330,7 +332,7 @@ def create_organisationfunktion(customer_number,
         "relationer": {
             "organisatoriskfunktionstype": [
                 {
-                    "urn": "urn:{0}".format(role),
+                    "urn": "urn:{0}".format(numeric_role),
                     "virkning": virkning
                 }
             ],

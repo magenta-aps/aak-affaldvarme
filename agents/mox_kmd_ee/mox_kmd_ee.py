@@ -28,6 +28,7 @@ VARME = "Varme"
 KUNDE = "Kunde"
 LIGESTILLINGSKUNDE = "Ligestillingskunde"
 
+ROLE_MAP = {KUNDE: "915240004", LIGESTILLINGSKUNDE: "915240006"}
 
 # This is used to cache customer's addresses from SP for use when creating
 # names for customer roles.
@@ -144,11 +145,9 @@ def lookup_customer(id_number):
         return lookup_organisation(id_number)
 
 
-def create_customer_role(customer_number, customer_uuid,
-                         customer_relation_uuid, role):
+def create_customer_role(customer_uuid, customer_relation_uuid, role):
     "Create an OrgFunktion from this info and return UUID"
     result = create_organisationfunktion(
-        customer_number,
         customer_uuid,
         customer_relation_uuid,
         role
@@ -333,8 +332,7 @@ def import_all(connection):
         assert(cr_uuid)
 
         # This done, create customer roles & link customer and relation
-        role_uuid = create_customer_role(customer_number, customer_uuid,
-                                         cr_uuid, "Kunde")
+        role_uuid = create_customer_role(customer_uuid, cr_uuid, KUNDE)
         assert(role_uuid)
 
         # Now handle partner/roommate, ignore empty CPR numbers
@@ -352,7 +350,7 @@ def import_all(connection):
 
             if ligest_uuid:
                 create_customer_role(
-                    customer_number, ligest_uuid, cr_uuid, "Ligestillingskunde"
+                    customer_number, ligest_uuid, cr_uuid, LIGESTILLINGSKUNDE
                 )
 
         # Create agreement
