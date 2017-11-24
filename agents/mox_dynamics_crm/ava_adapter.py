@@ -301,6 +301,10 @@ def ava_account(entity):
     account_name = egenskaber.get("interessefaellesskabsnavn")
     ava_kundenummer = egenskaber.get("brugervendtnoegle")
 
+    # Testing new address schema
+    addresses = relationer["adresser"]
+    ava_adresse = addresses[0]["uuid"]
+
     # Convert "kundetype" to literal
     type_ref = egenskaber.get("interessefaellesskabstype")
 
@@ -329,9 +333,8 @@ def ava_account(entity):
         "ava_kundenummer": ava_kundenummer,
         "ava_kundetype": ava_kundetype.get(type_ref),
 
-        # NOTE: no reference exists in Lora
-        # Address reference will be set at import
-        "ava_adresse": None,
+        # NOTE: Reference added
+        "ava_adresse": ava_adresse,
 
         # Currently not in use
         # "ava_kundeforholdstype": ava_kundeforholdstype,
