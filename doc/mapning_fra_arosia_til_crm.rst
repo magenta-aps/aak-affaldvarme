@@ -96,6 +96,7 @@ Kundenummer                 AccountNumber               brugervendtnoegle
 Kundetype                   "AFFALD"                    iftype
 Kundeforholdstype           <Udfyldes Ikke>             -
 Ejendom                     <TBD>                       -
+Adresse                     <TODO>                      adresser
 
 
 Aftale
@@ -134,7 +135,7 @@ CRM                         Arosia                      LoRa
 Navn                        ava_navn                    titel
 Identifikation              ava_stregkode               brugervendtnoegle
 Aftale                      <Redundant>                 (findes på aftale/indsats)
-Adresse                     <Redundant>                 (findes på aftale/indsats)
+Adresse                     <Materiellet adresse>       opstillingsadresse
 Installationstype           "AFFALD"                    overordnet_klasse
 Afhentningstype             ava_affaldstypeName         ava_afhentningstype
 Beskrivelse                 <Udfyldes ikke>             -
