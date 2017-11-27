@@ -225,8 +225,8 @@ Identifikation              Trefinstallation.          brugervendtnoegle
                               InstalNummer
 Aftale                      <Relation til Aftale>      (findes på
                                                        Aftale/Indsats)
-Adresse                     <Redundant =               (findes på
-                                                       Aftale/indsats)
+Adresse                     Altern. adresse            ava_opstillingsadresse
+                             eller                          
                              Forbrugssted.Adresse>
 Installationstype           Varme                      overordnet_klasse
 Afhentningstype             <Udfyldes ikke>
