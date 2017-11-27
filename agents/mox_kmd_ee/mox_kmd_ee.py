@@ -32,7 +32,7 @@ VARME = "Varme"
 # names for customer roles.
 
 
-def create_customer(id_number, key, name, phone="", email="",
+def create_customer(id_number, key, name, master_id, phone="", email="",
                     mobile="", fax="", note=""):
 
     if is_cvr(id_number):
@@ -62,8 +62,8 @@ def create_customer(id_number, key, name, phone="", email="",
         )
 
         result = create_organisation(
-            id_number, key, name, phone, email, mobile, fax, address_uuid,
-            company_type, industry_code, note
+            id_number, key, name, master_id, phone, email, mobile, fax,
+            address_uuid, company_type, industry_code, note
         )
     elif is_cpr(id_number):
         # This is a CPR number
@@ -120,9 +120,9 @@ def create_customer(id_number, key, name, phone="", email="",
         address_protection = person_dir['adressebeskyttelse']
 
         result = create_bruger(
-            id_number, key, name, phone, email, mobile, fax, first_name,
-            middle_name, last_name, address_uuid, gender, marital_status,
-            address_protection, note
+            id_number, key, name, master_id, phone, email, mobile, fax,
+            first_name, middle_name, last_name, address_uuid, gender,
+            marital_status, address_protection, note
         )
     else:
         report_error("Forkert CPR/SE-nr for {0}: {1}".format(
@@ -255,10 +255,11 @@ def get_forbrugssted_address_uuid(connection, forbrugssted, id_number):
 
 
 def create_product(name, identification, installation_type, meter_number,
-                   meter_type, start_date, end_date):
+                   meter_type, start_date, end_date, product_address):
     "Create a Klasse from this info and return UUID"
     result = create_klasse(name, identification, installation_type,
-                           meter_number, meter_type, start_date, end_date)
+                           meter_number, meter_type, start_date, end_date,
+                           product_address)
     if result:
         return result.json()['uuid']
 
@@ -279,6 +280,7 @@ def import_all(connection):
         id_number = cpr_cvr(float(row['PersonnrSEnr']))
         ligest_personnr = cpr_cvr(float(row['LigestPersonnr']))
         customer_number = str(int(float(row['Kundenr'])))
+        master_id = row['KundeSagsnr']
 
         customer_uuid = lookup_customer(id_number)
 
@@ -289,7 +291,8 @@ def import_all(connection):
                 row['KundeNavn'],
                 row['Telefonnr'],
                 row['EmailKunde'],
-                row['MobilTlf']
+                row['MobilTlf'],
+                master_id
             )
 
             if new_customer_uuid:
@@ -385,9 +388,11 @@ def import_all(connection):
             meter_type = p['MaalerTypeBetegnel']
             start_date = p['DatoFra']
             end_date = p['DatoTil']
+            product_address = forbrugssted_address
+            # TODO: Check alternative address!
             product_uuid = create_product(
                 name, identification, installation_type, meter_number,
-                meter_type, start_date, end_date
+                meter_type, start_date, end_date, product_address
             )
             if product_uuid:
                 product_uuids.append(product_uuid)

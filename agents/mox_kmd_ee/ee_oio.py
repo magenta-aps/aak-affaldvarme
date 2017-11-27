@@ -48,7 +48,7 @@ def request(func):
 
 
 @request
-def create_organisation(cvr_number, key, name, phone="", email="",
+def create_organisation(cvr_number, key, name, , master_id, phone="", email="",
                         mobile="", fax="", address_uuid="", company_type="",
                         industry_code="", note=""):
     # Sanity check
@@ -64,6 +64,7 @@ def create_organisation(cvr_number, key, name, phone="", email="",
                 {
                     "brugervendtnoegle": key,
                     "organisationsnavn": name,
+                    "ava_masterid": master_id,
                     "virkning": virkning
                 }
             ]
@@ -151,7 +152,7 @@ def lookup_organisation(id_number):
 
 
 @request
-def create_bruger(cpr_number, key, name, phone="", email="",
+def create_bruger(cpr_number, key, name, master_id, phone="", email="",
                   mobile="", fax="", first_name="", middle_name="",
                   last_name="", address_uuid="", gender="", marital_status="",
                   address_protection="", note=""):
@@ -436,7 +437,8 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
 
 @request
 def create_klasse(name, identification, installation_type,
-                  meter_number, meter_type, start_date, end_date, note=""):
+                  meter_number, meter_type, start_date, end_date,
+                  product_address, note=""):
     virkning = create_virkning(start_date, end_date)
     klasse_dict = {
         "note": note,
@@ -469,6 +471,14 @@ def create_klasse(name, identification, installation_type,
             }]
         }
     }
+
+    if product_address:
+        klasse_dict['relationer']['ava_opstillingsadresse'] = [
+            {
+                "uuid": product_address,
+                "virkning": virkning
+            }
+        ]
 
     url = "{0}/klassifikation/klasse".format(BASE_URL)
     response = session.post(url, json=klasse_dict)

@@ -29,6 +29,7 @@ SELECT top(100) [PersonnrSEnr]
       ,[ForbrugsstedID]
       ,[VejNavn]
       ,[Postdistrikt]
+      ,[KundeSagsnr]
   FROM [KMD_EE].[dbo].[Kunde]
   WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
 """
