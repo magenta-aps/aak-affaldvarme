@@ -7,6 +7,7 @@ from arosia_oio import (create_or_update_indsats,
                         extract_cpr_and_update_lora,
                         extract_cvr_and_update_lora,
                         lookup_bruger,
+                        lookup_klasse,
                         lookup_organisation,
                         lookup_organisationfunktion,
                         lookup_interessefaellesskab)
@@ -110,6 +111,9 @@ def handle_placeretmateriel(row):
     arosia_id = row.get('ava_placeretmaterielId')
     aftale_id = row.get('ava_Kundeaftale')
 
+    uuid = lookup_klasse(identification)
+    if uuid:
+        return uuid
     response = create_or_update_klasse(name=name,
                                        identification=identification,
                                        installation_type=installation_type,
@@ -144,7 +148,9 @@ def handle_account(row):
 def handle_kontaktrolle(row, contact, account):
     logger.info('Handling kontaktrolle')
     role = str(row.get('ava_Rolle'))
-    # It's not necessary to look up the role when we're only doing imports.
+    uuid = lookup_organisationfunktion(contact, account)
+    if uuid:
+        return uuid
     response = create_or_update_organisationfunktion(
         customer_uuid=contact,
         customer_relation_uuid=account,

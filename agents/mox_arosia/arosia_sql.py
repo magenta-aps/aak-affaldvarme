@@ -21,7 +21,7 @@ SELECT
 """
 
 KONTAKTROLLE_SQL = """
-SELECT
+SELECT  top(100)
         [ava_Kontakt],
         [ava_KontaktName],
         [ava_Kundeforhold],
