@@ -343,7 +343,7 @@ def process_entity(entity):
             log.info("Product address does not exist in CRM")
 
             # GET ADDRESS ENTITY HERE
-            product_address = dawa.get_address(ava_faktureringsgrad)
+            product_address = dawa.get_address(ava_utility_address)
 
             # Store in CRM
             crm_product_address_guid = crm.store_address(product_address)
