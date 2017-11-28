@@ -36,12 +36,12 @@ if __name__ == '__main__':
     csv_filename = 'tmp/trefinstallation_{0}.csv'.format(today)
     write_csv(csv_filename, cursor)
     """
-   
+
     customer_files = glob.glob('tmp/kunde_forbrugssted_*')
     latest_customer_file = max(customer_files)
 
     stored_customers = open(latest_customer_file, "r").read().split('\n')
-    
+
     # Connect and get rows
     connection = connect(server, database, username, password)
     cursor = connection.cursor()
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     print(stored_customers[1])
     print(customer_rows[0])
     print(customer_rows[1])
-    
+
     # Calculate diff
     print('Calculating diff ...')
     delta = difflib.ndiff(stored_customers, customer_rows)
@@ -67,4 +67,3 @@ if __name__ == '__main__':
     print('done!')
 
     print(len(delta))
-

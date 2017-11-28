@@ -13,6 +13,12 @@ from dateutil import parser
 
 from settings import SYSTEM_USER, AVA_ORGANISATION, BASE_URL
 
+KUNDE = "Kunde"
+LIGESTILLINGSKUNDE = "Ligestillingskunde"
+
+ROLE_MAP = {KUNDE: "915240004", LIGESTILLINGSKUNDE: "915240006"}
+
+
 session = requests.Session()
 session.verify = '/etc/ssl/certs/ca-certificates.crt'
 
@@ -260,7 +266,7 @@ def lookup_bruger(id_number):
 
 
 def create_interessefaellesskab(customer_number, customer_relation_name,
-                                customer_type, note=""):
+                                customer_type, address_uuid, note=""):
     virkning = create_virkning()
     interessefaellesskab_dict = {
         "note": note,
@@ -291,23 +297,32 @@ def create_interessefaellesskab(customer_number, customer_relation_name,
         }
     }
 
+    if address_uuid:
+        interessefaellesskab_dict['relationer']['adresser'] = [
+            {
+                "uuid": address_uuid,
+                "virkning": virkning
+            }
+        ]
+
     url = "{0}/organisation/interessefaellesskab".format(BASE_URL)
     response = session.post(url, json=interessefaellesskab_dict)
 
     return response
 
 
-def create_organisationfunktion(customer_number,
-                                customer_uuid,
+def create_organisationfunktion(customer_uuid,
                                 customer_relation_uuid,
                                 role, note=""):
     virkning = create_virkning()
+    numeric_role = ROLE_MAP[role]
+
     organisationfunktion_dict = {
         "note": note,
         "attributter": {
             "organisationfunktionegenskaber": [
                 {
-                    "brugervendtnoegle": " ".join([role, customer_number]),
+                    "brugervendtnoegle": numeric_role,
                     "funktionsnavn": role,
                     "virkning": virkning
                 }
@@ -322,7 +337,7 @@ def create_organisationfunktion(customer_number,
         "relationer": {
             "organisatoriskfunktionstype": [
                 {
-                    "urn": "urn:{0}".format(role),
+                    "urn": "urn:{0}".format(numeric_role),
                     "virkning": virkning
                 }
             ],
@@ -349,7 +364,7 @@ def create_organisationfunktion(customer_number,
 
 @request
 def create_indsats(name, agreement_type, no_of_products, invoice_address,
-                   address, start_date, end_date, location,
+                   start_date, end_date, location,
                    customer_relation_uuid, product_uuids, note=""):
     virkning = create_virkning()
     tz = pytz.timezone('Europe/Copenhagen')
@@ -412,15 +427,7 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
                 "virkning": virkning
             }
         ]
-    """
-    if address:
-        indsats_dict['relationer']['indsatssag'] = [
-            {
-                "uuid": address,
-                "virkning": virkning
-            }
-        ]
-    """
+
     url = "{0}/indsats/indsats".format(BASE_URL)
     response = session.post(url, json=indsats_dict)
 
