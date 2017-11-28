@@ -48,7 +48,7 @@ def request(func):
 
 
 @request
-def create_organisation(cvr_number, key, name, , master_id, phone="", email="",
+def create_organisation(cvr_number, key, name, master_id, phone="", email="",
                         mobile="", fax="", address_uuid="", company_type="",
                         industry_code="", note=""):
     # Sanity check
@@ -479,7 +479,6 @@ def create_klasse(name, identification, installation_type,
                 "virkning": virkning
             }
         ]
-
     url = "{0}/klassifikation/klasse".format(BASE_URL)
     response = session.post(url, json=klasse_dict)
     return response

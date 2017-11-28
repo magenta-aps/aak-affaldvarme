@@ -212,7 +212,7 @@ def get_forbrugssted_address_uuid(connection, forbrugssted, id_number):
             )
         )
 
-        return None
+        return ('', None)
 
     frbrst_addr = rows[0]
     # Lookup addres
@@ -286,13 +286,13 @@ def import_all(connection):
 
         if not customer_uuid:
             new_customer_uuid = create_customer(
-                id_number,
-                customer_number,
-                row['KundeNavn'],
-                row['Telefonnr'],
-                row['EmailKunde'],
-                row['MobilTlf'],
-                master_id
+                id_number=id_number,
+                key=customer_number,
+                name=row['KundeNavn'],
+                master_id=master_id,
+                phone=row['Telefonnr'],
+                email=row['EmailKunde'],
+                mobile=row['MobilTlf'],
             )
 
             if new_customer_uuid:
@@ -343,7 +343,10 @@ def import_all(connection):
 
             if not ligest_uuid:
                 new_ligest_uuid = create_customer(
-                    ligest_personnr, customer_number, row['KundeNavn']
+                    id_number=ligest_personnr,
+                    key=customer_number,
+                    name=row['KundeNavn'],
+                    master_id=master_id
                 )
                 if new_ligest_uuid:
                     ligest_uuid = new_ligest_uuid
@@ -388,7 +391,7 @@ def import_all(connection):
             meter_type = p['MaalerTypeBetegnel']
             start_date = p['DatoFra']
             end_date = p['DatoTil']
-            product_address = forbrugssted_address
+            product_address = forbrugssted_address_uuid
             # TODO: Check alternative address!
             product_uuid = create_product(
                 name, identification, installation_type, meter_number,
