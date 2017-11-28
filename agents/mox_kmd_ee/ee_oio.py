@@ -176,6 +176,7 @@ def create_bruger(cpr_number, key, name, master_id, phone="", email="",
                     "ava_civilstand": marital_status,
                     "ava_koen": gender,
                     "ava_adressebeskyttelse": address_protection,
+                    "ava_masterid": master_id,
                     "virkning": virkning
                 }
             ]
