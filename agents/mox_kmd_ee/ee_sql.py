@@ -12,7 +12,7 @@
 # Only relevant fields (please).
 
 CUSTOMER_SQL = """
-SELECT top(100) [PersonnrSEnr]
+SELECT top(1000) [PersonnrSEnr]
       ,[KundeCprnr]
       ,[LigestPersonnr]
       ,[Tilflytningsdato]
@@ -65,7 +65,6 @@ ALTERNATIVSTED_ADRESSE_SQL = """SELECT [HusnrAltern],
                             FROM AlternativSted
                             WHERE AlternativStedID = {0}
                           """
-
 
 
 CUSTOMER_AND_FORBRUGSSTED_SQL = """

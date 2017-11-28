@@ -14,6 +14,7 @@ import pymssql
 from serviceplatformen_cpr import get_cpr_data
 
 from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL, FORBRUGSSTED_ADRESSE_SQL
+from ee_sql import ALTERNATIVSTED_ADRESSE_SQL
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_oio import create_klasse, lookup_bruger, lookup_organisation
@@ -22,7 +23,7 @@ from ee_oio import KUNDE, LIGESTILLINGSKUNDE
 from ee_utils import cpr_cvr, is_cpr, is_cvr, connect
 
 from service_clients import get_address_uuid, fuzzy_address_uuid, get_cvr_data
-from service_clients import report_error
+from service_clients import report_error, access_address_uuid
 
 # Definition of strings used for Klassifikation URNs
 
@@ -43,7 +44,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
             company_dir = get_cvr_data(id_number)
         except Exception as e:
             # Retry *once* after sleeping
-            time.sleep(40)
+            time.sleep(1)
             try:
                 company_dir = get_cvr_data(id_number)
             except Exception as e:
@@ -76,7 +77,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
             report_error(traceback.format_exc())
 
             # Retry *once* after sleeping
-            time.sleep(40)
+            time.sleep(1)
             try:
                 person_dir = get_cpr_data(id_number)
             except Exception as e:
@@ -254,6 +255,71 @@ def get_forbrugssted_address_uuid(connection, forbrugssted, id_number):
     return (address_string, address_uuid)
 
 
+def get_alternativsted_address_uuid(connection, alternativsted_id):
+    "Get UUID of the address for this AlternativSted"
+    # TODO: This is cut and paste programming. Please refactor.
+    cursor = connection.cursor(as_dict=True)
+    cursor.execute(ALTERNATIVSTED_ADRESSE_SQL.format(alternativsted_id))
+    rows = cursor.fetchall()
+
+    # Hotfix:
+    # Some lookups will return 0
+    # Removing the assert as it breaks the import flow
+    # TODO:
+    # We must investigate the circumstances which cause this issue
+    # In theory forbrugssted should not be returned as 0
+
+    # assert(len(rows) == 1)
+
+    # Hotfix:
+    # Log if
+    if len(rows) != 1:
+        # Send error to log:
+        report_error(
+            "Forbrugssted for {0} returnerer: {1}".format(
+                id_number, forbrugssted
+            )
+        )
+
+        return None
+
+    altsted_addr = rows[0]
+    # Lookup addres
+    vejnavn = altsted_addr['ForbrStVejnavn']
+    vejkode = altsted_addr['VejkodeAltern']
+    postnr = altsted_addr['Postnr']
+    husnummer = str(altsted_addr['HusnrAltern'])
+    bogstav = altsted_addr.get('Bogstav', None)
+    etage = altsted_addr['EtageAltAdr']
+    doer = altsted_addr['SidedørnrAltern']
+
+    address = {
+        "vejkode": vejkode,
+        "postnr": postnr,
+        "vejnavn": vejnavn
+    }
+    if etage:
+        address["etage"] = etage
+    if doer:
+        address["dør"] = doer
+    if husnummer:
+        address["husnr"] = husnummer
+    if bogstav:
+        address["bogstav"] = bogstav
+
+    try:
+        address_uuid = access_address_uuid(address)
+    except Exception as e:
+        report_error(
+            "Alternativ adresse fejler for alt. sted {0}: {1}".format(
+                alternativsted_id, str(address)
+            ), error_stack=None, error_object=address
+        )
+        address_uuid = None
+
+    return address_uuid
+
+
 def create_product(name, identification, installation_type, meter_number,
                    meter_type, start_date, end_date, product_address):
     "Create a Klasse from this info and return UUID"
@@ -392,7 +458,15 @@ def import_all(connection):
             start_date = p['DatoFra']
             end_date = p['DatoTil']
             product_address = forbrugssted_address_uuid
-            # TODO: Check alternative address!
+            # Check alternative address
+            alternativsted_id = p['AlternativStedID']
+            if alternativsted_id:
+                alternativ_adresse_uuid = get_alternativsted_address_uuid(
+                    connection, alternativsted_id
+                )
+                if alternativ_adresse_uuid:
+                    product_address = alternativ_adresse_uuid
+
             product_uuid = create_product(
                 name, identification, installation_type, meter_number,
                 meter_type, start_date, end_date, product_address
