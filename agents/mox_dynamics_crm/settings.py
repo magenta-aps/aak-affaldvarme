@@ -35,3 +35,4 @@ CRM_ENDPOINT = os.environ.get("OAUTH_ENDPOINT")
 CRM_CLIENT_ID = os.environ.get("CLIENT_ID")
 CRM_CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
 CRM_REST_API_PATH = "api/data/v8.2"
+CRM_OWNER_ID = os.environ.get("OWNER_ID")
