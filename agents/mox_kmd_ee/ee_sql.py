@@ -54,6 +54,19 @@ FORBRUGSSTED_ADRESSE_SQL = """SELECT [Husnr],
                             WHERE ForbrugsstedID = {0}
                           """
 
+ALTERNATIVSTED_ADRESSE_SQL = """SELECT [HusnrAltern],
+                                     [ForbrStVejnavn],
+                                     [VejkodeAltern],
+                                     [Postdistrikt],
+                                     [Postnr],
+                                     [Bogstav],
+                                     [EtageAltAdr],
+                                     [SidedørnrAltern]
+                            FROM AlternativSted
+                            WHERE AlternativStedID = {0}
+                          """
+
+
 
 CUSTOMER_AND_FORBRUGSSTED_SQL = """
 SELECT   [PersonnrSEnr]
