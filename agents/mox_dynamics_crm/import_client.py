@@ -274,6 +274,7 @@ def process_entity(entity):
         # NOTE: Will depend on "Ejendom" in the future
 
         ava_kundenummer = kundeforhold["ava_kundenummer"]
+        ava_utility_address = kundeforhold["ava_adresse"]
         crm_account_guid = crm.get_account(ava_kundenummer)
 
         # Resolve dependencies
@@ -335,7 +336,7 @@ def process_entity(entity):
 
         # PRODUCT ADDRESSS
         # Check and return reference (GUID) if address exists in CRM
-        crm_product_address_guid = crm.get_ava_address(ava_faktureringsgrad)
+        crm_product_address_guid = crm.get_ava_address(ava_utility_address)
 
         # Create address in CRM if it does not exist
         if not crm_product_address_guid:
