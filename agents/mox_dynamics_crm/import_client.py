@@ -410,9 +410,6 @@ def process_entity(entity):
             return False
 
         # All following references
-        # MUST be replaced with their CRM counterparts
-        produkt["ava_adresse"] = ava_faktureringsgrad
-        produkt["ava_aftale"] = ava_faktureringsgrad
         produkt["ava_kundenummer"] = kundeforhold["ava_kundenummer"]
 
         # INSERT PRODUKT INTO CRM
