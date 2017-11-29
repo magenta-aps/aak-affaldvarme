@@ -450,12 +450,13 @@ def ava_installation(entity):
 
     ava_maalernummer = egenskaber.get("eksempel")
 
+    # Entity: DAWA
+    # Lora: AVA Opstillingsadresse
+    ava_adresse = relationer["ava_opstillingsadresse"]["uuid"]
+
     # Referenced by other entities
     # Entity: Lora (Aftale/Indsats)
     ava_aftale = None
-
-    # Entity: DAWA
-    ava_adresse = None
 
     # Entity: Lora (Account/Interessefaellesskab)
     ava_kundenummer = None
