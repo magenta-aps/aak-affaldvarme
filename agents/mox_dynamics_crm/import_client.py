@@ -253,6 +253,7 @@ def process_entity(entity):
         )
 
         kunderolle = adapter.ava_kunderolle(kunderolle_entity)
+        kunderolle_id = kunderolle["origin_id"]
 
         # Append "kundeforhold" reference to the list
         reference_kundeforhold = kunderolle["ava_kundeforhold"]
@@ -263,6 +264,7 @@ def process_entity(entity):
         )
 
         kundeforhold = adapter.ava_account(kundeforhold_entity)
+        kundeforhold_id = kundeforhold["origin_id"]
         log.info("Setting kundeforhold")
 
         if not kundeforhold:
@@ -274,7 +276,7 @@ def process_entity(entity):
         # NOTE: Will depend on "Ejendom" in the future
 
         ava_kundenummer = kundeforhold["ava_kundenummer"]
-        crm_account_guid = crm.get_account(ava_kundenummer)
+        crm_account_guid = crm.get_account(kundeforhold_id)
 
         # Utility address
         # Official address for utility services
@@ -332,7 +334,7 @@ def process_entity(entity):
         kunderolle.pop("ava_kundeforhold", None)
 
         # Missing identifier
-        crm_kunderolle_guid = crm.get_kunderolle(lookup_crm_contact)
+        crm_kunderolle_guid = crm.get_kunderolle(kunderolle_id)
 
         if not crm_kunderolle_guid:
             log.info("Kunderolle does not exist in CRM")
@@ -347,6 +349,7 @@ def process_entity(entity):
         # Attempt to fetch the kundeforhold entity
         aftale_entity = oio.fetch_relation_indsats(reference_kundeforhold)
         aftale = adapter.ava_aftale(aftale_entity)
+        aftale_id = aftale["origin_id"]
         log.info("Setting aftale")
 
         if not aftale:
@@ -363,7 +366,7 @@ def process_entity(entity):
         # Depends on: Account, Address (Fakturering)
 
         # Lookup aftale by account identifier (Missing)
-        crm_aftale_guid = crm.get_aftale(lookup_crm_account)
+        crm_aftale_guid = crm.get_aftale(aftale_id)
 
         if not crm_aftale_guid:
             log.info("Aftale does not exist in CRM")
@@ -404,6 +407,7 @@ def process_entity(entity):
 
         produkt_entity = oio.fetch_entity("klasse", produkt_reference)
         produkt = adapter.ava_installation(produkt_entity)
+        produkt_id = produkt["origin_id"]
 
         if not produkt:
             log.error("Product not found")
@@ -450,7 +454,7 @@ def process_entity(entity):
 
         # Lookup produkt by "ava_maalernummer"
         produkt_identifier = produkt["ava_maalernummer"]
-        crm_produkt_guid = crm.get_produkt(produkt_identifier)
+        crm_produkt_guid = crm.get_produkt(produkt_id)
 
         if not crm_produkt_guid:
             log.info("Produkt does not exist in CRM")
