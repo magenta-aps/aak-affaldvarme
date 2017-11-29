@@ -47,6 +47,7 @@ SELECT top(100)
         [ava_stregkode],
         [ava_Kundeaftale],
         [ava_affaldstypename],
+        [ava_standpladsName],
         [ava_placeretmaterielId]
     FROM [arhafadm_MSCRM].[dbo].[ava_placeretmateriel]
 """
