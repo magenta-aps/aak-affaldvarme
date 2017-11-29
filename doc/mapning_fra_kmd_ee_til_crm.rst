@@ -168,9 +168,9 @@ Mappes som angivet i tabellen herunder.
 
 I LoRa repræsenteres en aftale som en Indsats.
 
-NB: For at kunne repræsentere antal produkter samt de to adresser burde
-der - som vi allerede har set for aktørernes vedkommende - indføres to
-relationer og et egenskabsfelt til de to adresser og feltet "antal
+NB: For at kunne repræsentere antal produkter samt adressen burde
+der - som vi allerede har set for aktørernes vedkommende - indføres en
+relation og et egenskabsfelt til adressen og feltet "antal
 produkter". 
 
 Dette er imidlertid ikke muligt p.t., da klassen Indsats i LoRa er
@@ -183,7 +183,7 @@ implementationen af LoRas databaselag.
 =======================     =======================    =================     
 CRM                         KMD EE                     LoRa
 =======================     =======================    =================
-Navn                        Fjernvarmeaftale           brugervendtnoegle
+Navn                        Navn                       brugervendtnoegle
 Kundeforhold                <Relation til              indsatsmodtager 
                               Kundeforhold>
 Aftaletype                  Varme                      indsatstype
