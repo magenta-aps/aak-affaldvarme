@@ -32,6 +32,7 @@ SELECT top(100) [PersonnrSEnr]
       ,[KundeSagsnr]
   FROM [KMD_EE].[dbo].[Kunde]
   WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
+  and Afregningsgrpnr <> 999
 """
 
 
