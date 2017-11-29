@@ -274,36 +274,33 @@ def process_entity(entity):
         # NOTE: Will depend on "Ejendom" in the future
 
         ava_kundenummer = kundeforhold["ava_kundenummer"]
-        ava_utility_address = kundeforhold["ava_adresse"]
+        utility_address_ref = kundeforhold["ava_adresse"]
         crm_account_guid = crm.get_account(ava_kundenummer)
 
-        # TODO:
-        # We are currently not sure how to pass the product address
+        # Utility address
+        # Official address for utility services
 
-        # PRODUCT ADDRESSS
         # Check and return reference (GUID) if address exists in CRM
-        crm_product_address_guid = crm.get_ava_address(ava_utility_address)
+        crm_utility_address_guid = crm.get_ava_address(utility_address_ref)
 
         # Create address in CRM if it does not exist
         if not crm_product_address_guid:
-            log.info("Product address does not exist in CRM")
+            log.info("Utility address does not exist in CRM")
 
             # GET ADDRESS ENTITY HERE
-            product_address = dawa.get_address(ava_utility_address)
+            utility_address = dawa.get_address(utility_address_ref)
 
             # Store in CRM
-            crm_product_address_guid = crm.store_address(product_address)
+            crm_utility_address_guid = crm.store_address(utility_address)
 
         # Update lookup reference
-        lookup_crm_product_address = "/ava_adresses({0})".format(
-            crm_product_address_guid
+        lookup_crm_utility_address = "/ava_adresses({0})".format(
+            crm_utility_address_guid
         )
-        log.info("Product address created")
-
-        # END PRODUCT ADDRESS
+        log.info("Utility address created")
 
         # Resolve dependencies
-        kundeforhold["ava_adresse@odata.bind"] = lookup_crm_product_address
+        kundeforhold["ava_adresse@odata.bind"] = lookup_crm_utility_address
         kundeforhold.pop("ava_adresse", None)
 
         if not crm_account_guid:
@@ -426,7 +423,7 @@ def process_entity(entity):
             # Resolve dependencies
             log.info("Resolving dependencies for produkt")
             produkt["ava_aftale@odata.bind"] = lookup_crm_aftale
-            produkt["ava_adresse@odata.bind"] = lookup_crm_product_address
+            produkt["ava_adresse@odata.bind"] = lookup_crm_utility_address
 
             # Remove temporary address key
             produkt.pop("ava_aftale", None)
