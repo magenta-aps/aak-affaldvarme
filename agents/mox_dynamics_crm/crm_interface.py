@@ -546,7 +546,7 @@ def contact_and_aftale_link(aftale_guid, contact_guid):
     response = post_request(resource, payload)
 
     # Return False if not created
-    if response.status_code != 201:
+    if response.status_code != 200:
         log.error("Error creating link between contact and aftale")
         log.error(response.text)
         return False
