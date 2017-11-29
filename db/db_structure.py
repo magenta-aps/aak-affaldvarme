@@ -76,7 +76,8 @@ DATABASE_STRUCTURE = {
                 "ava_civilstand",
                 "ava_koen",
                 "ava_adressebeskyttelse",
-                "ava_sms_notifikation"
+                "ava_sms_notifikation",
+                "ava_masterid"
             ]
         },
         "tilstande": {
@@ -141,7 +142,7 @@ DATABASE_STRUCTURE = {
     "organisation": {
         "attributter": {
             "egenskaber": ["brugervendtnoegle", "organisationsnavn",
-                           "ava_sms_notifikation", "ava_kreditstatus"]
+                           "ava_sms_notifikation", "ava_masterid"]
         },
         "tilstande": {
             "gyldighed": ["Aktiv", "Inaktiv"]

@@ -29,6 +29,7 @@ SELECT top(100) [PersonnrSEnr]
       ,[ForbrugsstedID]
       ,[VejNavn]
       ,[Postdistrikt]
+      ,[KundeSagsnr]
   FROM [KMD_EE].[dbo].[Kunde]
   WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
 """
@@ -51,6 +52,18 @@ FORBRUGSSTED_ADRESSE_SQL = """SELECT [Husnr],
                                      [Sidedørnr]
                             FROM Forbrugssted
                             WHERE ForbrugsstedID = {0}
+                          """
+
+ALTERNATIVSTED_ADRESSE_SQL = """SELECT [HusnrAltern],
+                                     [ForbrStVejnavn],
+                                     [VejkodeAltern],
+                                     [Postdistrikt],
+                                     [Postnr],
+                                     [Bogstav],
+                                     [EtageAltAdr],
+                                     [SidedørnrAltern]
+                            FROM AlternativSted
+                            WHERE AlternativStedID = {0}
                           """
 
 

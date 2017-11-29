@@ -277,8 +277,33 @@ def process_entity(entity):
         ava_utility_address = kundeforhold["ava_adresse"]
         crm_account_guid = crm.get_account(ava_kundenummer)
 
+        # TODO:
+        # We are currently not sure how to pass the product address
+
+        # PRODUCT ADDRESSS
+        # Check and return reference (GUID) if address exists in CRM
+        crm_product_address_guid = crm.get_ava_address(ava_utility_address)
+
+        # Create address in CRM if it does not exist
+        if not crm_product_address_guid:
+            log.info("Product address does not exist in CRM")
+
+            # GET ADDRESS ENTITY HERE
+            product_address = dawa.get_address(ava_utility_address)
+
+            # Store in CRM
+            crm_product_address_guid = crm.store_address(product_address)
+
+        # Update lookup reference
+        lookup_crm_product_address = "/ava_adresses({0})".format(
+            crm_product_address_guid
+        )
+        log.info("Product address created")
+
+        # END PRODUCT ADDRESS
+
         # Resolve dependencies
-        kundeforhold["ava_adresse@odata.bind"] = lookup_crm_address
+        kundeforhold["ava_adresse@odata.bind"] = lookup_crm_product_address
         kundeforhold.pop("ava_adresse", None)
 
         if not crm_account_guid:
@@ -330,31 +355,6 @@ def process_entity(entity):
         produkt_reference = aftale.get("ava_produkter")
 
         log.info("Setting ava_faktureringsgrad")
-
-        # TODO:
-        # We are currently not sure how to pass the product address
-
-        # PRODUCT ADDRESSS
-        # Check and return reference (GUID) if address exists in CRM
-        crm_product_address_guid = crm.get_ava_address(ava_utility_address)
-
-        # Create address in CRM if it does not exist
-        if not crm_product_address_guid:
-            log.info("Product address does not exist in CRM")
-
-            # GET ADDRESS ENTITY HERE
-            product_address = dawa.get_address(ava_faktureringsgrad)
-
-            # Store in CRM
-            crm_product_address_guid = crm.store_address(product_address)
-
-        # Update lookup reference
-        lookup_crm_product_address = "/ava_adresses({0})".format(
-            crm_product_address_guid
-        )
-        log.info("Product address created")
-
-        # END PRODUCT ADDRESS
 
         # INSERT AFTALE INTO CRM
         # Aftale
