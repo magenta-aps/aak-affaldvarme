@@ -462,7 +462,7 @@ def ava_installation(entity):
     alternative_address = relationer.get("ava_opstillingsadresse")
 
     if alternative_address:
-        ava_adresse = opstillingsadresse[0]["uuid"]
+        ava_adresse = alternative_address[0]["uuid"]
 
     # Referenced by other entities
     # Entity: Lora (Aftale/Indsats)
