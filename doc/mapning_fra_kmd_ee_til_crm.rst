@@ -36,7 +36,7 @@ Telefon KMD EE              Telefon                    adresser
 E-mail KMD EE                 
 MobilTlf⁺                   MobilTlf                   adresser
 Fax⁺                        Fax                        overføres ikke
-MasterID                    KundeSagsnr
+MasterID                    KundeSagsnr                ava_masterid
 =======================     =======================    =================         
 
 

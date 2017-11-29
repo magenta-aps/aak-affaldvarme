@@ -227,8 +227,8 @@ def get_forbrugssted_address_uuid(connection, forbrugssted, id_number):
     etage = frbrst_addr['Etage']
     doer = frbrst_addr['Sidedørnr']
 
-    address_string = "{0} {1} {2} {3}, {4}".format(
-        vejnavn, husnummer, etage, doer, postdistrikt
+    address_string = "{0} {1} {2}{3}, {4} {5}".format(
+        vejnavn, husnummer, etage, doer, postnr, postdistrikt
     )
 
     address = {
@@ -346,7 +346,7 @@ def import_all(connection):
         id_number = cpr_cvr(float(row['PersonnrSEnr']))
         ligest_personnr = cpr_cvr(float(row['LigestPersonnr']))
         customer_number = str(int(float(row['Kundenr'])))
-        master_id = row['KundeSagsnr']
+        master_id = str(int(float(row['KundeSagsnr'])))
 
         customer_uuid = lookup_customer(id_number)
 
@@ -474,9 +474,10 @@ def import_all(connection):
             if product_uuid:
                 product_uuids.append(product_uuid)
 
+        agreement_name = "Varme, " + name
         agreement_uuid = create_agreement(
-            name, agreement_type, no_of_products, invoice_address_uuid,
-            start_date, end_date, forbrugssted,
+            agreement_name, agreement_type, no_of_products,
+            invoice_address_uuid, start_date, end_date, forbrugssted,
             cr_uuid, product_uuids
         )
         assert(agreement_uuid)
