@@ -301,9 +301,14 @@ def ava_account(entity):
     account_name = egenskaber.get("interessefaellesskabsnavn")
     ava_kundenummer = egenskaber.get("brugervendtnoegle")
 
-    # Testing new address schema
-    addresses = relationer["adresser"]
-    ava_adresse = addresses[0]["uuid"]
+    # AVA Utility address
+    ava_adresse = None
+
+    # Fetch utility address
+    addresses = relationer.get("adresser")
+
+    if addresses:
+        ava_adresse = addresses[0]["uuid"]
 
     # Convert "kundetype" to literal
     type_ref = egenskaber.get("interessefaellesskabstype")
@@ -450,9 +455,14 @@ def ava_installation(entity):
 
     ava_maalernummer = egenskaber.get("eksempel")
 
-    # Entity: DAWA
-    # Lora: AVA Opstillingsadresse
-    ava_adresse = relationer["ava_opstillingsadresse"]["uuid"]
+    # AVA alternative address
+    ava_adresse = None
+
+    # Fetch alternative address
+    alternative_address = relationer.get("ava_opstillingsadresse")
+
+    if alternative_address:
+        ava_adresse = opstillingsadresse[0]["uuid"]
 
     # Referenced by other entities
     # Entity: Lora (Aftale/Indsats)
