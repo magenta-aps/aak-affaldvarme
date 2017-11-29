@@ -748,7 +748,7 @@ def create_or_update_indsats(name, agreement_type, no_of_products,
 
 def generate_klasse_dict(afhentningstype, arosia_id, identification,
                          installation_type, meter_number, name, note,
-                         aftale_id):
+                         aftale_id, adresse_uuid):
     virkning = create_virkning()
     klasse_dict = {
         "note": note,
@@ -795,6 +795,13 @@ def generate_klasse_dict(afhentningstype, arosia_id, identification,
             "urn": "urn:ava_aftale_id:{0}".format(aftale_id),
             "virkning": virkning
         }]
+    if adresse_uuid:
+        klasse_dict['relationer']['ava_opstillingsadresse'].append(
+            {
+                "uuid": adresse_uuid,
+                "virkning": virkning
+            }
+        )
 
     return klasse_dict
 
@@ -812,12 +819,14 @@ def lookup_klasse(identification):
 @request
 def create_or_update_klasse(name, identification, installation_type,
                             meter_number="", note="", arosia_id="",
-                            afhentningstype="", aftale_id=""):
+                            afhentningstype="", aftale_id="",
+                            adresse_uuid=""):
     uuid = lookup_klasse(identification)
 
     klasse_dict = generate_klasse_dict(afhentningstype, arosia_id,
                                        identification, installation_type,
-                                       meter_number, name, note, aftale_id)
+                                       meter_number, name, note, aftale_id,
+                                       adresse_uuid)
 
     if uuid:
         url = "{0}/klassifikation/klasse/{1}".format(BASE_URL, uuid)

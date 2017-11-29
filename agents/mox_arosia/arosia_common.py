@@ -114,12 +114,17 @@ def handle_placeretmateriel(row):
     uuid = lookup_klasse(identification)
     if uuid:
         return uuid
-    response = create_or_update_klasse(name=name,
-                                       identification=identification,
-                                       installation_type=installation_type,
-                                       arosia_id=arosia_id,
-                                       afhentningstype=afhentningstype,
-                                       aftale_id=aftale_id)
+    address = row.get('ava_standpladsName')
+    address_uuid = fuzzy_address_uuid(address)
+    response = create_or_update_klasse(
+        name=name,
+        identification=identification,
+        installation_type=installation_type,
+        arosia_id=arosia_id,
+        afhentningstype=afhentningstype,
+        aftale_id=aftale_id,
+        adresse_uuid=address_uuid
+    )
     if response:
         lora_id = response.json()['uuid']
         return lora_id
