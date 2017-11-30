@@ -450,11 +450,12 @@ def import_all(connection):
         product_uuids = []
 
         for p in products:
-            name = p['Målertypefabrikat'] + ' ' + p['MaalerTypeBetegnel']
             identification = p['InstalNummer']
             installation_type = VARME
             meter_number = p['Målernr']
             meter_type = p['MaalerTypeBetegnel']
+            name = "{0}, {1} {2}".format(meter_number, p['Målertypefabrikat'],
+                                         meter_type)
             start_date = p['DatoFra']
             end_date = p['DatoTil']
             product_address = forbrugssted_address_uuid
