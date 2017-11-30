@@ -280,14 +280,19 @@ def process_entity(entity):
 
         # Utility address
         # Official address for utility services
-        try:
-            utility_address_ref = kundeforhold.get("ava_adresse")
+        crm_utility_address_guid = None
+
+        # Not every entity has a utility address
+        utility_address_ref = kundeforhold.get("ava_adresse")
+
+        if utility_address_ref:
+
             # Check and return reference (GUID) if address exists in CRM
             crm_utility_address_guid = crm.get_ava_address(utility_address_ref)
 
             # Create address in CRM if it does not exist
             if not crm_utility_address_guid:
-                log.info("Utility address does not exist in CRM")
+                log.info("Utility address does not exist in CRM - Creating")
 
                 # GET ADDRESS ENTITY HERE
                 utility_address = dawa.get_address(utility_address_ref)
@@ -295,14 +300,17 @@ def process_entity(entity):
                 # Store in CRM
                 crm_utility_address_guid = crm.store_address(utility_address)
 
-            # Update lookup reference
+        # Update lookup reference
+        lookup_crm_utility_address = None
+
+        if crm_utility_address_guid:
+
             lookup_crm_utility_address = "/ava_adresses({0})".format(
                 crm_utility_address_guid
             )
-            log.info("Utility address created")
-        except:
-            lookup_crm_utility_address = None
-            log.error("Utility address not created")
+            log.info("Utility address lookup created")
+        else:
+            log.info("No utility address lookup created")
 
         # Resolve dependencies
         if lookup_crm_utility_address:
