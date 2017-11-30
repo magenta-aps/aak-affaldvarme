@@ -135,7 +135,7 @@ CRM                         Arosia                      LoRa
 Navn                        ava_navn                    titel
 Identifikation              ava_stregkode               brugervendtnoegle
 Aftale                      <Redundant>                 (findes på aftale/indsats)
-Adresse                     <Materiellet adresse>       opstillingsadresse
+Adresse                     ava_standpladsName          ava_opstillingsadresse
 Installationstype           "AFFALD"                    overordnet_klasse
 Afhentningstype             ava_affaldstypeName         ava_afhentningstype
 Beskrivelse                 <Udfyldes ikke>             -
