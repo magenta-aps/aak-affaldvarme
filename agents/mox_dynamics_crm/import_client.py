@@ -468,7 +468,6 @@ def process_entity(entity):
                 alternative_address = dawa.get_access_address(
                     alternative_address_ref
                 )
-
                 log.debug(alternative_address)
 
                 # Store in CRM
@@ -487,8 +486,10 @@ def process_entity(entity):
                 lookup_crm_alternative_address = "/ava_adresses({0})".format(
                     crm_alternative_address_guid
                 )
-            else:
-                log.debug("NO alternative address exists")
+
+        if not lookup_crm_alternative_address:
+            lookup_crm_alternative_address = lookup_crm_utility_address
+            log.debug("Using utility address as alternative address")
 
         # INSERT PRODUKT INTO CRM
         # Product
