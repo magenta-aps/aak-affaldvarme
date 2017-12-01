@@ -20,9 +20,6 @@ LOG_FILE = "/var/log/mox/mox_dynamics_crm.log"
 OIO_REST_URL = os.environ.get('OIO_REST_URL')
 ORGANISATION_UUID = os.environ.get('ORGANISATION_UUID')
 
-# DAWA settings
-DAWA_SERVICE_URL = "https://dawa.aws.dk/adresser"
-
 # RabbitMQ settings
 MQ_HOST = os.environ.get("MQ_HOST")
 MQ_PORT = os.environ.get("MQ_PORT")
