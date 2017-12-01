@@ -4,15 +4,22 @@ import re
 import json
 import requests
 
-from settings import DAWA_SERVICE_URL
 from settings import DO_VERIFY_SSL_SIGNATURE
 
 
-def get_request(service_url=DAWA_SERVICE_URL, uuid=None):
+# DAR Service settings
+BASE_URL = "https://dawa.aws.dk"
+
+
+def get_request(resource, uuid):
     """GET ADDRESS"""
 
     # Generate url
-    url = "{0}/{1}".format(service_url, uuid)
+    url = "{base}/{resource}/{uuid}".format(
+        base=BASE_URL,
+        resource=resource,
+        uuid=uuid
+    )
 
     # Params
     params = {
@@ -34,7 +41,12 @@ def get_request(service_url=DAWA_SERVICE_URL, uuid=None):
 
 def get_address(uuid):
 
-    data = get_request(uuid=uuid)
+    resource = "adresser"
+
+    data = get_request(
+        resource=resource,
+        uuid=uuid
+    )
 
     if not data:
         return
@@ -117,6 +129,76 @@ def get_address(uuid):
     }
     return payload
 
+
+def get_access_address(uuid):
+
+    resource = "adgangsadresser"
+
+    data = get_request(
+        resource=resource,
+        uuid=uuid
+    )
+
+    if not data:
+        return
+
+    adresseid = data['id']
+    vejkode = data['vejkode']
+    vejnavn = data['vejnavn']
+    husnr = data['husnr']
+    postnr = data['postnr']
+    postnrnavn = data['postnrnavn']
+    kommunekode = data['kommunekode']
+
+    koordinat_nord = data['wgs84koordinat_bredde']
+    koordinat_oest = data['wgs84koordinat_længde']
+
+    laengdegrad = data['etrs89koordinat_nord']
+    breddegrad = data['etrs89koordinat_øst']
+
+    land = 'Danmark'
+
+    husnr_nr = re.findall('\d+', husnr)[0]
+    husnr_bogstav = re.findall('\D+', husnr)
+
+    if husnr_bogstav:
+        husnr_bogstav = husnr_bogstav[0]
+    else:
+        husnr_bogstav = None
+
+    # Create address search string by combining all relevant values
+    search = '{} {}'.format(vejnavn, husnr)
+
+    search += ', {} {}'.format(postnr, postnrnavn)
+
+    # Add "adgangsadresser" to the search string"
+    # To distinguish between actual addresses and access addresses
+    search += ', adgangsadresse'
+
+    # AVA specific payload
+    payload = {
+        # Hotfix:
+        # Adding redundant origin id
+        'origin_id': adresseid,
+
+        # Original payload
+        'ava_dawa_uuid': adresseid,
+        'ava_name': search,
+        'ava_gadenavn': vejnavn,
+        'ava_husnummer': husnr_nr,
+        'ava_bogstav': husnr_bogstav,
+        'ava_postnummer': postnr,
+        'ava_kommunenummer': kommunekode,
+        'ava_by': postnrnavn,
+        'ava_land': land,
+        'ava_koordinat_nord': str(koordinat_nord),
+        'ava_koordinat_oest': str(koordinat_oest),
+        'ava_laengdegrad': str(laengdegrad),
+        'ava_breddegrad': str(breddegrad)
+    }
+    return payload
+
+
 if __name__ == "__main__":
-    address = get_address("0a3f50a0-23cc-32b8-e044-0003ba298018")
+    address = get_access_address("0a3f5096-68f7-32b8-e044-0003ba298018")
     print(address)
