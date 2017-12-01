@@ -253,6 +253,7 @@ def process_entity(entity):
         )
 
         kunderolle = adapter.ava_kunderolle(kunderolle_entity)
+        kunderolle_id = kunderolle["origin_id"]
 
         # Append "kundeforhold" reference to the list
         reference_kundeforhold = kunderolle["ava_kundeforhold"]
@@ -263,6 +264,7 @@ def process_entity(entity):
         )
 
         kundeforhold = adapter.ava_account(kundeforhold_entity)
+        kundeforhold_id = kundeforhold["origin_id"]
         log.info("Setting kundeforhold")
 
         if not kundeforhold:
@@ -274,36 +276,46 @@ def process_entity(entity):
         # NOTE: Will depend on "Ejendom" in the future
 
         ava_kundenummer = kundeforhold["ava_kundenummer"]
-        ava_utility_address = kundeforhold["ava_adresse"]
-        crm_account_guid = crm.get_account(ava_kundenummer)
+        crm_account_guid = crm.get_account(kundeforhold_id)
 
-        # TODO:
-        # We are currently not sure how to pass the product address
+        # Utility address
+        # Official address for utility services
+        crm_utility_address_guid = None
 
-        # PRODUCT ADDRESSS
-        # Check and return reference (GUID) if address exists in CRM
-        crm_product_address_guid = crm.get_ava_address(ava_utility_address)
+        # Not every entity has a utility address
+        utility_address_ref = kundeforhold.get("ava_adresse")
 
-        # Create address in CRM if it does not exist
-        if not crm_product_address_guid:
-            log.info("Product address does not exist in CRM")
+        if utility_address_ref:
 
-            # GET ADDRESS ENTITY HERE
-            product_address = dawa.get_address(ava_utility_address)
+            # Check and return reference (GUID) if address exists in CRM
+            crm_utility_address_guid = crm.get_ava_address(utility_address_ref)
 
-            # Store in CRM
-            crm_product_address_guid = crm.store_address(product_address)
+            # Create address in CRM if it does not exist
+            if not crm_utility_address_guid:
+                log.info("Utility address does not exist in CRM - Creating")
+
+                # GET ADDRESS ENTITY HERE
+                utility_address = dawa.get_address(utility_address_ref)
+
+                # Store in CRM
+                crm_utility_address_guid = crm.store_address(utility_address)
 
         # Update lookup reference
-        lookup_crm_product_address = "/ava_adresses({0})".format(
-            crm_product_address_guid
-        )
-        log.info("Product address created")
+        lookup_crm_utility_address = None
 
-        # END PRODUCT ADDRESS
+        if crm_utility_address_guid:
+
+            lookup_crm_utility_address = "/ava_adresses({0})".format(
+                crm_utility_address_guid
+            )
+            log.info("Utility address lookup created")
+        else:
+            log.info("No utility address lookup created")
 
         # Resolve dependencies
-        kundeforhold["ava_adresse@odata.bind"] = lookup_crm_product_address
+        if lookup_crm_utility_address:
+            kundeforhold["ava_adresse@odata.bind"] = lookup_crm_utility_address
+
         kundeforhold.pop("ava_adresse", None)
 
         if not crm_account_guid:
@@ -330,7 +342,7 @@ def process_entity(entity):
         kunderolle.pop("ava_kundeforhold", None)
 
         # Missing identifier
-        crm_kunderolle_guid = crm.get_kunderolle(lookup_crm_contact)
+        crm_kunderolle_guid = crm.get_kunderolle(kunderolle_id)
 
         if not crm_kunderolle_guid:
             log.info("Kunderolle does not exist in CRM")
@@ -345,6 +357,7 @@ def process_entity(entity):
         # Attempt to fetch the kundeforhold entity
         aftale_entity = oio.fetch_relation_indsats(reference_kundeforhold)
         aftale = adapter.ava_aftale(aftale_entity)
+        aftale_id = aftale["origin_id"]
         log.info("Setting aftale")
 
         if not aftale:
@@ -361,7 +374,7 @@ def process_entity(entity):
         # Depends on: Account, Address (Fakturering)
 
         # Lookup aftale by account identifier (Missing)
-        crm_aftale_guid = crm.get_aftale(lookup_crm_account)
+        crm_aftale_guid = crm.get_aftale(aftale_id)
 
         if not crm_aftale_guid:
             log.info("Aftale does not exist in CRM")
@@ -402,6 +415,7 @@ def process_entity(entity):
 
         produkt_entity = oio.fetch_entity("klasse", produkt_reference)
         produkt = adapter.ava_installation(produkt_entity)
+        produkt_id = produkt["origin_id"]
 
         if not produkt:
             log.error("Product not found")
@@ -410,10 +424,71 @@ def process_entity(entity):
             return False
 
         # All following references
-        # MUST be replaced with their CRM counterparts
-        produkt["ava_adresse"] = ava_faktureringsgrad
-        produkt["ava_aftale"] = ava_faktureringsgrad
         produkt["ava_kundenummer"] = kundeforhold["ava_kundenummer"]
+
+        # Alternative address
+        # Address alternative for utility services
+        alternative_address_ref = produkt.get("ava_adresse")
+        log.debug("Attempting to retrieve alternative address")
+        log.debug(alternative_address_ref)
+
+        # DEBUG
+        if not alternative_address_ref:
+            log.debug("#236188 - Alternative address missing")
+            log.debug("#236188 - Lora ID: {0}".format(produkt["origin_id"]))
+            log.debug(
+                "#236188 - Maalernummer: {0}".format(
+                    produkt["ava_maalernummer"]
+                )
+            )
+            log.debug(
+                "#236188 - UTILITY: {0}".format(
+                    lookup_crm_utility_address
+                )
+            )
+            log.debug("#236188 - Customer: {0}".format(entity_uuid))
+
+        # Fallback lookup reference
+        lookup_crm_alternative_address = None
+
+        if alternative_address_ref:
+
+            # Check and return reference (GUID) if address exists in CRM
+            log.debug("Attempt to fetch alternative address guid")
+            crm_alternative_address_guid = crm.get_ava_address(
+                alternative_address_ref
+            )
+
+            # Create address in CRM if it does not exist
+            if not crm_alternative_address_guid:
+                log.info("Alternative address does not exist in CRM")
+
+                # GET ADDRESS ENTITY HERE
+                log.debug("Fetching access address from DAWA")
+                alternative_address = dawa.get_access_address(
+                    alternative_address_ref
+                )
+
+                log.debug(alternative_address)
+
+                # Store in CRM
+                crm_alternative_address_guid = crm.store_address(
+                    alternative_address
+                )
+                log.debug("Attempting to store alternative address in CRM")
+                log.debug(
+                    "CRM returns: {0}".format(
+                        crm_alternative_address_guid
+                    )
+                )
+
+            # Attempt to update the alternative address lookup
+            if crm_alternative_address_guid:
+                lookup_crm_alternative_address = "/ava_adresses({0})".format(
+                    crm_alternative_address_guid
+                )
+            else:
+                log.debug("NO alternative address exists")
 
         # INSERT PRODUKT INTO CRM
         # Product
@@ -421,7 +496,7 @@ def process_entity(entity):
 
         # Lookup produkt by "ava_maalernummer"
         produkt_identifier = produkt["ava_maalernummer"]
-        crm_produkt_guid = crm.get_produkt(produkt_identifier)
+        crm_produkt_guid = crm.get_produkt(produkt_id)
 
         if not crm_produkt_guid:
             log.info("Produkt does not exist in CRM")
@@ -429,7 +504,13 @@ def process_entity(entity):
             # Resolve dependencies
             log.info("Resolving dependencies for produkt")
             produkt["ava_aftale@odata.bind"] = lookup_crm_aftale
-            produkt["ava_adresse@odata.bind"] = lookup_crm_product_address
+
+            # Create lookup if alternative adresse was retrieved
+            if lookup_crm_alternative_address:
+                produkt["ava_adresse@odata.bind"] = lookup_crm_alternative_address
+                log.info("Lookup for alternative address created")
+            else:
+                log.info("Lookup for alternative address not created")
 
             # Remove temporary address key
             produkt.pop("ava_aftale", None)

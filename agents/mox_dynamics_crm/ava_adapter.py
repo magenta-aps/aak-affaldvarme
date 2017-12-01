@@ -116,7 +116,7 @@ def ava_bruger(entity):
 
         # KMD EE
         # AVA masterid currently appears to be missing from the CRM schema
-        # "ava_masterid": egenskaber.get("brugervendtnoegle"),
+        "ava_kmdeemasterid": egenskaber.get("ava_masterid"),
         "ava_mobilkmdee": kmd_ee.get("mobile", None),
         "ava_fastnetkmdee": kmd_ee.get("landline", None),
         "ava_emailkmdee": kmd_ee.get("email"),
@@ -210,7 +210,7 @@ def ava_organisation(entity):
 
         # KMD EE
         # AVA masterid currently appears to be missing from the CRM schema
-        # "ava_masterid": egenskaber.get("brugervendtnoegle"),
+        "ava_kmdeemasterid": egenskaber.get("ava_masterid"),
         "ava_mobilkmdee": kmd_ee.get("mobile", None),
         "ava_fastnetkmdee": kmd_ee.get("landline", None),
         "ava_emailkmdee": kmd_ee.get("email"),
@@ -301,9 +301,14 @@ def ava_account(entity):
     account_name = egenskaber.get("interessefaellesskabsnavn")
     ava_kundenummer = egenskaber.get("brugervendtnoegle")
 
-    # Testing new address schema
-    addresses = relationer["adresser"]
-    ava_adresse = addresses[0]["uuid"]
+    # AVA Utility address
+    ava_adresse = None
+
+    # Fetch utility address
+    addresses = relationer.get("adresser")
+
+    if addresses:
+        ava_adresse = addresses[0]["uuid"]
 
     # Convert "kundetype" to literal
     type_ref = egenskaber.get("interessefaellesskabstype")
@@ -450,12 +455,18 @@ def ava_installation(entity):
 
     ava_maalernummer = egenskaber.get("eksempel")
 
+    # AVA alternative address
+    ava_adresse = None
+
+    # Fetch alternative address
+    alternative_address = relationer.get("ava_opstillingsadresse")
+
+    if alternative_address:
+        ava_adresse = alternative_address[0]["uuid"]
+
     # Referenced by other entities
     # Entity: Lora (Aftale/Indsats)
     ava_aftale = None
-
-    # Entity: DAWA
-    ava_adresse = None
 
     # Entity: Lora (Account/Interessefaellesskab)
     ava_kundenummer = None

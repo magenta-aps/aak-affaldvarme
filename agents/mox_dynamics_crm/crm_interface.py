@@ -196,50 +196,15 @@ def delete_request(service_url):
     )
 
 
-def get_contact(lora_uuid):
+def get_ava_address(uuid):
 
-    # REST resource
-    resource = "contact"
+    # Check local cache before inserting
+    existing_guid = global_address.get(uuid, None)
 
-    search_string = "ava_lora_uuid eq '{0}'".format(lora_uuid)
+    if not existing_guid:
+        existing_guid = False
 
-    params = {
-        "$filter": search_string
-    }
-
-    query = get_request(resource, params)
-    exist_in_crm = query.json()["value"]
-
-    if not exist_in_crm:
-        log.info("Contact does not exist in CRM")
-        return False
-
-    # If object exists return identifier
-    response = exist_in_crm[0]["contactid"]
-    return response
-
-
-def get_ava_address(dawa_uuid):
-
-    # REST resource
-    resource = "ava_adresses"
-
-    search_string = "ava_dawa_uuid eq '{0}'".format(dawa_uuid)
-
-    params = {
-        "$filter": search_string
-    }
-
-    query = get_request(resource, params)
-
-    exist_in_crm = query.json()["value"]
-
-    if not exist_in_crm:
-        return False
-
-    # If object exists return identifier
-    response = exist_in_crm[0]["ava_adresseid"]
-    return response
+    return existing_guid
 
 
 def store_address(payload):
@@ -282,31 +247,20 @@ def store_address(payload):
     return crm_guid
 
 
-def get_contact(cpr_id):
+def get_contact(uuid):
     """
     Attempt to retrieve CRM contact
     Returns GUID
     Missing: Logging on events
     """
 
-    # REST resource
-    resource = "contacts"
+    # Check local cache before inserting
+    existing_guid = global_contact.get(uuid, None)
 
-    search_string = "ava_cpr_nummer eq '{0}'".format(cpr_id)
+    if not existing_guid:
+        existing_guid = False
 
-    params = {
-        "$filter": search_string
-    }
-
-    # If object exists return identifier
-    query = get_request(resource, params)
-    exist_in_crm = query.json()["value"]
-
-    if not exist_in_crm:
-        return False
-
-    response = exist_in_crm[0]["contactid"]
-    return response
+    return existing_guid
 
 
 def store_contact(payload):
@@ -357,12 +311,18 @@ def store_contact(payload):
     return crm_guid
 
 
-def get_kunderolle(identifier):
+def get_kunderolle(uuid):
     """
     MISSING: We have no reference for the CRM entity
     TODO: May be resolved by creating CRM meta fields
     """
-    return False
+    # Check local cache before inserting
+    existing_guid = global_kunderolle.get(uuid, None)
+
+    if not existing_guid:
+        existing_guid = False
+
+    return existing_guid
 
 
 def store_kunderolle(payload):
@@ -414,13 +374,20 @@ def store_kunderolle(payload):
     return crm_guid
 
 
-def get_account(identifier):
+def get_account(uuid):
     """
     Account (Kundeforhold)
     MISSING: We have no reference for the CRM entity
     TODO: May be resolved by creating CRM meta fields
     """
-    return False
+
+    # Check local cache before inserting
+    existing_guid = global_account.get(uuid, None)
+
+    if not existing_guid:
+        existing_guid = False
+
+    return existing_guid
 
 
 def store_account(payload):
@@ -473,12 +440,18 @@ def store_account(payload):
     return crm_guid
 
 
-def get_aftale(identifier):
+def get_aftale(uuid):
     """
     MISSING: We have no reference for the CRM entity
     TODO: May be resolved by creating CRM meta fields
     """
-    return False
+    # Check local cache before inserting
+    existing_guid = global_aftale.get(uuid, None)
+
+    if not existing_guid:
+        existing_guid = False
+
+    return existing_guid
 
 
 def store_aftale(payload):
@@ -546,7 +519,7 @@ def contact_and_aftale_link(aftale_guid, contact_guid):
     response = post_request(resource, payload)
 
     # Return False if not created
-    if response.status_code != 201:
+    if response.status_code != 200:
         log.error("Error creating link between contact and aftale")
         log.error(response.text)
         return False
@@ -554,12 +527,18 @@ def contact_and_aftale_link(aftale_guid, contact_guid):
     return True
 
 
-def get_produkt(identifier):
+def get_produkt(uuid):
     """
     MISSING: We have no reference for the CRM entity
     TODO: May be resolved by creating CRM meta fields
     """
-    return False
+    # Check local cache before inserting
+    existing_guid = global_address.get(uuid, None)
+
+    if not existing_guid:
+        existing_guid = False
+
+    return existing_guid
 
 
 def store_produkt(payload):
@@ -603,23 +582,6 @@ def store_produkt(payload):
     global_produkt[identifier] = crm_guid
 
     return crm_guid
-
-
-# DO NOT USE THE DELETE FUNCTION
-# def delete_contact(uuid):
-
-#     # REST resource
-#     resource = "contacts({contact})".format(
-#         contact=uuid
-#     )
-
-#     service_url = "{api}/{resource}".format(
-#         api=base_endpoint,
-#         resource=resource
-#     )
-
-#     crm_response = delete_request(service_url)
-#     return crm_response
 
 
 if __name__ == "__main__":
