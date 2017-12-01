@@ -458,7 +458,7 @@ def import_all(connection):
                                          meter_type)
             start_date = p['DatoFra']
             end_date = p['DatoTil']
-            product_address = forbrugssted_address_uuid
+            product_address = None
             # Check alternative address
             alternativsted_id = p['AlternativStedID']
             if alternativsted_id:
