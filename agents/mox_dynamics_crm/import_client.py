@@ -428,12 +428,36 @@ def process_entity(entity):
 
         # Alternative address
         # Address alternative for utility services
-        try:
-            alternative_address_ref = produkt["ava_adresse"]
+        alternative_address_ref = produkt.get("ava_adresse")
+        log.debug("Attempting to retrieve alternative address")
+        log.debug(alternative_address_ref)
+
+        # DEBUG
+        if not alternative_address_ref:
+            log.debug("#236188 - Alternative address missing")
+            log.debug("#236188 - Lora ID: {0}".format(produkt["origin_id"]))
+            log.debug(
+                "#236188 - Maalernummer: {0}".format(
+                    produkt["ava_maalernummer"]
+                )
+            )
+            log.debug(
+                "#236188 - UTILITY: {0}".format(
+                    lookup_crm_utility_address
+                )
+            )
+            log.debug("#236188 - Customer: {0}".format(entity_uuid))
+
+        # Fallback lookup reference
+        lookup_crm_alternative_address = None
+
+        if alternative_address_ref:
 
             # Check and return reference (GUID) if address exists in CRM
+            log.debug("Attempt to fetch alternative address guid")
             crm_alternative_address_guid = crm.get_ava_address(
-                alternative_address_ref)
+                alternative_address_ref
+            )
 
             # Create address in CRM if it does not exist
             if not crm_alternative_address_guid:
@@ -441,20 +465,27 @@ def process_entity(entity):
 
                 # GET ADDRESS ENTITY HERE
                 alternative_address = dawa.get_address(alternative_address_ref)
+                log.debug("Fetching alternative address from DAWA")
+                log.debug(alternative_address)
 
                 # Store in CRM
                 crm_alternative_address_guid = crm.store_address(
                     alternative_address
                 )
+                log.debug("Attempting to store alternative address in CRM")
+                log.debug(
+                    "CRM returns: {0}".format(
+                        crm_alternative_address_guid
+                    )
+                )
 
-            # Update lookup reference
-            lookup_crm_alternative_address = "/ava_adresses({0})".format(
-                crm_alternative_address_guid
-            )
-            log.info("Alternative address created")
-        except:
-            lookup_crm_alternative_address = None
-            log.info("Alternative address not created")
+            # Attempt to update the alternative address lookup
+            if crm_alternative_address_guid:
+                lookup_crm_alternative_address = "/ava_adresses({0})".format(
+                    crm_alternative_address_guid
+                )
+            else:
+                log.debug("NO alternative address exists")
 
         # INSERT PRODUKT INTO CRM
         # Product
@@ -471,8 +502,12 @@ def process_entity(entity):
             log.info("Resolving dependencies for produkt")
             produkt["ava_aftale@odata.bind"] = lookup_crm_aftale
 
+            # Create lookup if alternative adresse was retrieved
             if lookup_crm_alternative_address:
                 produkt["ava_adresse@odata.bind"] = lookup_crm_alternative_address
+                log.info("Lookup for alternative address created")
+            else:
+                log.info("Lookup for alternative address not created")
 
             # Remove temporary address key
             produkt.pop("ava_aftale", None)
