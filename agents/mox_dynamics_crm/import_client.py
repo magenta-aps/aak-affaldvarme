@@ -464,8 +464,11 @@ def process_entity(entity):
                 log.info("Alternative address does not exist in CRM")
 
                 # GET ADDRESS ENTITY HERE
-                alternative_address = dawa.get_address(alternative_address_ref)
-                log.debug("Fetching alternative address from DAWA")
+                log.debug("Fetching access address from DAWA")
+                alternative_address = dawa.get_access_address(
+                    alternative_address_ref
+                )
+
                 log.debug(alternative_address)
 
                 # Store in CRM
