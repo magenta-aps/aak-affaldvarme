@@ -227,9 +227,13 @@ def get_forbrugssted_address_uuid(connection, forbrugssted, id_number):
     etage = frbrst_addr['Etage']
     doer = frbrst_addr['Sidedørnr']
 
-    address_string = "{0} {1} {2}{3}, {4} {5}".format(
-        vejnavn, husnummer, etage, doer, postnr, postdistrikt
+    address_string1 = "{0} {1} {2}{3}".format(
+        vejnavn, husnummer, etage, doer
     )
+    address_string2 = "{0} {1}".format(postnr, postdistrikt)
+
+    address_string = "{0}, {1}".format(address_string1.strip(),
+                                       address_string2)
 
     address = {
         "vejkode": vejkode,
@@ -238,19 +242,23 @@ def get_forbrugssted_address_uuid(connection, forbrugssted, id_number):
     if etage:
         address["etage"] = etage
     if doer:
-        address["dør"] = doer
+        address["dør"] = doer.strip('-')
     if husnummer:
         address["husnr"] = husnummer
 
     try:
         address_uuid = get_address_uuid(address)
-    except Exception as e:
-        report_error(
-            "Forbrugsadresse fejler for kunde {0}: {1}".format(
-                id_number, address_string
-            ), error_stack=None, error_object=address
-        )
-        address_uuid = None
+    except Exception:
+        try:
+            address_uuid = fuzzy_address_uuid(address_string)
+        except Exception as e:
+            report_error(
+                "Forbrugsadresse fejler for kunde {0}: {1}".format(
+                    id_number, address_string
+                ), error_stack=None, error_object=address
+            )
+            print(address)
+            address_uuid = None
 
     return (address_string, address_uuid)
 
@@ -426,7 +434,8 @@ def import_all(connection):
         # Create agreement
         name = 'Fjernvarmeaftale'
         agreement_type = VARME
-        invoice_address = row['VejNavn'] + ', ' + row['Postdistrikt']
+        invoice_address = (row['VejNavn'].replace(',-', ' ') +
+                           ', ' + row['Postdistrikt'])
         try:
             invoice_address_uuid = fuzzy_address_uuid(invoice_address)
         except Exception as e:
