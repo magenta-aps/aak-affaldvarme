@@ -67,6 +67,9 @@ ALTERNATIVSTED_ADRESSE_SQL = """SELECT [HusnrAltern],
                             WHERE AlternativStedID = {0}
                           """
 
+'''
+
+TODO: Delete this
 
 CUSTOMER_AND_FORBRUGSSTED_SQL = """
 SELECT   [PersonnrSEnr]
@@ -104,3 +107,6 @@ Instalnummer, Målernr, DatoFra, DatoTil
     WHERE  a.InstallationID = b.InstallationID
     AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
     """
+
+'''
+

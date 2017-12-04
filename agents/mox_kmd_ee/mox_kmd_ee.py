@@ -284,8 +284,8 @@ def get_alternativsted_address_uuid(connection, alternativsted_id):
     if len(rows) != 1:
         # Send error to log:
         report_error(
-            "Forbrugssted for {0} returnerer: {1}".format(
-                id_number, forbrugssted
+            "Alternativt sted for {0} returnerer: {1}".format(
+                id_number, alternativsted_id
             )
         )
 
