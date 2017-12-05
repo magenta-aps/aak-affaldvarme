@@ -93,6 +93,10 @@ def ava_bruger(entity):
     # Redundant identifier for linking Lora and CRM references
     origin_id = entity["id"]
 
+    # HOTFIX:
+    # Phone prefix
+    phone_prefix = "tel:"
+
     # CRM formatted payload
     payload = {
         # Adding origin identifier to the payload
@@ -117,8 +121,6 @@ def ava_bruger(entity):
         # KMD EE
         # AVA masterid currently appears to be missing from the CRM schema
         "ava_kmdeemasterid": egenskaber.get("ava_masterid"),
-        "ava_mobilkmdee": kmd_ee.get("mobile", None),
-        "ava_fastnetkmdee": kmd_ee.get("landline", None),
         "ava_emailkmdee": kmd_ee.get("email"),
 
 
@@ -127,6 +129,13 @@ def ava_bruger(entity):
         # "arosia_telephone": None,
         # "ava_arosiaid": None
     }
+
+    # HOTFIX:
+    if kmd_ee.get("mobile"):
+        payload["ava_mobilkmdee"] = phone_prefix + kmd_ee.get("mobile")
+
+    if kmd_ee.get("landline"):
+        payload["ava_fastnetkmdee"] = phone_prefix + kmd_ee.get("landline")
 
     return payload
 
@@ -191,6 +200,10 @@ def ava_organisation(entity):
     # Redundant identifier for linking Lora and CRM references
     origin_id = entity["id"]
 
+    # HOTFIX:
+    # Phone prefix
+    phone_prefix = "tel:"
+
     # Format CRM payload
     payload = {
         # Adding origin identifier to the payload
@@ -211,8 +224,6 @@ def ava_organisation(entity):
         # KMD EE
         # AVA masterid currently appears to be missing from the CRM schema
         "ava_kmdeemasterid": egenskaber.get("ava_masterid"),
-        "ava_mobilkmdee": kmd_ee.get("mobile", None),
-        "ava_fastnetkmdee": kmd_ee.get("landline", None),
         "ava_emailkmdee": kmd_ee.get("email"),
 
         # Arosia
@@ -220,6 +231,12 @@ def ava_organisation(entity):
         # "arosia_telephone": None,
         # "ava_arosiaid": None,
     }
+
+    if kmd_ee.get("mobile"):
+        payload["ava_mobilkmdee"] = phone_prefix + kmd_ee.get("mobile")
+
+    if kmd_ee.get("landline"):
+        payload["ava_fastnetkmdee"] = phone_prefix + kmd_ee.get("landline")
 
     return payload
 
