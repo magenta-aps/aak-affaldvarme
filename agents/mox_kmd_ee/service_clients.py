@@ -8,6 +8,7 @@
 
 import json
 import datetime
+import functools
 
 import requests
 import pika
@@ -17,46 +18,34 @@ from serviceplatformen_cvr import get_cvr_data as _get_cvr_data
 from settings import SP_UUIDS, CERTIFICATE_FILE, ERROR_MQ_QUEUE, ERROR_MQ_HOST
 
 
-def get_address_uuid(address):
+DAWA_ADDRESS_URL = 'https://dawa.aws.dk/adresser'
+DAWA_ACCESS_URL = 'https://dawa.aws.dk/adgangsadresser'
+
+def get_address_from_service(dawa_service, address):
     "Get DAWA UUID from dictionary with correct fields."
-    DAWA_SERVICE_URL = 'https://dawa.aws.dk/adresser'
 
     address['struktur'] = 'mini'
 
     response = requests.get(
-        url=DAWA_SERVICE_URL,
+        url=dawa_service,
         params=address
     )
     js = response.json()
 
     if len(js) == 1:
-        return js[0]['id']
+        address_uuid = js[0]['id']
     elif len(js) > 1:
         raise RuntimeError('Non-unique address: {0}'.format(address))
     else:
         # len(js) == 0
         raise RuntimeError('Address not found: {0}'.format(address))
+    return address_uuid
 
 
-def access_address_uuid(address):
-    "Get DAWA UUID from dictionary with correct fields."
-    DAWA_SERVICE_URL = 'https://dawa.aws.dk/adgangsadresser'
-
-    address['struktur'] = 'mini'
-
-    response = requests.get(
-        url=DAWA_SERVICE_URL,
-        params=address
-    )
-    js = response.json()
-
-    if len(js) == 1:
-        return js[0]['id']
-    elif len(js) > 1:
-        raise RuntimeError('Non-unique address: {0}'.format(address))
-    else:
-        # len(js) == 0
-        raise RuntimeError('Address not found: {0}'.format(address))
+get_address_uuid = functools.partial(get_address_from_service,
+                                     DAWA_ADDRESS_URL)
+access_address_uuid = functools.partial(get_address_from_service,
+                                        DAWA_ACCESS_URL)
 
 
 def fuzzy_address_uuid(addr_str):
