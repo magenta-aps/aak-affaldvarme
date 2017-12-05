@@ -21,6 +21,7 @@ from settings import SP_UUIDS, CERTIFICATE_FILE, ERROR_MQ_QUEUE, ERROR_MQ_HOST
 DAWA_ADDRESS_URL = 'https://dawa.aws.dk/adresser'
 DAWA_ACCESS_URL = 'https://dawa.aws.dk/adgangsadresser'
 
+
 def get_address_from_service(dawa_service, address):
     "Get DAWA UUID from dictionary with correct fields."
 
@@ -39,6 +40,7 @@ def get_address_from_service(dawa_service, address):
     else:
         # len(js) == 0
         raise RuntimeError('Address not found: {0}'.format(address))
+    print(address_uuid, dawa_service)
     return address_uuid
 
 
@@ -73,7 +75,8 @@ def fuzzy_address_uuid(addr_str):
                 '(datavask) address not found: {0}'.format(addr_str)
             )
     else:
-        return None
+        print("Error when looking up address:", result)
+        raise RuntimeError("Unable to look up address: {0}".format(addr_str))
 
 
 def get_cvr_data(cvr_number):

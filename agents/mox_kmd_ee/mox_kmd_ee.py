@@ -189,44 +189,18 @@ def get_products_for_location(connection, forbrugssted):
     return rows
 
 
-def get_forbrugssted_address_uuid(connection, forbrugssted, id_number):
+def get_forbrugssted_address_uuid(row):
     "Get UUID of the address for this Forbrugssted"
-    cursor = connection.cursor(as_dict=True)
-    cursor.execute(FORBRUGSSTED_ADRESSE_SQL.format(forbrugssted))
-    rows = cursor.fetchall()
 
-    # Hotfix:
-    # Some lookups will return 0
-    # Removing the assert as it breaks the import flow
-    # TODO:
-    # We must investigate the circumstances which cause this issue
-    # In theory forbrugssted should not be returned as 0
-
-    # assert(len(rows) == 1)
-
-    # Hotfix:
-    # Log if
-    if len(rows) != 1:
-        # Send error to log:
-        report_error(
-            "Forbrugssted for {0} returnerer: {1}".format(
-                id_number, forbrugssted
-            )
-        )
-
-        return ('', None)
-
-    frbrst_addr = rows[0]
-    # Lookup addres
-    vejnavn = frbrst_addr['ForbrStVejnavn']
-    vejkode = frbrst_addr['Vejkode']
-    postnr = frbrst_addr['Postnr']
-    postdistrikt = frbrst_addr['Postdistrikt']
-    husnummer = str(frbrst_addr['Husnr'])
-    if frbrst_addr['Bogstav']:
-        husnummer += frbrst_addr['Bogstav']
-    etage = frbrst_addr['Etage']
-    doer = frbrst_addr['Sidedørnr']
+    vejnavn = row['ForbrStVejnavn']
+    vejkode = row['Vejkode']
+    postnr = row['Postnr']
+    postdistrikt = row['ForbrStPostdistrikt']
+    husnummer = str(row['Husnr'])
+    if row['Bogstav']:
+        husnummer += row['Bogstav']
+    etage = row['Etage']
+    doer = row['Sidedørnr']
 
     address_string1 = "{0} {1} {2}{3}".format(
         vejnavn, husnummer, etage, doer
@@ -253,13 +227,14 @@ def get_forbrugssted_address_uuid(connection, forbrugssted, id_number):
         try:
             address_uuid = fuzzy_address_uuid(address_string)
         except Exception as e:
-            report_error(
-                "Forbrugsadresse fejler for kunde {0}: {1}".format(
-                    id_number, address_string
-                ), error_stack=None, error_object=address
+            id_number = row['PersonnrSEnr']
+            err_str = "Forbrugsadresse fejler for kunde {0}: {1}".format(
+                id_number, address_string
             )
+            report_error(err_str, error_stack=None, error_object=address)
+            print("ERROR:", err_str)
             address_uuid = None
-
+    print("FORBRUGSSTED:", address_string, address_uuid)
     return (address_string, address_uuid)
 
 
@@ -391,14 +366,8 @@ def import_all(connection):
             continue
 
         # Get Forbrugsstedadresse
-        forbrugssted = row['ForbrugsstedID']
-
         (forbrugssted_address,
-         forbrugssted_address_uuid) = get_forbrugssted_address_uuid(
-            connection,
-            forbrugssted,
-            id_number
-        )
+         forbrugssted_address_uuid) = get_forbrugssted_address_uuid(row)
 
         name_address = forbrugssted_address
         if not forbrugssted_address_uuid:
@@ -456,7 +425,7 @@ def import_all(connection):
         # There is always one agreement for each location (Forbrugssted)
         # AND only one location for each customer record.
 
-        customer_id = row['KundeID']
+        forbrugssted = row['ForbrugsstedID']
 
         products = get_products_for_location(connection, forbrugssted)
 

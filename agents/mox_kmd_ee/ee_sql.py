@@ -12,31 +12,44 @@
 # Only relevant fields (please).
 
 CUSTOMER_SQL = """
-SELECT top(100) [PersonnrSEnr]
-      ,[KundeCprnr]
+SELECT top(1000) [PersonnrSEnr]
       ,[LigestPersonnr]
-      ,[Tilflytningsdato]
-      ,[Fraflytningsdato]
+      ,[Kundenr]
+      ,[KundeSagsnr]
+      ,[KundeNavn]
+      ,[Telefonnr]
       ,[EmailKunde]
       ,[MobilTlf]
-      ,[KundeID]
-      ,[Kundenr]
+      ,[a].[ForbrugsstedID]
+      ,[VejNavn]
+      ,[a].[Postdistrikt]
+      ,[Tilflytningsdato]
+      ,[Fraflytningsdato]
       ,[Status]
-      ,[Telefonnr]
       ,[FasadministratorID]
       ,[BoligadminID]
-      ,[KundeNavn]
-      ,[ForbrugsstedID]
-      ,[VejNavn]
-      ,[Postdistrikt]
-      ,[KundeSagsnr]
-  FROM [KMD_EE].[dbo].[Kunde]
+      ,[Husnr]
+      ,[ForbrStVejnavn]
+      ,[Vejkode]
+      ,[b].[Postdistrikt] as [ForbrStPostdistrikt]
+      ,[Postnr]
+      ,[Bogstav]
+      ,[Etage]
+      ,[Sidedørnr]
+  FROM Kunde a, Forbrugssted b
   WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
   and Afregningsgrpnr <> 999
+  and a.ForbrugsstedID = b.ForbrugsstedID
 """
 
 
-TREFINSTALLATION_SQL = """SELECT *
+TREFINSTALLATION_SQL = """SELECT [InstalNummer],
+                                 [AlternativStedID],
+                                 [Målernr],
+                                 [MaalerTypeBetegnel],
+                                 [Målertypefabrikat],
+                                 [DatoFra],
+                                 [DatoTil]
     FROM TrefInstallation a, TrefMaaler b
     WHERE ForbrugsstedID = {0}
     AND a.InstallationID = b.InstallationID
@@ -66,47 +79,3 @@ ALTERNATIVSTED_ADRESSE_SQL = """SELECT [HusnrAltern],
                             FROM AlternativSted
                             WHERE AlternativStedID = {0}
                           """
-
-'''
-
-TODO: Delete this
-
-CUSTOMER_AND_FORBRUGSSTED_SQL = """
-SELECT   [PersonnrSEnr]
-      ,[KundeCprnr]
-      ,[LigestPersonnr]
-      ,[Tilflytningsdato]
-      ,[Fraflytningsdato]
-      ,[EmailKunde]
-      ,[MobilTlf]
-      ,[KundeID]
-      ,[Kundenr]
-      ,[Status]
-      ,[Telefonnr]
-      ,[FasadministratorID]
-      ,[BoligadminID]
-      ,[KundeNavn]
-      ,[VejNavn]
-      ,[Kunde].[Postdistrikt]
-      ,[Kunde].[ForbrugsstedID]
-      ,[Forbrugssted].[Husnr]
-      ,[Forbrugssted].[ForbrStVejnavn]
-      ,[Forbrugssted].[Postdistrikt]
-      ,[Forbrugssted].[Postnr]
-      ,[Forbrugssted].[Bogstav]
-      ,[Forbrugssted].[Etage]
-      ,[Forbrugssted].[Sidedørnr]
-  FROM Kunde, Forbrugssted
-  WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE() AND
-  [Kunde].[ForbrugsstedID] = [Forbrugssted].[ForbrugsstedID]
-"""
-
-TREFINSTALLATION_ALL_SQL = """SELECT Målertypefabrikat, MaalertypeBetegnel,
-Instalnummer, Målernr, DatoFra, DatoTil
-    FROM TrefInstallation a, TrefMaaler b
-    WHERE  a.InstallationID = b.InstallationID
-    AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
-    """
-
-'''
-
