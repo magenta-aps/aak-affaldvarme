@@ -267,6 +267,30 @@ def lookup_bruger(id_number):
         return search_results[0]
 
 
+def lookup_interessefaellesskab(customer_number):
+    request_string = (
+        "{0}/organisation/interessefaellesskab?brugervendtnoegle={1}".format(
+            BASE_URL, customer_number
+        )
+    )
+
+    result = session.get(request_string)
+
+    if result:
+        search_results = result.json()['results'][0]
+
+    if len(search_results) > 0:
+        # There should only be one
+        # assert(len(search_results) == 1)
+        if len(search_results) > 1:
+            print(
+                "More than one of customer relation", customer_number, "found"
+            )
+        return search_results[0]
+    else:
+        return None
+
+
 def create_interessefaellesskab(customer_number, customer_relation_name,
                                 customer_type, address_uuid, note=""):
     virkning = create_virkning()
