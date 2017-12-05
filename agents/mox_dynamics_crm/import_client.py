@@ -297,8 +297,17 @@ def process_entity(entity):
                 # GET ADDRESS ENTITY HERE
                 utility_address = dawa.get_address(utility_address_ref)
 
-                # Store in CRM
-                crm_utility_address_guid = crm.store_address(utility_address)
+                if utility_address:
+                    # Store in CRM
+                    crm_utility_address_guid = crm.store_address(
+                        utility_address
+                    )
+                else:
+                    log.warning(
+                        "Address uuid: {0} does not exist".format(
+                            utility_address_ref
+                        )
+                    )
 
         # Update lookup reference
         lookup_crm_utility_address = None
