@@ -18,6 +18,7 @@ from ee_sql import ALTERNATIVSTED_ADRESSE_SQL
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_oio import create_klasse, lookup_bruger, lookup_organisation
+from ee_oio import lookup_interessefaellesskab
 from ee_oio import KUNDE, LIGESTILLINGSKUNDE
 
 from ee_utils import cpr_cvr, is_cpr, is_cvr, connect
@@ -257,7 +258,6 @@ def get_forbrugssted_address_uuid(connection, forbrugssted, id_number):
                     id_number, address_string
                 ), error_stack=None, error_object=address
             )
-            print(address)
             address_uuid = None
 
     return (address_string, address_uuid)
@@ -383,6 +383,12 @@ def import_all(connection):
         # Create customer relation
         # NOTE: In KMD EE, there's always one customer relation for each row in
         # the Kunde table.
+
+        # If customer relation already exists, please skip.
+
+        if lookup_interessefaellesskab(customer_number):
+            print("This customer relation already exists:", customer_number)
+            continue
 
         # Get Forbrugsstedadresse
         forbrugssted = row['ForbrugsstedID']
