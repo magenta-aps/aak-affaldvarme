@@ -73,6 +73,8 @@ def fuzzy_address_uuid(addr_str):
         if len(addrs) == 1:
             return addrs[0]['adresse']['id']
         elif len(addrs) > 1:
+            # print("Adresses found:")
+            # print(addrs)
             raise RuntimeError(
                 'Non-unique (datavask) address: {0}'.format(addr_str)
             )
