@@ -107,11 +107,17 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         middle_name = person_dir.get('mellemnavn', '')
         last_name = person_dir['efternavn']
 
+        # Hotfix:
+        # Some entities have no zip code
         # Address related stuff
         address = {
-            "vejnavn": person_dir["vejnavn"],
-            "postnr": person_dir["postnummer"]
+            "vejnavn": person_dir["vejnavn"]
         }
+
+        # Hotfix:
+        if "postnummer" in person_dir:
+            address["postnr"] = person_dir["postnummer"]
+
         if "etage" in person_dir:
             address["etage"] = person_dir["etage"].lstrip('0')
         if "sidedoer" in person_dir:
