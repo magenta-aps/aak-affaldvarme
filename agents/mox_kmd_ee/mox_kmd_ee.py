@@ -136,9 +136,14 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
             address_uuid = None
 
         # Cache address for customer relation
-        address_string = "{0}, {1}".format(
-            person_dir['standardadresse'], person_dir['postnummer']
+        address_string = "{0}".format(
+            person_dir['standardadresse']
         )
+
+        # Hotfix:
+        if 'postnummer' in person_dir:
+            address_string += ", {0}".format(person_dir['postnummer'])
+
         gender = person_dir['koen']
         marital_status = person_dir['civilstand']
         address_protection = person_dir['adressebeskyttelse']
