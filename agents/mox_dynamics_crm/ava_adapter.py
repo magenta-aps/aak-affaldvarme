@@ -117,8 +117,8 @@ def ava_bruger(entity):
         # KMD EE
         # AVA masterid currently appears to be missing from the CRM schema
         "ava_kmdeemasterid": egenskaber.get("ava_masterid"),
-        "ava_mobilkmdee": kmd_ee.get("mobile", None),
-        "ava_fastnetkmdee": kmd_ee.get("landline", None),
+        "ava_mobilkmdee": kmd_ee.get("mobile"),
+        "ava_fastnetkmdee": kmd_ee.get("landline"),
         "ava_emailkmdee": kmd_ee.get("email"),
 
 
@@ -211,8 +211,8 @@ def ava_organisation(entity):
         # KMD EE
         # AVA masterid currently appears to be missing from the CRM schema
         "ava_kmdeemasterid": egenskaber.get("ava_masterid"),
-        "ava_mobilkmdee": kmd_ee.get("mobile", None),
-        "ava_fastnetkmdee": kmd_ee.get("landline", None),
+        "ava_mobilkmdee": kmd_ee.get("mobile"),
+        "ava_fastnetkmdee": kmd_ee.get("landline"),
         "ava_emailkmdee": kmd_ee.get("email"),
 
         # Arosia

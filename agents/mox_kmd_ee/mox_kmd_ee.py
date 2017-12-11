@@ -75,15 +75,31 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         try:
             person_dir = get_cpr_data(id_number)
         except Exception as e:
-            report_error(traceback.format_exc())
+            # Deprecate:
+            # report_error(traceback.format_exc())
+
+            # Print to screen instead
+            error_message = "SP CPR Lookup failed for ID: {0}".format(
+                id_number
+            )
+
+            print(error_message)
+            print("Retrying in 1 second")
 
             # Retry *once* after sleeping
             time.sleep(1)
+
             try:
                 person_dir = get_cpr_data(id_number)
             except Exception as e:
+                # Hotfix:
+                print("CPR lookukup failed after retrying, logging error")
+                # Certain CPR ID's are actually P-Numbers
+                # These must be manually processed
                 report_error(
-                    "CPR number not found: {0}".format(id_number)
+                    error_message=error_message,
+                    error_stack=e,
+                    error_object=id_number
                 )
                 return None
 
