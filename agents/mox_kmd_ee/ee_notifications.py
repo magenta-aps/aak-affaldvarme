@@ -1,69 +1,62 @@
 
+import os
+import datetime
+import pickle
+
+from mssql_config import username, password, server, database
+from ee_utils import connect
+from ee_sql import CUSTOMER_SQL, RELEVANT_TREF_INSTALLATIONS_SQL
+
+
+CUSTOMER_RELATIONS_FILE = 'var/customer_relations'
+
+
+def read_customer_relations(cursor):
+    """Read customer relations from database.
+
+    Read all data regarding customers, customer roles and customer
+    relationships and map them for easy lookup in case something
+    changes. Basically, by creating a dictionary with customer
+    number as key.
+    """
+    cursor.execute(CUSTOMER_SQL)
+    rows = cursor.fetchall()
+    customer_dict = {row['Kundenr']: row for row in rows}
+
+    return customer_dict
+
+
+def store_customer_relations(customer_relations):
+    with open(CUSTOMER_RELATIONS_FILE, 'wb') as f:
+        pickle.dump(customer_relations, f, protocol=4)
+
+
+def retrieve_customer_relations():
+    with open(CUSTOMER_RELATIONS_FILE, 'rb') as f:
+        return pickle.load(f)
+
+
 if __name__ == '__main__':
-
-    import csv
-    import os
-    import glob
-    import datetime
-    import difflib
-
-    from io import StringIO
-
-    from mssql_config import username, password, server, database
-    from ee_utils import connect
-    from ee_sql import CUSTOMER_AND_FORBRUGSSTED_SQL, CUSTOMER_SQL
-    from ee_sql import TREFINSTALLATION_ALL_SQL
-
-    def write_csv(csv_file, cursor):
-        with open(csv_file, "w") as f:
-            writer = csv.writer(f)
-            writer.writerow([i[0] for i in cursor.description])
-            writer.writerows(cursor)
-
-    # Obtain CSV files for "now"
-    """
-    connection = connect(server, database, username, password)
-    cursor = connection.cursor()
-    cursor.execute(CUSTOMER_AND_FORBRUGSSTED_SQL)
-    # rows = cursor.fetchall()
-
-    today = str(datetime.date.today())
-    csv_filename = 'tmp/kunde_forbrugssted_{0}.csv'.format(today)
-    write_csv(csv_filename, cursor)
-
-    cursor.execute(TREFINSTALLATION_ALL_SQL)
-
-    csv_filename = 'tmp/trefinstallation_{0}.csv'.format(today)
-    write_csv(csv_filename, cursor)
-    """
-
-    customer_files = glob.glob('tmp/kunde_forbrugssted_*')
-    latest_customer_file = max(customer_files)
-
-    stored_customers = open(latest_customer_file, "r").read().split('\n')
 
     # Connect and get rows
     connection = connect(server, database, username, password)
-    cursor = connection.cursor()
-    cursor.execute(CUSTOMER_AND_FORBRUGSSTED_SQL)
-    strio = StringIO()
-    writer = csv.writer(strio)
-    writer.writerow([i[0] for i in cursor.description])
-    writer.writerows(cursor)
+    cursor = connection.cursor(as_dict=True)
 
-    customer_rows = strio.getvalue().split('\n')
+    cr1 = read_customer_relations(cursor)
 
-    print(stored_customers[0])
-    print(stored_customers[1])
-    print(customer_rows[0])
-    print(customer_rows[1])
+    # store_customer_relations(cr1)
 
-    # Calculate diff
-    print('Calculating diff ...')
-    delta = difflib.ndiff(stored_customers, customer_rows)
-    print(len(stored_customers))
-    print(len(customer_rows))
-    delta = [r for r in delta if not r.startswith('  ')]
-    print('done!')
+    cr2 = retrieve_customer_relations()
 
-    print(len(delta))
+    print('Comparison, cr1 == cr2:', cr1 == cr2)
+    """
+    s1 = set(cr1.items())
+    s2 = set(cr2.items())
+
+    diff = (s1 - s2) | (s2 - s1)
+    """
+    new_keys = set(cr2.keys()) - set(cr1.keys())
+    lost_keys = set(cr1.keys()) - set(cr2.keys())
+
+    print("new keys", new_keys)
+    print("lost keys", lost_keys)

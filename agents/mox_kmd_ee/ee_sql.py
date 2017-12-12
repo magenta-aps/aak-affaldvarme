@@ -108,7 +108,7 @@ ALTERNATIVSTED_ADRESSE_SQL = """SELECT [HusnrAltern],
 if __name__ == '__main__':
 
     import pymssql
- 
+
     from mssql_config import username, password, server, database
     from ee_utils import connect
 
