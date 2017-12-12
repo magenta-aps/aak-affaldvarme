@@ -7,6 +7,10 @@ import json
 import adal
 import logging
 import requests
+from datetime import datetime
+
+# Cache layer
+import cache_interface as cache
 
 # Local settings
 from settings import CRM_RESOURCE
@@ -210,27 +214,20 @@ def get_ava_address(uuid):
 def store_address(payload):
     """Address retrieved from DAWA"""
 
-    # Hotfix:
-    # Fetch origin id from payload
-    identifier = payload["origin_id"]
-    payload.pop("origin_id", None)
-
-    # Check local cache before inserting
-    existing_guid = global_address.get(identifier, None)
-
-    if existing_guid:
-        return existing_guid
-
-    # REST resource
-    resource = "ava_adresses"
-
     # Check if payload exists
     if not payload:
         return None
 
+    # Set timestamps
+    payload["created"] = datetime.utcnow()
+    payload["updated"] = datetime.utcnow()
+
+    # REST resource
+    resource = "ava_adresses"
+
     log.info("Creating address in CRM")
-    log.debug(payload)
-    response = post_request(resource, payload)
+    log.debug(payload["data"])
+    response = post_request(resource, payload["data"])
 
     crm_guid = response.json()["ava_adresseid"]
 
@@ -240,9 +237,11 @@ def store_address(payload):
         log.error(response.text)
         return False
 
-    # Hotfix:
-    # Store reference in local cache to avoid duplicate entries
-    global_address[identifier] = crm_guid
+    # Store CRM GUID reference as _external key
+    payload["_external"] = crm_guid
+
+    # Cache address
+    cache.store_address(payload)
 
     return crm_guid
 
