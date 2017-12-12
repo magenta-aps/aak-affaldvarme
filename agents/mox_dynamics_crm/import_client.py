@@ -25,6 +25,7 @@ from settings import ORGANISATION_UUID
 from settings import LOG_FILE
 from settings import DO_RUN_IN_TEST_MODE
 from settings import DO_DISABLE_SSL_WARNINGS
+from settings import AREA_CODE
 
 
 # If the SSL signature is not valid requests will print errors
@@ -535,13 +536,49 @@ def process_entity(entity):
     log.info("Finished processing entity: {0}".format(entity_uuid))
 
 
+# IMPORT ALL ADDRESSES
+def import_all_addresses():
+    """ 
+    Missing docstring
+    """
+
+    # Begin
+    log.info("Begin address import")
+    log.info(
+        "Import all addresses from area code: {0}".format()
+    )
+
+    for address in dawa.get_all(AREA_CODE):
+        address_guid = crm.store_address(address)
+        if address_guid:
+            log.info(
+                "Address {0} stored in CRM".format(address["id"])
+            )
+            log.debug(
+                "Address {0} stored, CRM returns: {1}".format(
+                    address["id"],
+                    address_guid
+                )
+            )
+        else:
+            log.error(
+                "Failed to store address: {0}".format(address["id"])
+            )
+
+    # Finished procedure
+    log.info("Finished processing all addresses")
+
+
 # RUN THE CLIENT
 if __name__ == "__main__":
 
     # Log to file
     start_logging(20, LOG_FILE)
 
-    # Begin import
+    # Import all addresses
+    import_all_addresses()
+
+    # Import Lora entities
     run_import_all()
     run_import_all_org()
 
