@@ -75,15 +75,31 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         try:
             person_dir = get_cpr_data(id_number)
         except Exception as e:
-            report_error(traceback.format_exc())
+            # Deprecate:
+            # report_error(traceback.format_exc())
+
+            # Print to screen instead
+            error_message = "SP CPR Lookup failed for ID: {0}".format(
+                id_number
+            )
+
+            print(error_message)
+            print("Retrying in 1 second")
 
             # Retry *once* after sleeping
             time.sleep(1)
+
             try:
                 person_dir = get_cpr_data(id_number)
             except Exception as e:
+                # Hotfix:
+                print("CPR lookukup failed after retrying, logging error")
+                # Certain CPR ID's are actually P-Numbers
+                # These must be manually processed
                 report_error(
-                    "CPR number not found: {0}".format(id_number)
+                    error_message=error_message,
+                    error_stack=e,
+                    error_object=id_number
                 )
                 return None
 
@@ -91,11 +107,17 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         middle_name = person_dir.get('mellemnavn', '')
         last_name = person_dir['efternavn']
 
+        # Hotfix:
+        # Some entities have no zip code
         # Address related stuff
         address = {
-            "vejnavn": person_dir["vejnavn"],
-            "postnr": person_dir["postnummer"]
+            "vejnavn": person_dir["vejnavn"]
         }
+
+        # Hotfix:
+        if "postnummer" in person_dir:
+            address["postnr"] = person_dir["postnummer"]
+
         if "etage" in person_dir:
             address["etage"] = person_dir["etage"].lstrip('0')
         if "sidedoer" in person_dir:
@@ -114,9 +136,14 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
             address_uuid = None
 
         # Cache address for customer relation
-        address_string = "{0}, {1}".format(
-            person_dir['standardadresse'], person_dir['postnummer']
+        address_string = "{0}".format(
+            person_dir['standardadresse']
         )
+
+        # Hotfix:
+        if 'postnummer' in person_dir:
+            address_string += ", {0}".format(person_dir['postnummer'])
+
         gender = person_dir['koen']
         marital_status = person_dir['civilstand']
         address_protection = person_dir['adressebeskyttelse']
