@@ -545,7 +545,7 @@ def import_all_addresses():
     # Begin
     log.info("Begin address import")
     log.info(
-        "Import all addresses from area code: {0}".format()
+        "Import all addresses from area code: {0}".format(AREA_CODE)
     )
 
     for address in dawa.get_all(AREA_CODE):
