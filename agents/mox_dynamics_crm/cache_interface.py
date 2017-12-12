@@ -51,6 +51,37 @@ def insert(resource, payload):
     return query
 
 
+def find(resource, uuid):
+
+    if not resource:
+        return False
+
+    # Connect
+    db = connect()
+
+    # do stuff
+    collection = db[resource]
+
+    params = {
+        "_id": uuid
+    }
+
+    query = collection.find_one(params)
+
+    return query
+
+
+def find_address(uuid):
+
+    if not uuid:
+        return False
+
+    # Set resource
+    resource = "addresses"
+
+    return find(resource, uuid)
+
+
 def store_address(payload):
 
     if not payload:
@@ -60,3 +91,7 @@ def store_address(payload):
     resource = "addresses"
 
     return insert(resource, payload)
+
+if __name__ == "__main__":
+    address = find_address("0a3f50c2-6335-32b8-e044-0003ba298018s")
+    print(address)
