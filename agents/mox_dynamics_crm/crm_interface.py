@@ -202,13 +202,10 @@ def delete_request(service_url):
 
 def get_ava_address(uuid):
 
-    # Check local cache before inserting
-    existing_guid = global_address.get(uuid, None)
+    if not uuid:
+        return False
 
-    if not existing_guid:
-        existing_guid = False
-
-    return existing_guid
+    address = cache.find_address(uuid)
 
 
 def store_address(payload):
@@ -217,6 +214,20 @@ def store_address(payload):
     # Check if payload exists
     if not payload:
         return None
+
+    identifier = payload["_id"]
+    existing_address = get_ava_address(identifier)
+
+    if existing_address:
+        # CRM reference
+        crm_guid = existing_address["_external"]
+
+        # Log entry
+        log.info(
+            "Addess already exists in CRM with GUID: {0}".format(crm_guid)
+        )
+
+        return crm_guid
 
     # Set timestamps
     payload["created"] = datetime.utcnow()
