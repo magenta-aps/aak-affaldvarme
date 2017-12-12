@@ -552,17 +552,17 @@ def import_all_addresses():
         address_guid = crm.store_address(address)
         if address_guid:
             log.info(
-                "Address {0} stored in CRM".format(address["id"])
+                "Address {0} stored in CRM".format(address["_id"])
             )
             log.debug(
                 "Address {0} stored, CRM returns: {1}".format(
-                    address["id"],
+                    address["_id"],
                     address_guid
                 )
             )
         else:
             log.error(
-                "Failed to store address: {0}".format(address["id"])
+                "Failed to store address: {0}".format(address["_id"])
             )
 
     # Finished procedure
