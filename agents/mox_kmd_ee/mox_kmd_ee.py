@@ -13,7 +13,7 @@ import pymssql
 
 from serviceplatformen_cpr import get_cpr_data
 
-from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL, FORBRUGSSTED_ADRESSE_SQL
+from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL
 from ee_sql import ALTERNATIVSTED_ADRESSE_SQL
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion

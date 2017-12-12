@@ -12,7 +12,7 @@
 # Only relevant fields (please).
 
 CUSTOMER_SQL = """
-SELECT top(1000) [PersonnrSEnr]
+SELECT  [PersonnrSEnr]
       ,[LigestPersonnr]
       ,[Kundenr]
       ,[KundeSagsnr]
@@ -56,18 +56,43 @@ TREFINSTALLATION_SQL = """SELECT [InstalNummer],
     AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
     """
 
-FORBRUGSSTED_ADRESSE_SQL = """SELECT [Husnr],
+RELEVANT_TREF_INSTALLATIONS_SQL = """SELECT [InstalNummer],
+                                 [AlternativStedID],
+                                 [Målernr],
+                                 [MaalerTypeBetegnel],
+                                 [Målertypefabrikat],
+                                 [DatoFra],
+                                 [DatoTil]
+    FROM TrefInstallation a, TrefMaaler b
+    WHERE
+    a.InstallationID = b.InstallationID
+    AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
+    AND ForbrugsstedID IN (SELECT a.ForbrugsstedID from Kunde a, Forbrugssted b
+  WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
+  and Afregningsgrpnr <> 999
+  and a.ForbrugsstedID = b.ForbrugsstedID)
+    """
+
+RELEVANT_ALT_ADRESSE_SQL = """SELECT [HusnrAltern],
                                      [ForbrStVejnavn],
-                                     [Vejkode],
+                                     [VejkodeAltern],
                                      [Postdistrikt],
                                      [Postnr],
                                      [Bogstav],
-                                     [Etage],
-                                     [Sidedørnr]
-                            FROM Forbrugssted
-                            WHERE ForbrugsstedID = {0}
-                          """
-
+                                     [EtageAltAdr],
+                                     [SidedørnrAltern]
+                            FROM AlternativSted
+                            WHERE AlternativStedID IN (
+                SELECT AlternativStedID FROM TrefInstallation
+                WHERE AlternativStedID <> 0
+    AND ForbrugsstedID IN (
+        SELECT a.ForbrugsstedID from Kunde a, Forbrugssted b
+       WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
+       and Afregningsgrpnr <> 999
+       and a.ForbrugsstedID = b.ForbrugsstedID
+  )
+  )
+  """
 ALTERNATIVSTED_ADRESSE_SQL = """SELECT [HusnrAltern],
                                      [ForbrStVejnavn],
                                      [VejkodeAltern],
@@ -79,3 +104,26 @@ ALTERNATIVSTED_ADRESSE_SQL = """SELECT [HusnrAltern],
                             FROM AlternativSted
                             WHERE AlternativStedID = {0}
                           """
+
+if __name__ == '__main__':
+
+    import pymssql
+ 
+    from mssql_config import username, password, server, database
+    from ee_utils import connect
+
+    connection = connect(server, database, username, password)
+    cursor = connection.cursor(as_dict=True)
+    cursor.execute(RELEVANT_ALT_ADRESSE_SQL)
+    rows = cursor.fetchall()
+    n1 = cursor.rowcount
+    cursor.execute(CUSTOMER_SQL)
+    rows = cursor.fetchall()
+    n2 = cursor.rowcount
+    cursor.execute(RELEVANT_TREF_INSTALLATIONS_SQL)
+    rows = cursor.fetchall()
+    n3 = cursor.rowcount
+
+    print(n1, "AltSted rows to consider")
+    print(n2, "Customer rows to consider")
+    print(n3, "Installation rows to consider")
