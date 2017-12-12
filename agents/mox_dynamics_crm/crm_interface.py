@@ -205,7 +205,7 @@ def get_ava_address(uuid):
     if not uuid:
         return False
 
-    address = cache.find_address(uuid)
+    return cache.find_address(uuid)
 
 
 def store_address(payload):
