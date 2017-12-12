@@ -13,7 +13,7 @@ import pymssql
 
 from serviceplatformen_cpr import get_cpr_data
 
-from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL, FORBRUGSSTED_ADRESSE_SQL
+from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL
 from ee_sql import ALTERNATIVSTED_ADRESSE_SQL
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
@@ -107,11 +107,17 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         middle_name = person_dir.get('mellemnavn', '')
         last_name = person_dir['efternavn']
 
+        # Hotfix:
+        # Some entities have no zip code
         # Address related stuff
         address = {
-            "vejnavn": person_dir["vejnavn"],
-            "postnr": person_dir["postnummer"]
+            "vejnavn": person_dir["vejnavn"]
         }
+
+        # Hotfix:
+        if "postnummer" in person_dir:
+            address["postnr"] = person_dir["postnummer"]
+
         if "etage" in person_dir:
             address["etage"] = person_dir["etage"].lstrip('0')
         if "sidedoer" in person_dir:
@@ -130,9 +136,14 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
             address_uuid = None
 
         # Cache address for customer relation
-        address_string = "{0}, {1}".format(
-            person_dir['standardadresse'], person_dir['postnummer']
+        address_string = "{0}".format(
+            person_dir['standardadresse']
         )
+
+        # Hotfix:
+        if 'postnummer' in person_dir:
+            address_string += ", {0}".format(person_dir['postnummer'])
+
         gender = person_dir['koen']
         marital_status = person_dir['civilstand']
         address_protection = person_dir['adressebeskyttelse']
