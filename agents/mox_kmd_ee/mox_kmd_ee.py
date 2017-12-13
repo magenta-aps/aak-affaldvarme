@@ -21,7 +21,7 @@ from ee_oio import create_klasse, lookup_bruger, lookup_organisation
 from ee_oio import lookup_interessefaellesskab
 from ee_oio import KUNDE, LIGESTILLINGSKUNDE
 
-from ee_utils import cpr_cvr, is_cpr, is_cvr, connect
+from ee_utils import cpr_cvr, is_cpr, is_cvr, connect, lookup_customer
 
 from service_clients import get_address_uuid, fuzzy_address_uuid, get_cvr_data
 from service_clients import report_error, access_address_uuid
@@ -163,13 +163,6 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
     if result:
 
         return result.json()['uuid']
-
-
-def lookup_customer(id_number):
-    if is_cpr(id_number):
-        return lookup_bruger(id_number)
-    elif is_cvr(id_number):
-        return lookup_organisation(id_number)
 
 
 def create_customer_role(customer_uuid, customer_relation_uuid, role):
@@ -353,10 +346,10 @@ def import_all(connection):
     for row in rows:
         # Lookup customer in LoRa - insert if it doesn't exist already.
 
-        id_number = cpr_cvr(float(row['PersonnrSEnr']))
-        ligest_personnr = cpr_cvr(float(row['LigestPersonnr']))
-        customer_number = str(int(float(row['Kundenr'])))
-        master_id = str(int(float(row['KundeSagsnr'])))
+        id_number = cpr_cvr(int_str(row['PersonnrSEnr']))
+        ligest_personnr = cpr_cvr(int_str(row['LigestPersonnr']))
+        customer_number = int_str(row['Kundenr'])
+        master_id = int_str(row['KundeSagsnr'])
 
         customer_uuid = lookup_customer(id_number)
 

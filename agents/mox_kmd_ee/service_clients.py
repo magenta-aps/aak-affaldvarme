@@ -9,6 +9,7 @@
 import json
 import datetime
 import functools
+import warnings
 
 import requests
 import pika
@@ -103,6 +104,7 @@ def report_error(error_message, error_stack=None, error_object=None):
     connection.close()
 
     # Print error to the error file
+    warnings.warn(error_message)
     todaystr = str(datetime.datetime.today().date())
     with open("mox_kmd_ee_{0}.log".format(todaystr), "a") as f:
         f.write(error_message + '\n\n')
