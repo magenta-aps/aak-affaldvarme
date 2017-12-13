@@ -267,6 +267,7 @@ def adapter(data):
             'ava_by': postnrnavn,
             'ava_land': land,
             'ava_kvhx': kvhx,
+            "ava_vejkode": vejkode,
             'ava_koordinat_nord': str(koordinat_nord),
             'ava_koordinat_oest': str(koordinat_oest),
             'ava_laengdegrad': str(laengdegrad),
@@ -303,9 +304,18 @@ def get_all(area_code):
     if response.status_code != 200:
         return False
 
+    # Create empty payload:
+    payload = []
+
     for address in response.json():
-        yield adapter(address)
+        converted = adapter(address)
+        payload.append(converted)
+
+    return payload
 
 if __name__ == "__main__":
     address = get_access_address("0a3f5096-68f7-32b8-e044-0003ba298018")
     print(address)
+
+    addresses = get_all("0751")
+    print(addresses)
