@@ -21,7 +21,7 @@ from ee_oio import create_klasse, lookup_bruger, lookup_organisation
 from ee_oio import lookup_interessefaellesskab
 from ee_oio import KUNDE, LIGESTILLINGSKUNDE
 
-from ee_utils import cpr_cvr, is_cpr, is_cvr, connect, lookup_customer
+from ee_utils import cpr_cvr, is_cpr, is_cvr, connect
 
 from service_clients import get_address_uuid, fuzzy_address_uuid, get_cvr_data
 from service_clients import report_error, access_address_uuid
@@ -30,8 +30,12 @@ from service_clients import report_error, access_address_uuid
 
 VARME = "Varme"
 
-# This is used to cache customer's addresses from SP for use when creating
-# names for customer roles.
+
+def lookup_customer(id_number):
+    if is_cpr(id_number):
+        return lookup_bruger(id_number)
+    elif is_cvr(id_number):
+        return lookup_organisation(id_number)
 
 
 def create_customer(id_number, key, name, master_id, phone="", email="",
@@ -434,6 +438,7 @@ def import_all(connection):
         try:
             invoice_address_uuid = fuzzy_address_uuid(invoice_address)
         except Exception as e:
+            invoice_address_uuid = None
             report_error(
                 "Customer {1}: Unable to lookup invoicing address: {0}".format(
                     str(e), id_number
@@ -486,6 +491,7 @@ def import_all(connection):
             cr_uuid, product_uuids
         )
         assert(agreement_uuid)
+
     print("Fandt {0} primære kunder og {1} ligestillingskunder.".format(
         n, ligest_persons)
     )

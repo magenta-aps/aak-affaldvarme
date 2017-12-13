@@ -7,10 +7,16 @@ import warnings
 import settings
 
 from mssql_config import username, password, server, database
-from ee_utils import connect, int_str, lookup_customer
+from ee_utils import connect, int_str, cpr_cvr
 from ee_sql import CUSTOMER_SQL, RELEVANT_TREF_INSTALLATIONS_SQL
-from ee_oio import lookup_interessefaellesskab
-from service_clients import report_error
+from ee_oio import lookup_interessefaellesskab, lookup_bruger
+from ee_oio import KUNDE, LIGESTILLINGSKUNDE
+from mox_kmd_ee import lookup_customer, create_customer
+from mox_kmd_ee import get_forbrugssted_address_uuid, VARME
+from mox_kmd_ee import create_customer_relation, create_customer_role
+from mox_kmd_ee import get_products_for_location, create_product
+from mox_kmd_ee import create_agreement
+from service_clients import report_error, fuzzy_address_uuid
 
 
 CUSTOMER_RELATIONS_FILE = 'var/customer_relations'
@@ -67,7 +73,147 @@ def delete_customer_record(customer_number):
 
 def import_customer_record(fields):
     "Import a new customer record including relation, agreement, products."
-    print("Importing", fields)
+
+    # Lookup customer in LoRa - insert if it doesn't exist already.
+    id_number = cpr_cvr(int_str(fields['PersonnrSEnr']))
+    ligest_personnr = cpr_cvr(int_str(fields['LigestPersonnr']))
+    customer_number = int_str(fields['Kundenr'])
+    master_id = int_str(fields['KundeSagsnr'])
+
+    customer_uuid = lookup_customer(id_number)
+
+    if not customer_uuid:
+        new_customer_uuid = create_customer(
+            id_number=id_number,
+            key=customer_number,
+            name=fields['KundeNavn'],
+            master_id=master_id,
+            phone=fields['Telefonnr'],
+            email=fields['EmailKunde'],
+            mobile=fields['MobilTlf'],
+        )
+
+        if new_customer_uuid:
+            # New customer created
+            customer_uuid = new_customer_uuid
+        else:
+            # No customer created or found.
+            report_error("No customer created: %s %s" % (
+                         fields['KundeNavn'],
+                         fields['PersonnrSEnr']))
+            return
+
+    # Create customer relation
+    # NOTE: In KMD EE, there's always one customer relation for each row in
+    # the Kunde table.
+
+    # If customer relation already exists, please skip.
+
+    if lookup_interessefaellesskab(customer_number):
+        print("This customer relation already exists:", customer_number)
+        return
+
+    # Get Forbrugsstedadresse
+    (forbrugssted_address,
+     forbrugssted_address_uuid) = get_forbrugssted_address_uuid(fields)
+
+    name_address = forbrugssted_address
+    if not forbrugssted_address_uuid:
+        report_error(forbrugssted_address)
+    cr_name = "{0}, {1}".format(VARME, name_address)
+    cr_type = VARME  # Always for KMD EE
+    cr_address_uuid = forbrugssted_address_uuid
+    cr_uuid = create_customer_relation(
+        customer_number, cr_name, cr_type, cr_address_uuid
+    )
+
+    assert(cr_uuid)
+
+    # This done, create customer roles & link customer and relation
+    role_uuid = create_customer_role(customer_uuid, cr_uuid, KUNDE)
+    assert(role_uuid)
+
+    # Now handle partner/roommate, ignore empty CPR numbers
+    if len(ligest_personnr) > 1:
+
+        ligest_uuid = lookup_customer(ligest_personnr)
+
+        if not ligest_uuid:
+            new_ligest_uuid = create_customer(
+                id_number=ligest_personnr,
+                key=customer_number,
+                name=fields['KundeNavn'],
+                master_id=master_id
+            )
+            if new_ligest_uuid:
+                ligest_uuid = new_ligest_uuid
+
+        if ligest_uuid:
+            create_customer_role(
+                ligest_uuid, cr_uuid, LIGESTILLINGSKUNDE
+            )
+
+    # Create agreement
+    name = 'Fjernvarmeaftale'
+    agreement_type = VARME
+    invoice_address = (fields['VejNavn'].replace(',-', ' ') +
+                       ', ' + fields['Postdistrikt'])
+    try:
+        invoice_address_uuid = fuzzy_address_uuid(invoice_address)
+    except Exception as e:
+        invoice_address_uuid = None
+        report_error(
+            "Customer {1}: Unable to lookup invoicing address: {0}".format(
+                str(e), id_number
+            )
+        )
+    start_date = fields['Tilflytningsdato']
+    end_date = fields['Fraflytningsdato']
+
+    # There is always one agreement for each location (Forbrugssted)
+    # AND only one location for each customer record.
+
+    forbrugssted = fields['ForbrugsstedID']
+
+    products = get_products_for_location(connection, forbrugssted)
+
+    no_of_products = len(products)
+
+    product_uuids = []
+
+    for p in products:
+        identification = p['InstalNummer']
+        installation_type = VARME
+        meter_number = p['Målernr']
+        meter_type = p['MaalerTypeBetegnel']
+        name = "{0}, {1} {2}".format(meter_number, p['Målertypefabrikat'],
+                                     meter_type)
+        start_date = p['DatoFra']
+        end_date = p['DatoTil']
+        product_address = None
+        # Check alternative address
+        alternativsted_id = p['AlternativStedID']
+        if alternativsted_id:
+            alternativ_adresse_uuid = get_alternativsted_address_uuid(
+                connection, alternativsted_id
+            )
+            if alternativ_adresse_uuid:
+                product_address = alternativ_adresse_uuid
+
+        product_uuid = create_product(
+            name, identification, installation_type, meter_number,
+            meter_type, start_date, end_date, product_address
+        )
+        if product_uuid:
+            product_uuids.append(product_uuid)
+
+    agreement_name = "Varme, " + name
+    agreement_uuid = create_agreement(
+        agreement_name, agreement_type, no_of_products,
+        invoice_address_uuid, start_date, end_date, forbrugssted,
+        cr_uuid, product_uuids
+    )
+    assert(agreement_uuid)
 
 
 def update_customer_record(fields, changed_values):

@@ -12,8 +12,8 @@ def int_str(s):
 def cpr_cvr(val):
     assert(type(val) == str)
     val = str(int(val))
-    if not (8 <= len(val) <= 10):
-        raise RuntimeError("Not a CPR or CVR number")
+    if not (8 <= len(val) <= 10) and (len(val) > 1):
+        raise RuntimeError("Not a CPR or CVR number:".format(val))
     if len(val) == 9:
         val = '0' + val
     return val
@@ -39,10 +39,3 @@ def connect(server, database, username, password):
         report_error(str(e))
         raise
     return cnxn
-
-
-def lookup_customer(id_number):
-    if is_cpr(id_number):
-        return lookup_bruger(id_number)
-    elif is_cvr(id_number):
-        return lookup_organisation(id_number)
