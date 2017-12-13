@@ -12,6 +12,7 @@ import logging
 import requests
 
 # Local modules
+import cache_interface as cache
 import crm_interface as crm
 import oio_interface as oio
 import ava_adapter as adapter
@@ -548,22 +549,21 @@ def import_all_addresses():
         "Import all addresses from area code: {0}".format(AREA_CODE)
     )
 
-    for address in dawa.get_all(AREA_CODE):
-        address_guid = crm.store_address(address)
-        if address_guid:
-            log.info(
-                "Address {0} stored in CRM".format(address["_id"])
-            )
-            log.debug(
-                "Address {0} stored, CRM returns: {1}".format(
-                    address["_id"],
-                    address_guid
-                )
-            )
-        else:
-            log.error(
-                "Failed to store address: {0}".format(address["_id"])
-            )
+    # Get list of all address within "AREA_CODE"
+    # See settings to get the area code
+    addresses = dawa.get_all(AREA_CODE)
+
+    if not addresses:
+        log.warning(
+            "No addresses found in area code:  {0}".format(AREA_CODE)
+        )
+        return False
+
+    # Store addresses
+    try:
+        cache.store_address(addresses)
+    except Exception as error:
+        log.error(error)
 
     # Finished procedure
     log.info("Finished processing all addresses")
