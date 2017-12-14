@@ -9,7 +9,6 @@
 import json
 import datetime
 import functools
-import warnings
 
 import requests
 import pika
@@ -41,7 +40,6 @@ def get_address_from_service(dawa_service, address):
     else:
         # len(js) == 0
         raise RuntimeError('Address not found: {0}'.format(address))
-    print(address_uuid, dawa_service)
     return address_uuid
 
 
@@ -76,7 +74,6 @@ def fuzzy_address_uuid(addr_str):
                 '(datavask) address not found: {0}'.format(addr_str)
             )
     else:
-        print("Error when looking up address:", result)
         raise RuntimeError("Unable to look up address: {0}".format(addr_str))
 
 
@@ -104,9 +101,8 @@ def report_error(error_message, error_stack=None, error_object=None):
     connection.close()
 
     # Print error to the error file
-    warnings.warn(error_message)
     todaystr = str(datetime.datetime.today().date())
-    with open("mox_kmd_ee_{0}.log".format(todaystr), "a") as f:
+    with open("var/mox_kmd_ee_{0}.log".format(todaystr), "a") as f:
         f.write(error_message + '\n\n')
 
 

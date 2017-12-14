@@ -12,7 +12,7 @@
 # Only relevant fields (please).
 
 CUSTOMER_SQL = """
-SELECT  [PersonnrSEnr]
+SELECT TOP(1000) [PersonnrSEnr]
       ,[LigestPersonnr]
       ,[Kundenr]
       ,[KundeSagsnr]

@@ -15,7 +15,7 @@ from mox_kmd_ee import lookup_customer, create_customer
 from mox_kmd_ee import get_forbrugssted_address_uuid, VARME
 from mox_kmd_ee import create_customer_relation, create_customer_role
 from mox_kmd_ee import get_products_for_location, create_product
-from mox_kmd_ee import create_agreement
+from mox_kmd_ee import create_agreement, get_alternativsted_address_uuid
 from service_clients import report_error, fuzzy_address_uuid
 
 
@@ -50,8 +50,11 @@ def store_customer_records(customer_relations):
 
 
 def retrieve_customer_records():
-    with open(CUSTOMER_RELATIONS_FILE, 'rb') as f:
-        return pickle.load(f)
+    try:
+        with open(CUSTOMER_RELATIONS_FILE, 'rb') as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return {}
 
 
 def delete_customer_record(customer_number):
@@ -80,6 +83,12 @@ def import_customer_record(fields):
     customer_number = int_str(fields['Kundenr'])
     master_id = int_str(fields['KundeSagsnr'])
 
+    # If customer relation already exists, please skip.
+    if lookup_interessefaellesskab(customer_number):
+        print("This customer relation already exists:", customer_number)
+        return
+
+    # Now start handling customers etc.
     customer_uuid = lookup_customer(id_number)
 
     if not customer_uuid:
@@ -106,12 +115,6 @@ def import_customer_record(fields):
     # Create customer relation
     # NOTE: In KMD EE, there's always one customer relation for each row in
     # the Kunde table.
-
-    # If customer relation already exists, please skip.
-
-    if lookup_interessefaellesskab(customer_number):
-        print("This customer relation already exists:", customer_number)
-        return
 
     # Get Forbrugsstedadresse
     (forbrugssted_address,
@@ -167,8 +170,8 @@ def import_customer_record(fields):
                 str(e), id_number
             )
         )
-    start_date = fields['Tilflytningsdato']
-    end_date = fields['Fraflytningsdato']
+    agreement_start_date = fields['Tilflytningsdato']
+    agreement_end_date = fields['Fraflytningsdato']
 
     # There is always one agreement for each location (Forbrugssted)
     # AND only one location for each customer record.
@@ -182,43 +185,36 @@ def import_customer_record(fields):
     product_uuids = []
 
     for p in products:
-        identification = p['InstalNummer']
-        installation_type = VARME
         meter_number = p['Målernr']
         meter_type = p['MaalerTypeBetegnel']
-        name = "{0}, {1} {2}".format(meter_number, p['Målertypefabrikat'],
-                                     meter_type)
-        start_date = p['DatoFra']
-        end_date = p['DatoTil']
-        product_address = None
-        # Check alternative address
-        alternativsted_id = p['AlternativStedID']
-        if alternativsted_id:
-            alternativ_adresse_uuid = get_alternativsted_address_uuid(
-                connection, alternativsted_id
-            )
-            if alternativ_adresse_uuid:
-                product_address = alternativ_adresse_uuid
-
         product_uuid = create_product(
-            name, identification, installation_type, meter_number,
-            meter_type, start_date, end_date, product_address
+            name="{0}, {1} {2}".format(
+                meter_number, p['Målertypefabrikat'], meter_type
+            ),
+            identification=p['InstalNummer'],
+            installation_type=VARME,
+            meter_number=meter_number,
+            meter_type=meter_type,
+            start_date=p['DatoFra'],
+            end_date=p['DatoTil'],
+            product_address=get_alternativsted_address_uuid(
+                connection, p['AlternativStedID']
+            )
         )
         if product_uuid:
             product_uuids.append(product_uuid)
 
     agreement_name = "Varme, " + name
     agreement_uuid = create_agreement(
-        agreement_name, agreement_type, no_of_products,
-        invoice_address_uuid, start_date, end_date, forbrugssted,
-        cr_uuid, product_uuids
+        agreement_name, agreement_type, no_of_products, invoice_address_uuid,
+        agreement_start_date, agreement_end_date, forbrugssted, cr_uuid,
+        product_uuids
     )
     assert(agreement_uuid)
 
 
 def update_customer_record(fields, changed_values):
     "Update relevant LoRa objects with the specific changes."
-    print("Updating", fields, "with", changed_values)
 
 
 if __name__ == '__main__':
@@ -228,8 +224,6 @@ if __name__ == '__main__':
     cursor = connection.cursor(as_dict=True)
 
     new_values = read_customer_records(cursor)
-
-    # store_customer_relations(cr1)
 
     old_values = retrieve_customer_records()
 
@@ -269,3 +263,6 @@ if __name__ == '__main__':
     for k, changed_fields in changed_records.items():
         # Handle update of the specific changed fields.
         update_customer_record(old_values[k], changed_fields)
+
+    # All's well that ends well
+    store_customer_records(new_values)

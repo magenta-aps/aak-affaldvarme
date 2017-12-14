@@ -48,8 +48,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         try:
             company_dir = get_cvr_data(id_number)
         except Exception as e:
-            # Retry *once* after sleeping
-            time.sleep(1)
+            # Retry *once*
             try:
                 company_dir = get_cvr_data(id_number)
             except Exception as e:
@@ -87,12 +86,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
                 id_number
             )
 
-            print(error_message)
-            print("Retrying in 1 second")
-
-            # Retry *once* after sleeping
-            time.sleep(1)
-
+            # Retry *once*
             try:
                 person_dir = get_cpr_data(id_number)
             except Exception as e:
@@ -256,30 +250,18 @@ def get_forbrugssted_address_uuid(row):
                 id_number, address_string
             )
             report_error(err_str, error_stack=None, error_object=address)
-            print("ERROR:", err_str)
             address_uuid = None
-    print("FORBRUGSSTED:", address_string, address_uuid)
     return (address_string, address_uuid)
 
 
 def get_alternativsted_address_uuid(connection, alternativsted_id):
     "Get UUID of the address for this AlternativSted"
-    # TODO: This is cut and paste programming. Please refactor.
+    if not alternativsted_id:
+        return None
     cursor = connection.cursor(as_dict=True)
     cursor.execute(ALTERNATIVSTED_ADRESSE_SQL.format(alternativsted_id))
     rows = cursor.fetchall()
 
-    # Hotfix:
-    # Some lookups will return 0
-    # Removing the assert as it breaks the import flow
-    # TODO:
-    # We must investigate the circumstances which cause this issue
-    # In theory forbrugssted should not be returned as 0
-
-    # assert(len(rows) == 1)
-
-    # Hotfix:
-    # Log if
     if len(rows) != 1:
         # Send error to log:
         report_error(
