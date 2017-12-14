@@ -14,29 +14,18 @@ from settings import CACHE_DATABASE
 log = logging.getLogger(__name__)
 
 
-def connect():
+client = MongoClient(
+    host=CACHE_HOST,
+    port=CACHE_PORT,
+    authSource=CACHE_DATABASE,
+    username=CACHE_USERNAME,
+    password=CACHE_PASSWORD
+)
 
-    client = MongoClient(
-        host=CACHE_HOST,
-        port=CACHE_PORT,
-        authSource=CACHE_DATABASE,
-        username=CACHE_USERNAME,
-        password=CACHE_PASSWORD
-    )
-
-    return client[CACHE_DATABASE]
+db = client[CACHE_DATABASE]
 
 
 def insert(resource, payload):
-
-    if not resource:
-        return False
-
-    if not payload:
-        return False
-
-    # Connect
-    db = connect()
 
     # do stuff
     collection = db[resource]
@@ -46,18 +35,28 @@ def insert(resource, payload):
         check_keys=False
     )
 
-    # Close db connection
-    # collection.close()
+    return query
+
+
+def update_or_insert(resource, payload):
+
+    # Get id
+    identifier = payload.get("_id")
+
+    # do stuff
+    collection = db[resource]
+
+    query = collection.update(
+        spec={"_id": identifier},
+        document=payload,
+        upsert=True,
+        check_keys=False
+    )
+
     return query
 
 
 def find(resource, uuid):
-
-    if not resource:
-        return False
-
-    # Connect
-    db = connect()
 
     # do stuff
     collection = db[resource]
@@ -66,9 +65,15 @@ def find(resource, uuid):
         "_id": uuid
     }
 
-    query = collection.find_one(params)
+    return collection.find_one(params)
 
-    return query
+
+def find_all(resource, params=None):
+
+    # do stuff
+    collection = db[resource]
+
+    return collection.find(params)
 
 
 def find_address(uuid):
@@ -88,10 +93,34 @@ def store_address(payload):
         return False
 
     # Set resource
-    resource = "addresses"
+    resource = "dawa"
 
     return insert(resource, payload)
 
+
+def find_indsats(uuid):
+
+    # Set resource
+    resource = "indsats"
+
+    # do stuff
+    collection = db[resource]
+
+    params = {
+        "interessefaellesskab_ref": uuid
+    }
+
+    return collection.find_one(params)
+
+
+def disconnect():
+    return client.close()
+
 if __name__ == "__main__":
-    address = find_address("0a3f50c2-6335-32b8-e044-0003ba298018s")
-    print(address)
+    # address = find_address("0a3f50c2-6335-32b8-e044-0003ba298018s")
+    # print(address)
+    addresses = []
+    for address in find_all("addresses"):
+        addresses.append(address)
+
+    print(len(addresses))
