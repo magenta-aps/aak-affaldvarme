@@ -35,509 +35,18 @@ if DO_DISABLE_SSL_WARNINGS:
     from requests.packages.urllib3.exceptions import InsecureRequestWarning
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
+
 # In test mode log is written to a local logfile
 # This is to prevent the test log from being collected for analysis
 if DO_RUN_IN_TEST_MODE:
     LOG_FILE = "debug.log"
 
-# Switch statement workaround
-# TODO: Please replace with sane code
-resources = {
-    "bruger": "organisation/bruger",
-    "organisation": "organisation/organisation",
-    "organisationfunktion": "organisation/organisationfunktion",
-    "interessefaellesskab": "organisation/interessefaellesskab",
-    "indsats": "indsats/indsats",
-    "klasse": "klassifikation/klasse"
-}
 
 # Set logging
 log = logging.getLogger(__name__)
 
 
-def batch_generator(resource, list_of_things):
-    """Generate and return batches of objects"""
-
-    # Amount of chuncks a batch contains
-    chunck = 50
-
-    # Generate batches until done
-    while len(list_of_things) > 0:
-        uuid_batch = list_of_things[:chunck]
-        list_of_things = list_of_things[chunck:]
-
-        params = {
-            'uuid': uuid_batch
-        }
-
-        # Call GET request function
-        results = oio.get_request(resource, params)
-
-        # Return iterator
-        for result in results:
-            yield result
-
-
-def run_import(uuid):
-    """
-    Import function for a single entity
-    Perhaps we do not need a method for this
-    NOTE: The import all function may render this redundant
-    """
-
-    entity = oio.fetch_entity("bruger", uuid)
-    contact = adapter.ava_bruger(entity)
-
-    return process_entity(contact)
-
-
-def run_import_all():
-    """
-    Import all wrapper function
-    All contacts that belongs to parent organisation (See settings)
-    """
-
-    # Use switch to determine resource path
-    bruger = resources["bruger"]
-
-    # Belgons to parent organisation
-    params = {
-        "tilhoerer": ORGANISATION_UUID
-    }
-
-    # Generate list of contacts (uuid)
-    log.info("Attempting to import all contacts of parent organisation")
-    list_of_contacts = oio.get_request(bruger, params)
-
-    # Debug:
-    total = len(list_of_contacts)
-    log.debug("{0} contacts found".format(total))
-
-    # TODO: Log error when nothing is returned
-    if not list_of_contacts:
-        log.error("No contacts found")
-        return None
-
-    # Batch generate fetches n amount of entities
-    # Returns iterator
-    for entity in batch_generator(bruger, list_of_contacts):
-        # Format adapter
-        exported = adapter.ava_bruger(entity)
-
-        # Process the entity
-        process_entity(exported)
-
-
-def run_import_all_org():
-    """
-    Import all org wrapper function
-    All organisations that belong to parent organisation (See settings)
-    """
-
-    # Use switch to determine resource path
-    org = resources["organisation"]
-
-    # Belgons to parent organisation
-    params = {
-        "tilhoerer": ORGANISATION_UUID
-    }
-
-    # Generate list of contacts (uuid)
-    log.info("Attempting to import all organisations")
-    list_of_contacts = oio.get_request(org, params)
-
-    # Debug:
-    total = len(list_of_contacts)
-    log.debug("{0} contacts found".format(total))
-
-    # TODO: Log error when nothing is returned
-    if not list_of_contacts:
-        log.error("No contacts found")
-        return None
-
-    # Batch generate fetches n amount of entities
-    # Returns iterator
-    for entity in batch_generator(org, list_of_contacts):
-        # Format adapter
-        exported = adapter.ava_organisation(entity)
-
-        # Process the entity
-        process_entity(exported)
-
-
-def process_entity(entity):
-    """
-    Process customer, requires a contact and address entity
-    TODO: Consolidate logic for process contact/organisation
-    TODO: Absolutely must be broken down to smaller pieces
-    """
-
-    # Contact required
-    if not entity:
-        log.error("No contact object provided")
-        return False
-
-    # Gather information
-    entity_uuid = entity.get("ava_lora_uuid")
-    address_uuid = entity.get("ava_adresse")
-    ava_masterid = entity.get("ava_masterid")
-
-    # Log entry
-    log.info("Processing: {0}".format(entity_uuid))
-
-    # Check if address
-    if not address_uuid:
-        log.info("Contact: {0} has no address - Exiting".format(entity_uuid))
-        return False
-
-    # CRM INSERT ADDRESS
-    # Adresse
-    # Depends on: None
-
-    # Check and return reference (GUID) if address exists in CRM
-    crm_address_guid = crm.get_ava_address(address_uuid)
-
-    # Create address in CRM if it does not exist
-    if not crm_address_guid:
-        log.info("Address does not exist in CRM")
-
-        # GET ADDRESS ENTITY HERE
-        address_entity = dawa.get_address(address_uuid)
-
-        # Store in CRM
-        crm_address_guid = crm.store_address(address_entity)
-
-    # Update lookup reference
-    lookup_crm_address = "/ava_adresses({0})".format(crm_address_guid)
-    log.info("Lookup created: {0}".format(lookup_crm_address))
-
-    # CRM INSERT CONTACT
-    # Contact
-    # Depends on: Address
-
-    # Prepare lookup reference fallback
-    lookup_crm_contact = None
-
-    # Resolve dependencies for Contact
-    log.info("Resolve dependencies for: {0}".format(entity_uuid))
-    entity["ava_adresse@odata.bind"] = lookup_crm_address
-
-    # Remove temporary address key
-    entity.pop("ava_adresse", None)
-
-    # Check and return contact reference (GUID) if contact exists
-    crm_contact_guid = crm.get_contact(entity_uuid)
-
-    # Create contact in CRM if it does not exist
-    if not crm_contact_guid:
-        log.info("Contact does not exist in CRM")
-        crm_contact_guid = crm.store_contact(entity)
-
-    # Update lookup reference
-    lookup_crm_contact = "/contacts({0})".format(crm_contact_guid)
-    log.info("Lookup for contact created: {0}".format(lookup_crm_contact))
-
-    # ABSTRACTED KUNDEROLLE
-
-    # List of related "kunderoller" (belongs to contact)
-    kunderolle_uuids = oio.fetch_relation(entity_uuid)
-
-    if not kunderolle_uuids:
-        log.error("Kunderolle not found: ")
-        log.error("No kunderoller found for: {0}".format(entity_uuid))
-
-    for kunderolle_uuid in kunderolle_uuids:
-        log.info("Kunderolle found: {0}".format(kunderolle_uuid))
-
-        kunderolle_entity = oio.fetch_entity(
-            "organisationfunktion",
-            kunderolle_uuid
-        )
-
-        kunderolle = adapter.ava_kunderolle(kunderolle_entity)
-        kunderolle_id = kunderolle["origin_id"]
-
-        # Append "kundeforhold" reference to the list
-        reference_kundeforhold = kunderolle["ava_kundeforhold"]
-
-        kundeforhold_entity = oio.fetch_entity(
-            "interessefaellesskab",
-            reference_kundeforhold
-        )
-
-        kundeforhold = adapter.ava_account(kundeforhold_entity)
-        kundeforhold_id = kundeforhold["origin_id"]
-        log.info("Setting kundeforhold")
-
-        if not kundeforhold:
-            log.info("Kundeforhold not found for {0}".format(entity_uuid))
-            return False
-
-        # Kundeforhold (Account)
-        # Depends on: Address
-        # NOTE: Will depend on "Ejendom" in the future
-
-        ava_kundenummer = kundeforhold["ava_kundenummer"]
-        crm_account_guid = crm.get_account(kundeforhold_id)
-
-        # Utility address
-        # Official address for utility services
-        crm_utility_address_guid = None
-
-        # Not every entity has a utility address
-        utility_address_ref = kundeforhold.get("ava_adresse")
-
-        if utility_address_ref:
-
-            # Check and return reference (GUID) if address exists in CRM
-            crm_utility_address_guid = crm.get_ava_address(utility_address_ref)
-
-            # Create address in CRM if it does not exist
-            if not crm_utility_address_guid:
-                log.info("Utility address does not exist in CRM - Creating")
-
-                # GET ADDRESS ENTITY HERE
-                utility_address = dawa.get_address(utility_address_ref)
-
-                if utility_address:
-                    # Store in CRM
-                    crm_utility_address_guid = crm.store_address(
-                        utility_address
-                    )
-                else:
-                    log.warning(
-                        "Address uuid: {0} does not exist".format(
-                            utility_address_ref
-                        )
-                    )
-
-        # Update lookup reference
-        lookup_crm_utility_address = None
-
-        if crm_utility_address_guid:
-
-            lookup_crm_utility_address = "/ava_adresses({0})".format(
-                crm_utility_address_guid
-            )
-            log.info("Utility address lookup created")
-        else:
-            log.info("No utility address lookup created")
-
-        # Resolve dependencies
-        if lookup_crm_utility_address:
-            kundeforhold["ava_adresse@odata.bind"] = lookup_crm_utility_address
-
-        kundeforhold.pop("ava_adresse", None)
-
-        if not crm_account_guid:
-            log.info("Account does not exist in CRM")
-            crm_account_guid = crm.store_account(kundeforhold)
-
-        # Update lookup reference
-        lookup_crm_account = "/accounts({0})".format(crm_account_guid)
-        log.info("Lookup for account created: {0}".format(
-            lookup_crm_account))
-
-        # Kunderolle
-        # Depends on: Contact, Account
-
-        # Prepare lookup reference fallback
-        lookup_crm_kunderolle = None
-
-        # Resolve dependencies for Kunderolle
-        kunderolle["ava_aktoer@odata.bind"] = lookup_crm_contact
-        kunderolle["ava_kundeforhold@odata.bind"] = lookup_crm_account
-
-        # Remove temporary address key
-        kunderolle.pop("ava_aktoer", None)
-        kunderolle.pop("ava_kundeforhold", None)
-
-        # Missing identifier
-        crm_kunderolle_guid = crm.get_kunderolle(kunderolle_id)
-
-        if not crm_kunderolle_guid:
-            log.info("Kunderolle does not exist in CRM")
-            crm_kunderolle_guid = crm.store_kunderolle(kunderolle)
-
-        # Update lookup reference
-        lookup_crm_kunderolle = "/ava_kunde({0})".format(crm_kunderolle_guid)
-        log.info("Lookup for kunderolle created: {0}".format(
-            lookup_crm_kunderolle))
-
-        # AFTALE
-        # Attempt to fetch the kundeforhold entity
-        aftale_entity = oio.fetch_relation_indsats(reference_kundeforhold)
-        aftale = adapter.ava_aftale(aftale_entity)
-        aftale_id = aftale["origin_id"]
-        log.info("Setting aftale")
-
-        if not aftale:
-            log.error('Aftale not found')
-            return False
-
-        ava_faktureringsgrad = aftale["ava_faktureringsgrad"]
-        produkt_reference = aftale.get("ava_produkter")
-
-        log.info("Setting ava_faktureringsgrad")
-
-        # INSERT AFTALE INTO CRM
-        # Aftale
-        # Depends on: Account, Address (Fakturering)
-
-        # Lookup aftale by account identifier (Missing)
-        crm_aftale_guid = crm.get_aftale(aftale_id)
-
-        if not crm_aftale_guid:
-            log.info("Aftale does not exist in CRM")
-
-            # Resolve dependencies for Aftale
-            aftale["ava_kundeforhold@odata.bind"] = lookup_crm_account
-            aftale["ava_faktureringsadresse@odata.bind"] = lookup_crm_address
-
-            # Remove temporary address key
-            aftale.pop("ava_kundeforhold", None)
-            aftale.pop("ava_faktureringsgrad", None)
-            aftale.pop("ava_produkter", None)
-
-            crm_aftale_guid = crm.store_aftale(aftale)
-
-        # Update lookup reference
-        lookup_crm_aftale = "/ava_aftales({0})".format(crm_aftale_guid)
-        log.info("Lookup for aftale created: {0}".format(lookup_crm_aftale))
-
-        # Hotfix:
-        # NOTES: This will be replaced by the cache functionality
-        # Create link between Contact and Aftale
-        crm.contact_and_aftale_link(
-            aftale_guid=crm_aftale_guid,
-            contact_guid=crm_contact_guid
-        )
-
-        # Attempt to get the product
-        # This depends on aftale
-
-        if not produkt_reference:
-            log.error(
-                "No product reference found for: {0}".format(
-                    entity_uuid
-                )
-            )
-            return False
-
-        produkt_entity = oio.fetch_entity("klasse", produkt_reference)
-        produkt = adapter.ava_installation(produkt_entity)
-        produkt_id = produkt["origin_id"]
-
-        if not produkt:
-            log.error("Product not found")
-            log.error("Customer: {0}".format(entity_uuid))
-            log.error("Aftale: {0}".format(aftale))
-            return False
-
-        # All following references
-        produkt["ava_kundenummer"] = kundeforhold["ava_kundenummer"]
-
-        # Alternative address
-        # Address alternative for utility services
-        alternative_address_ref = produkt.get("ava_adresse")
-        log.debug("Attempting to retrieve alternative address")
-        log.debug(alternative_address_ref)
-
-        # DEBUG
-        if not alternative_address_ref:
-            log.debug("#236188 - Alternative address missing")
-            log.debug("#236188 - Lora ID: {0}".format(produkt["origin_id"]))
-            log.debug(
-                "#236188 - Maalernummer: {0}".format(
-                    produkt["ava_maalernummer"]
-                )
-            )
-            log.debug(
-                "#236188 - UTILITY: {0}".format(
-                    lookup_crm_utility_address
-                )
-            )
-            log.debug("#236188 - Customer: {0}".format(entity_uuid))
-
-        # Fallback lookup reference
-        lookup_crm_alternative_address = None
-
-        if alternative_address_ref:
-
-            # Check and return reference (GUID) if address exists in CRM
-            log.debug("Attempt to fetch alternative address guid")
-            crm_alternative_address_guid = crm.get_ava_address(
-                alternative_address_ref
-            )
-
-            # Create address in CRM if it does not exist
-            if not crm_alternative_address_guid:
-                log.info("Alternative address does not exist in CRM")
-
-                # GET ADDRESS ENTITY HERE
-                log.debug("Fetching access address from DAWA")
-                alternative_address = dawa.get_access_address(
-                    alternative_address_ref
-                )
-                log.debug(alternative_address)
-
-                # Store in CRM
-                crm_alternative_address_guid = crm.store_address(
-                    alternative_address
-                )
-                log.debug("Attempting to store alternative address in CRM")
-                log.debug(
-                    "CRM returns: {0}".format(
-                        crm_alternative_address_guid
-                    )
-                )
-
-            # Attempt to update the alternative address lookup
-            if crm_alternative_address_guid:
-                lookup_crm_alternative_address = "/ava_adresses({0})".format(
-                    crm_alternative_address_guid
-                )
-
-        if not lookup_crm_alternative_address:
-            lookup_crm_alternative_address = lookup_crm_utility_address
-            log.debug("Using utility address as alternative address")
-
-        # INSERT PRODUKT INTO CRM
-        # Product
-        # Depends on: Aftale, Address
-
-        # Lookup produkt by "ava_maalernummer"
-        produkt_identifier = produkt["ava_maalernummer"]
-        crm_produkt_guid = crm.get_produkt(produkt_id)
-
-        if not crm_produkt_guid:
-            log.info("Produkt does not exist in CRM")
-
-            # Resolve dependencies
-            log.info("Resolving dependencies for produkt")
-            produkt["ava_aftale@odata.bind"] = lookup_crm_aftale
-
-            # Create lookup if alternative adresse was retrieved
-            if lookup_crm_alternative_address:
-                produkt["ava_adresse@odata.bind"] = lookup_crm_alternative_address
-                log.info("Lookup for alternative address created")
-            else:
-                log.info("Lookup for alternative address not created")
-
-            # Remove temporary address key
-            produkt.pop("ava_aftale", None)
-            produkt.pop("ava_adresse", None)
-
-            # Call function to insert object into CRM
-            crm_produkt_guid = crm.store_produkt(produkt)
-
-        # Finished inserting product
-
-    # Finished processing entity
-    log.info("Finished processing entity: {0}".format(entity_uuid))
-
-
-# IMPORT ALL ADDRESSES
+### CACHE ###
 def import_all_addresses():
     """ 
     Missing docstring
@@ -569,6 +78,44 @@ def import_all_addresses():
     log.info("Finished processing all addresses")
 
 
+def import_to_cache(resource):
+
+    # Get all uuids
+    list_of_uuids = oio.get_all(resource)
+
+    # Prepare cache payload
+    cache_payload = []
+
+    # Workaround for consolidating bruger/organisation
+    cache_resource = resource
+
+    if resource == "bruger" or resource == "organisation":
+        cache_resource = "contact"
+
+    # Batch generate fetches n amount of entities
+    # Returns iterator
+    for entity in oio.batch_generator(resource, list_of_uuids):
+        # # Append to the payload
+        # cache_payload.append(entity)
+        store = cache.update_or_insert(cache_resource, entity)
+        print(store)
+
+
+def import_sanity_check():
+
+    # Loop and do stuff
+    for address in cache.find_all("addresses"):
+        identifier = address.get("_id")
+        external = address.get("_external")
+
+        payload = {
+            "ava_dawa_uuid": identifier
+        }
+
+        print("ava_adresses({0})".format(external))
+        print(json.dumps(payload))
+
+
 # RUN THE CLIENT
 if __name__ == "__main__":
 
@@ -576,11 +123,18 @@ if __name__ == "__main__":
     start_logging(20, LOG_FILE)
 
     # Import all addresses
-    import_all_addresses()
+    # import_all_addresses()
 
-    # Import Lora entities
-    run_import_all()
-    run_import_all_org()
+    # Import to cache
+    import_to_cache("bruger")
+    import_to_cache("organisation")
+    import_to_cache("organisationfunktion")
+    import_to_cache("indsats")
+    import_to_cache("interessefaellesskab")
+    import_to_cache("klasse")
+
+    # Run sanity check
+    # import_sanity_check()
 
     # Done
     print("Import procedure completed - Exiting")
