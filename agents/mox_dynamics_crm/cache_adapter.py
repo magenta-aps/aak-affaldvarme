@@ -52,7 +52,7 @@ def ava_bruger(entity):
 
     except:
         # TODO: Must be sent to error queue for manual processing
-        log.error("Error getting address from: {0}".format(ava_lora_uuid))
+        log.error("Error getting address from: {0}".format(origin_id))
         log.error("Relationer: {0}".format(relationer))
 
     # Convert gender to CRM values
@@ -373,8 +373,17 @@ def ava_aftale(entity):
     # if ava_slutdato == "infinity":
     #     ava_slutdato = None
 
-    indsatsdokument = relationer.get("indsatsdokument")[0]
-    ava_faktureringsgrad = indsatsdokument.get("uuid")
+    ava_faktureringsgrad = None
+
+    try:
+        indsatsdokument = relationer.get("indsatsdokument")[0]
+        ava_faktureringsgrad = indsatsdokument.get("uuid")
+    except:
+        log.error(
+            "Error getting address for: {0}".format(origin_id)
+        )
+
+        log.debug(relationer.get("indsatsdokument"))
 
     # Format CRM payload
     payload = {
