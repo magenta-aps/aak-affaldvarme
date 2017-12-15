@@ -9,18 +9,101 @@
 import datetime
 import pytz
 import requests
+import functools
+
 from dateutil import parser
 
 from settings import SYSTEM_USER, AVA_ORGANISATION, BASE_URL
 
-KUNDE = "Kunde"
-LIGESTILLINGSKUNDE = "Ligestillingskunde"
+KUNDE = 'Kunde'
+LIGESTILLINGSKUNDE = 'Ligestillingskunde'
 
-ROLE_MAP = {KUNDE: "915240004", LIGESTILLINGSKUNDE: "915240006"}
+ROLE_MAP = {KUNDE: '915240004', LIGESTILLINGSKUNDE: '915240006'}
 
 
 session = requests.Session()
 session.verify = '/etc/ssl/certs/ca-certificates.crt'
+
+
+def request(func):
+    def call_and_raise(*args, **kwargs):
+        result = func(*args, **kwargs)
+        if not result:
+            result.raise_for_status()
+        return result
+    return call_and_raise
+
+
+def lookup_objects(service, oio_class, *conditions):
+    'Lookup objects of class cls in service with the specified conditions.'
+    search_results = []
+    if conditions:
+        condition_string = '&'.join(
+            ['{0}={1}'.format(k, v) for k, v in conditions.items()]
+        )
+        request_string = ('{0}/{1}/{2}?{3}'.format(
+            BASE_URL, service, oio_class, conditions
+        ))
+
+        result = session.get(request_string)
+
+        if result:
+            search_results = result.json()['results'][0]
+
+    return search_results
+
+
+def lookup_one(service, oio_class, *conditions):
+    'Lookup supposedly unique object - assert/fail if more than one is found.'
+    search_results = lookup_objects(service, oio_class, *conditions)
+
+    if len(search_results) > 0:
+        # There should only be one
+        assert(len(search_results) == 1)
+        return search_results[0]
+    else:
+        return None
+
+
+@request
+def read_object(service, oio_class, uuid):
+    'Read object from LoRa, return JSON. Fail (throw 404) if not found.'
+    request_string = '{0}/{1}/{2}/{3}'.format(
+        BASE_URL, service, oio_class, uuid
+    )
+    response = session.get(request_string)
+    return response
+
+
+@request
+def delete_object(service, oio_class, uuid):
+    'Delete object in sevice with the given UUID'
+    request_string = '{0}/{1}/{2}/{3}'.format(
+        BASE_URL, service, oio_class, uuid
+    )
+    response = session.delete(request_string)
+    return response
+
+# Lookup per class
+
+# Lookup one
+lookup_organisation = functools.partial(
+    lookup_one, service='organisation', oio_class='organisation'
+)
+lookup_bruger = functools.partial(
+    lookup_one, service='organisation', oio_class='bruger'
+)
+lookup_interessefaellesskab = functools.partial(
+    lookup_one, service='organisation', oio_class='interessefaellesskab'
+)
+
+# Lookup many
+lookup_organisationfunktioner = functools.partial(
+    lookup_objects, service='organisation', oio_class='organisationfunktion'
+)
+lookup_indsatser = functools.partial(
+    lookup_objects, service='organisation', oio_class='indsats'
+)
 
 
 def create_virkning(frm=datetime.datetime.now(),
@@ -36,15 +119,6 @@ def create_virkning(frm=datetime.datetime.now(),
     }
 
     return virkning
-
-
-def request(func):
-    def call_and_raise(*args, **kwargs):
-        result = func(*args, **kwargs)
-        if not result:
-            result.raise_for_status()
-        return result
-    return call_and_raise
 
 
 @request
@@ -131,24 +205,6 @@ def create_organisation(cvr_number, key, name, master_id, phone="", email="",
     response = session.post(url, json=organisation_dict)
 
     return response
-
-
-def lookup_organisation(id_number):
-    request_string = (
-        "{0}/organisation/organisation?virksomhed=urn:{1}".format(
-            BASE_URL, id_number
-        )
-    )
-
-    result = session.get(request_string)
-
-    if result:
-        search_results = result.json()['results'][0]
-
-    if len(search_results) > 0:
-        # There should only be one
-        assert(len(search_results) == 1)
-        return search_results[0]
 
 
 @request
@@ -240,55 +296,6 @@ def create_bruger(cpr_number, key, name, master_id, phone="", email="",
     response = session.post(url, json=bruger_dict)
 
     return response
-
-
-def lookup_bruger(id_number):
-    request_string = (
-        "{0}/organisation/bruger?tilknyttedepersoner=urn:{1}".format(
-            BASE_URL, id_number
-        )
-    )
-
-    result = session.get(request_string)
-
-    if result:
-        search_results = result.json()['results'][0]
-    else:
-        # TODO: What to do? Network error. Ignore and assume it will work next
-        # time.
-        return None
-
-    if len(search_results) > 0:
-        # There should only be one
-        if len(search_results) > 1:
-            print("Denne bruger findes {0} gange: {1}".format(
-                len(search_results), id_number)
-            )
-        return search_results[0]
-
-
-def lookup_interessefaellesskab(customer_number):
-    request_string = (
-        "{0}/organisation/interessefaellesskab?brugervendtnoegle={1}".format(
-            BASE_URL, customer_number
-        )
-    )
-
-    result = session.get(request_string)
-
-    if result:
-        search_results = result.json()['results'][0]
-
-    if len(search_results) > 0:
-        # There should only be one
-        # assert(len(search_results) == 1)
-        if len(search_results) > 1:
-            print(
-                "More than one of customer relation", customer_number, "found"
-            )
-        return search_results[0]
-    else:
-        return None
 
 
 def create_interessefaellesskab(customer_number, customer_relation_name,

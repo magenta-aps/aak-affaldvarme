@@ -1,3 +1,10 @@
+#
+# Copyright (c) 2017, Magenta ApS
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
 
 import os
 import datetime
@@ -9,13 +16,14 @@ import settings
 from mssql_config import username, password, server, database
 from ee_utils import connect, int_str, cpr_cvr
 from ee_sql import CUSTOMER_SQL, RELEVANT_TREF_INSTALLATIONS_SQL
-from ee_oio import lookup_interessefaellesskab, lookup_bruger
 from ee_oio import KUNDE, LIGESTILLINGSKUNDE
-from mox_kmd_ee import lookup_customer, create_customer
+from crm_utils import lookup_customer_relation, lookup_customer_roles
+from crm_utils import lookup_customer, create_customer
+from crm_utils import create_customer_relation, create_customer_role
+from crm_utils import create_agreement, create_product
 from mox_kmd_ee import get_forbrugssted_address_uuid, VARME
-from mox_kmd_ee import create_customer_relation, create_customer_role
-from mox_kmd_ee import get_products_for_location, create_product
-from mox_kmd_ee import create_agreement, get_alternativsted_address_uuid
+from mox_kmd_ee import get_products_for_location
+from mox_kmd_ee import get_alternativsted_address_uuid
 from service_clients import report_error, fuzzy_address_uuid
 
 
@@ -59,16 +67,31 @@ def retrieve_customer_records():
 
 def delete_customer_record(customer_number):
         "Purge relation along with customer roles, agreements and products."
-        cr_uuid = lookup_interessefaellesskab(k)
+        cr_uuid = lookup_customer_relation(k)
         # This should exist provided everything is up to date!
         if not cr_uuid:
             report("Customer number {} not found.".format(customer_number))
 
         # Look up the customer roles and customers for this customer relation.
 
+        roles = lookup_customer_roles(customer_relation=cr_uuid)
+
         # Delete the customer roles.
 
-        # If the customers have no other customer roles, delete them.
+        for role in roles:
+            delete_customer_role(role)
+
+        # There can be only one agreement per customer as is, but in the future
+        # there might be more.
+        agreements = lookup_agreements(customer_relation=cr_uuid)
+
+        for agreement_uuid in agreements:
+            products = lookup_products(agreement=agreement_uuid)
+
+            for p in products:
+                delete_product(product)
+
+            delete_agreement(agreement_uuid)
 
         # Delete all agreements and products corresponding to this customer
         # relation.
@@ -84,7 +107,7 @@ def import_customer_record(fields):
     master_id = int_str(fields['KundeSagsnr'])
 
     # If customer relation already exists, please skip.
-    if lookup_interessefaellesskab(customer_number):
+    if lookup_customer_relation(customer_number):
         # print("This customer relation already exists:", customer_number)
         return
 
