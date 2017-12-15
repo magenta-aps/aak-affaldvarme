@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import requests
 
 import crm_interface as crm
 import cache_interface as cache
@@ -75,6 +76,9 @@ def process(kunderolle):
         store = cache.store_address(dawa_address)
         address = cache.find("dawa", address_ref)
 
+    if not address:
+        return False
+
     # Export address
     # Depends on: None
     if not address["external_ref"]:
@@ -137,8 +141,6 @@ def process(kunderolle):
             if dawa_address:
                 store = cache.store_address(dawa_address)
                 billing_address = cache.find("dawa", billing_address_ref)
-        except:
-            log.error("Unable to import address into cache layer")
 
     if billing_address:
 
@@ -163,7 +165,11 @@ def process(kunderolle):
 
     if not kundeforhold["external_ref"]:
         kundeforhold_data = kundeforhold["data"]
-        kundeforhold_data["ava_adresse@odata.bind"] = lookup_billing_address
+
+        if lookup_billing_address:
+            kundeforhold_data[
+                "ava_adresse@odata.bind"] = lookup_billing_address
+
         kundeforhold["external_ref"] = crm.store_account(kundeforhold_data)
 
         update_cache = cache.update_or_insert(
@@ -185,8 +191,12 @@ def process(kunderolle):
 
     # Resolve dependencies for Kunderolle
     kunderolle_data = kunderolle["data"]
-    kunderolle_data["ava_aktoer@odata.bind"] = lookup_contact
-    kunderolle_data["ava_kundeforhold@odata.bind"] = lookup_account
+
+    if lookup_contact:
+        kunderolle_data["ava_aktoer@odata.bind"] = lookup_contact
+
+    if lookup_account:
+        kunderolle_data["ava_kundeforhold@odata.bind"] = lookup_account
 
     if not kunderolle["external_ref"]:
         log.info("Kunderolle does not exist in CRM")
@@ -212,12 +222,13 @@ def process(kunderolle):
     if not aftale["external_ref"]:
         aftale_data = aftale["data"]
 
-        # Dependencies
-        kundeforhold_bind = "ava_kundeforhold@odata.bind"
-        billing_bind = "ava_faktureringsadresse@odata.bind"
+        if lookup_account:
+            kundeforhold_bind = "ava_kundeforhold@odata.bind"
+            aftale_data[kundeforhold_bind] = lookup_account
 
-        aftale_data[kundeforhold_bind] = lookup_account
-        aftale_data[billing_bind] = lookup_billing_address
+        if lookup_billing_address:
+            billing_bind = "ava_faktureringsadresse@odata.bind"
+            aftale_data[billing_bind] = lookup_billing_address
 
         log.debug("AFTALE DATA CHECK:")
         log.debug(aftale_data)
@@ -253,7 +264,10 @@ def process(kunderolle):
         # Workaround: Just inserting billing address
         ava_kundenummer = kundeforhold["data"]["ava_kundenummer"]
         produkt_data["ava_kundenummer"] = ava_kundenummer
-        produkt_data["ava_adresse@odata.bind"] = lookup_billing_address
+
+        if lookup_billing_address:
+            produkt_data["ava_adresse@odata.bind"] = lookup_billing_address
+
         produkt["external_ref"] = crm.store_produkt(produkt_data)
 
         update_cache = cache.update_or_insert(
