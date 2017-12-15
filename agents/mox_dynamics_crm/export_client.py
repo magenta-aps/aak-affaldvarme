@@ -1,9 +1,30 @@
 # -*- coding: utf-8 -*-
 
 import logging
+
 import crm_interface as crm
 import cache_interface as cache
 import dawa_interface as dawa
+
+# Log handler
+from logger import start_logging
+
+# Local settings
+from settings import LOG_FILE
+from settings import DO_RUN_IN_TEST_MODE
+from settings import DO_DISABLE_SSL_WARNINGS
+
+
+# If the SSL signature is not valid requests will print errors
+# To circumvent this, warnings can be disabled for testing purposes
+if DO_DISABLE_SSL_WARNINGS:
+    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
+# In test mode log is written to a local logfile
+# This is to prevent the test log from being collected for analysis
+if DO_RUN_IN_TEST_MODE:
+    LOG_FILE = "debug.log"
 
 
 # Init logger
@@ -40,6 +61,13 @@ def process(kunderolle):
 
     # Address
     address_ref = contact["dawa_ref"]
+
+    if not address_ref:
+        log.info("No address reference found, skipping")
+        log.debug("Kunderolle: {0}".format(kunderolle["_id"]))
+        log.debug("Contact: {0}".format(contact["_id"]))
+        return False
+
     address = cache.find("dawa", address_ref)
 
     if not address:
@@ -62,9 +90,10 @@ def process(kunderolle):
         log.info(update_cache)
 
     # Update address lookup
-    lookup_address = "/ava_adresses({external_ref})".format(
-        external_ref=address["external_ref"]
-    )
+    if address["external_ref"]:
+        lookup_address = "/ava_adresses({external_ref})".format(
+            external_ref=address["external_ref"]
+        )
 
     # Export contact
     # Depends on: address
@@ -82,9 +111,10 @@ def process(kunderolle):
         log.info(update_cache)
 
     # Update contact lookup
-    lookup_contact = "/contacts({external_ref})".format(
-        external_ref=contact["external_ref"]
-    )
+    if contact["external_ref"]:
+        lookup_contact = "/contacts({external_ref})".format(
+            external_ref=contact["external_ref"]
+        )
 
     # Kundeforhold
     kundeforhold = cache.find(
@@ -95,31 +125,38 @@ def process(kunderolle):
     # Billing address
     billing_address_ref = kundeforhold["dawa_ref"]
 
-    if billing_address_ref:
-        billing_address = cache.find("dawa", billing_address_ref)
+    # Fallback
+    billing_address = None
 
-        if not billing_address:
+    if billing_address_ref:
+        try:
+            billing_address = cache.find("dawa", billing_address_ref)
+        except:
+            log.info("Address does not exist in the cache layer, importing")
             dawa_address = dawa.get_address(billing_address_ref)
             if dawa_address:
                 store = cache.store_address(dawa_address)
                 billing_address = cache.find("dawa", billing_address_ref)
+        except:
+            log.error("Unable to import address into cache layer")
 
-        if billing_address:
+    if billing_address:
 
-            if not billing_address["external_ref"]:
-                billing_address["external_ref"] = crm.store_address(
-                    billing_address["data"]
-                )
+        if not billing_address["external_ref"]:
+            billing_address["external_ref"] = crm.store_address(
+                billing_address["data"]
+            )
 
-                update_cache = cache.update_or_insert(
-                    resource="dawa",
-                    payload=billing_address
-                )
+            update_cache = cache.update_or_insert(
+                resource="dawa",
+                payload=billing_address
+            )
 
-                log.info("Updating cache for billing_address")
-                log.info(update_cache)
+            log.info("Updating cache for billing_address")
+            log.info(update_cache)
 
-            # Update address lookup
+        # Update address lookup
+        if billing_address["external_ref"]:
             lookup_billing_address = "/ava_adresses({external_ref})".format(
                 external_ref=billing_address["external_ref"]
             )
@@ -138,9 +175,10 @@ def process(kunderolle):
         log.info(update_cache)
 
     # Update account lookup
-    lookup_account = "/accounts({external_ref})".format(
-        external_ref=kundeforhold["external_ref"]
-    )
+    if kundeforhold["external_ref"]:
+        lookup_account = "/accounts({external_ref})".format(
+            external_ref=kundeforhold["external_ref"]
+        )
 
     # Kunderolle
     # Depends on: Contact, Account
@@ -172,7 +210,7 @@ def process(kunderolle):
         return
 
     if not aftale["external_ref"]:
-        aftale_data = kundeforhold["data"]
+        aftale_data = aftale["data"]
 
         # Dependencies
         kundeforhold_bind = "ava_kundeforhold@odata.bind"
@@ -180,6 +218,9 @@ def process(kunderolle):
 
         aftale_data[kundeforhold_bind] = lookup_account
         aftale_data[billing_bind] = lookup_billing_address
+
+        log.debug("AFTALE DATA CHECK:")
+        log.debug(aftale_data)
 
         aftale["external_ref"] = crm.store_aftale(aftale_data)
 
@@ -192,9 +233,10 @@ def process(kunderolle):
         log.info(update_cache)
 
     # Update aftale lookup
-    lookup_account = "/ava_aftales({external_ref})".format(
-        external_ref=aftale["external_ref"]
-    )
+    if aftale["external_ref"]:
+        lookup_account = "/ava_aftales({external_ref})".format(
+            external_ref=aftale["external_ref"]
+        )
 
     # Installation
     klasse_ref = aftale["klasse_ref"]
@@ -224,7 +266,12 @@ def process(kunderolle):
 
 
 if __name__ == "__main__":
-    print("Begin exporting to crm")
+
+    # Begin
+    print("Begin export from cache to CRM")
+
+    # Log to file
+    start_logging(20, LOG_FILE)
 
     # Run
     export_everything()
