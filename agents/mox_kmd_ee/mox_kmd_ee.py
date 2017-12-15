@@ -30,8 +30,12 @@ from service_clients import report_error, access_address_uuid
 
 VARME = "Varme"
 
-# This is used to cache customer's addresses from SP for use when creating
-# names for customer roles.
+
+def lookup_customer(id_number):
+    if is_cpr(id_number):
+        return lookup_bruger(id_number)
+    elif is_cvr(id_number):
+        return lookup_organisation(id_number)
 
 
 def create_customer(id_number, key, name, master_id, phone="", email="",
@@ -44,8 +48,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         try:
             company_dir = get_cvr_data(id_number)
         except Exception as e:
-            # Retry *once* after sleeping
-            time.sleep(1)
+            # Retry *once*
             try:
                 company_dir = get_cvr_data(id_number)
             except Exception as e:
@@ -83,12 +86,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
                 id_number
             )
 
-            print(error_message)
-            print("Retrying in 1 second")
-
-            # Retry *once* after sleeping
-            time.sleep(1)
-
+            # Retry *once*
             try:
                 person_dir = get_cpr_data(id_number)
             except Exception as e:
@@ -165,13 +163,6 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         return result.json()['uuid']
 
 
-def lookup_customer(id_number):
-    if is_cpr(id_number):
-        return lookup_bruger(id_number)
-    elif is_cvr(id_number):
-        return lookup_organisation(id_number)
-
-
 def create_customer_role(customer_uuid, customer_relation_uuid, role):
     "Create an OrgFunktion from this info and return UUID"
     result = create_organisationfunktion(
@@ -208,11 +199,14 @@ def create_agreement(name, agreement_type, no_of_products, invoice_address,
         return result.json()['uuid']
 
 
-def get_products_for_location(connection, forbrugssted):
+def get_products_for_location(forbrugssted):
     "Get locations for this customer ID from the Forbrugssted table"
+    from mssql_config import username, password, server, database
+    connection = connect(server, database, username, password)
     cursor = connection.cursor(as_dict=True)
     cursor.execute(TREFINSTALLATION_SQL.format(forbrugssted))
     rows = cursor.fetchall()
+    connection.close()
     return rows
 
 
@@ -259,30 +253,21 @@ def get_forbrugssted_address_uuid(row):
                 id_number, address_string
             )
             report_error(err_str, error_stack=None, error_object=address)
-            print("ERROR:", err_str)
             address_uuid = None
-    print("FORBRUGSSTED:", address_string, address_uuid)
     return (address_string, address_uuid)
 
 
-def get_alternativsted_address_uuid(connection, alternativsted_id):
+def get_alternativsted_address_uuid(alternativsted_id):
     "Get UUID of the address for this AlternativSted"
-    # TODO: This is cut and paste programming. Please refactor.
+    if not alternativsted_id:
+        return None
+    from mssql_config import username, password, server, database
+    connection = connect(server, database, username, password)
     cursor = connection.cursor(as_dict=True)
     cursor.execute(ALTERNATIVSTED_ADRESSE_SQL.format(alternativsted_id))
     rows = cursor.fetchall()
+    connection.close()
 
-    # Hotfix:
-    # Some lookups will return 0
-    # Removing the assert as it breaks the import flow
-    # TODO:
-    # We must investigate the circumstances which cause this issue
-    # In theory forbrugssted should not be returned as 0
-
-    # assert(len(rows) == 1)
-
-    # Hotfix:
-    # Log if
     if len(rows) != 1:
         # Send error to log:
         report_error(
@@ -353,10 +338,10 @@ def import_all(connection):
     for row in rows:
         # Lookup customer in LoRa - insert if it doesn't exist already.
 
-        id_number = cpr_cvr(float(row['PersonnrSEnr']))
-        ligest_personnr = cpr_cvr(float(row['LigestPersonnr']))
-        customer_number = str(int(float(row['Kundenr'])))
-        master_id = str(int(float(row['KundeSagsnr'])))
+        id_number = cpr_cvr(int_str(row['PersonnrSEnr']))
+        ligest_personnr = cpr_cvr(int_str(row['LigestPersonnr']))
+        customer_number = int_str(row['Kundenr'])
+        master_id = int_str(row['KundeSagsnr'])
 
         customer_uuid = lookup_customer(id_number)
 
@@ -441,6 +426,7 @@ def import_all(connection):
         try:
             invoice_address_uuid = fuzzy_address_uuid(invoice_address)
         except Exception as e:
+            invoice_address_uuid = None
             report_error(
                 "Customer {1}: Unable to lookup invoicing address: {0}".format(
                     str(e), id_number
@@ -454,7 +440,7 @@ def import_all(connection):
 
         forbrugssted = row['ForbrugsstedID']
 
-        products = get_products_for_location(connection, forbrugssted)
+        products = get_products_for_location(forbrugssted)
 
         no_of_products = len(products)
 
@@ -474,7 +460,7 @@ def import_all(connection):
             alternativsted_id = p['AlternativStedID']
             if alternativsted_id:
                 alternativ_adresse_uuid = get_alternativsted_address_uuid(
-                    connection, alternativsted_id
+                    alternativsted_id
                 )
                 if alternativ_adresse_uuid:
                     product_address = alternativ_adresse_uuid
@@ -493,6 +479,7 @@ def import_all(connection):
             cr_uuid, product_uuids
         )
         assert(agreement_uuid)
+
     print("Fandt {0} primære kunder og {1} ligestillingskunder.".format(
         n, ligest_persons)
     )

@@ -40,7 +40,6 @@ def get_address_from_service(dawa_service, address):
     else:
         # len(js) == 0
         raise RuntimeError('Address not found: {0}'.format(address))
-    print(address_uuid, dawa_service)
     return address_uuid
 
 
@@ -75,7 +74,6 @@ def fuzzy_address_uuid(addr_str):
                 '(datavask) address not found: {0}'.format(addr_str)
             )
     else:
-        print("Error when looking up address:", result)
         raise RuntimeError("Unable to look up address: {0}".format(addr_str))
 
 
@@ -97,14 +95,17 @@ def report_error(error_message, error_stack=None, error_object=None):
     channel = connection.channel()
     channel.queue_declare(queue=ERROR_MQ_QUEUE, durable=True)
 
-    channel.basic_publish(
-        exchange='', routing_key=ERROR_MQ_QUEUE, body=json.dumps(error_msg)
-    )
+    try:
+        channel.basic_publish(
+            exchange='', routing_key=ERROR_MQ_QUEUE, body=json.dumps(error_msg)
+        )
+    except Exception:
+        print("Unable to send", error_msg, "to AMQP service")
     connection.close()
 
     # Print error to the error file
     todaystr = str(datetime.datetime.today().date())
-    with open("mox_kmd_ee_{0}.log".format(todaystr), "a") as f:
+    with open("var/mox_kmd_ee_{0}.log".format(todaystr), "a") as f:
         f.write(error_message + '\n\n')
 
 
