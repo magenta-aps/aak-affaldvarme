@@ -70,9 +70,21 @@ def batch_generator(resource, list_of_uuids):
         # Call GET request function
         results = get_request(resource, params)
 
+        if not results:
+            log.error("No results for batch: ")
+            log.error(uuid_batch)
+            return False
+
         # Return iterator
         for result in results:
-            yield adapter(result)
+            adapted = adapter(result)
+
+            if not adapted:
+                log.error("One faulty result: ")
+                log.error(result)
+                break
+
+            yield adapted
 
 
 def get_all(resource):
