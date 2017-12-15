@@ -85,7 +85,7 @@ def import_customer_record(fields):
 
     # If customer relation already exists, please skip.
     if lookup_interessefaellesskab(customer_number):
-        print("This customer relation already exists:", customer_number)
+        # print("This customer relation already exists:", customer_number)
         return
 
     # Now start handling customers etc.
@@ -178,7 +178,7 @@ def import_customer_record(fields):
 
     forbrugssted = fields['ForbrugsstedID']
 
-    products = get_products_for_location(connection, forbrugssted)
+    products = get_products_for_location(forbrugssted)
 
     no_of_products = len(products)
 
@@ -198,7 +198,7 @@ def import_customer_record(fields):
             start_date=p['DatoFra'],
             end_date=p['DatoTil'],
             product_address=get_alternativsted_address_uuid(
-                connection, p['AlternativStedID']
+                p['AlternativStedID']
             )
         )
         if product_uuid:
@@ -222,8 +222,8 @@ if __name__ == '__main__':
     # Connect and get rows
     connection = connect(server, database, username, password)
     cursor = connection.cursor(as_dict=True)
-
     new_values = read_customer_records(cursor)
+    connection.close()
 
     old_values = retrieve_customer_records()
 
@@ -256,9 +256,21 @@ if __name__ == '__main__':
         # These records are no longer active and should be deleted in LoRa
         delete_customer_record(k)
 
+    # New customer relations - import along with agreements & products
+    # Below, the unthreaded version
+    """
     for k in new_keys:
         # New customer relations - import along with agreements & products
+        # import_customer_record(new_values[k])
         import_customer_record(new_values[k])
+    """
+    # Threaded import
+    from multiprocessing.dummy import Pool
+
+    p = Pool(50)
+    p.map(import_customer_record, [new_values[k] for k in new_keys])
+    p.close()
+    p.join()
 
     for k, changed_fields in changed_records.items():
         # Handle update of the specific changed fields.

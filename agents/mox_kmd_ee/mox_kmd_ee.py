@@ -199,11 +199,14 @@ def create_agreement(name, agreement_type, no_of_products, invoice_address,
         return result.json()['uuid']
 
 
-def get_products_for_location(connection, forbrugssted):
+def get_products_for_location(forbrugssted):
     "Get locations for this customer ID from the Forbrugssted table"
+    from mssql_config import username, password, server, database
+    connection = connect(server, database, username, password)
     cursor = connection.cursor(as_dict=True)
     cursor.execute(TREFINSTALLATION_SQL.format(forbrugssted))
     rows = cursor.fetchall()
+    connection.close()
     return rows
 
 
@@ -254,13 +257,16 @@ def get_forbrugssted_address_uuid(row):
     return (address_string, address_uuid)
 
 
-def get_alternativsted_address_uuid(connection, alternativsted_id):
+def get_alternativsted_address_uuid(alternativsted_id):
     "Get UUID of the address for this AlternativSted"
     if not alternativsted_id:
         return None
+    from mssql_config import username, password, server, database
+    connection = connect(server, database, username, password)
     cursor = connection.cursor(as_dict=True)
     cursor.execute(ALTERNATIVSTED_ADRESSE_SQL.format(alternativsted_id))
     rows = cursor.fetchall()
+    connection.close()
 
     if len(rows) != 1:
         # Send error to log:
@@ -434,7 +440,7 @@ def import_all(connection):
 
         forbrugssted = row['ForbrugsstedID']
 
-        products = get_products_for_location(connection, forbrugssted)
+        products = get_products_for_location(forbrugssted)
 
         no_of_products = len(products)
 
@@ -454,7 +460,7 @@ def import_all(connection):
             alternativsted_id = p['AlternativStedID']
             if alternativsted_id:
                 alternativ_adresse_uuid = get_alternativsted_address_uuid(
-                    connection, alternativsted_id
+                    alternativsted_id
                 )
                 if alternativ_adresse_uuid:
                     product_address = alternativ_adresse_uuid

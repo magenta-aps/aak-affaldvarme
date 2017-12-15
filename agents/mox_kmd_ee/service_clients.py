@@ -95,9 +95,12 @@ def report_error(error_message, error_stack=None, error_object=None):
     channel = connection.channel()
     channel.queue_declare(queue=ERROR_MQ_QUEUE, durable=True)
 
-    channel.basic_publish(
-        exchange='', routing_key=ERROR_MQ_QUEUE, body=json.dumps(error_msg)
-    )
+    try:
+        channel.basic_publish(
+            exchange='', routing_key=ERROR_MQ_QUEUE, body=json.dumps(error_msg)
+        )
+    except Exception:
+        print("Unable to send", error_msg, "to AMQP service")
     connection.close()
 
     # Print error to the error file
