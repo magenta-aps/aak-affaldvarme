@@ -53,6 +53,12 @@ def process(kunderolle):
     lookup_utility_address = None
     lookup_kunderolle = None
 
+    # Hotfix:
+    # To create a link between contact and aftale,
+    # We need the CRM GUID references
+    contact_external_ref = None
+    aftale_external_ref = None
+
     # References
     contact_ref = kunderolle["contact_ref"]
     interessefaellesskab_ref = kunderolle["interessefaellesskab_ref"]
@@ -116,6 +122,10 @@ def process(kunderolle):
 
     # Update contact lookup
     if contact["external_ref"]:
+        # Hotfix:
+        contact_external_ref = contact["external_ref"]
+
+        # Create lookup
         lookup_contact = "/contacts({external_ref})".format(
             external_ref=contact["external_ref"]
         )
@@ -245,8 +255,17 @@ def process(kunderolle):
 
     # Update aftale lookup
     if aftale["external_ref"]:
+        # Hotfix:
+        aftale_external_ref = aftale["external_ref"]
+
         lookup_aftale = "/ava_aftales({external_ref})".format(
             external_ref=aftale["external_ref"]
+        )
+
+        # Create link between aftale and contact
+        create_link = crm.contact_and_aftale_link(
+            contact_guid=contact_external_ref,
+            aftale_guid=aftale_external_ref
         )
 
     # Installation
@@ -256,6 +275,10 @@ def process(kunderolle):
     if not produkt:
         log.warning("Produkt does not exist")
         return
+
+    # Workaround
+    if aftale_external_ref:
+        produkt["indsats_ref"] = aftale_external_ref
 
     if not produkt["external_ref"]:
         produkt_data = produkt["data"]
@@ -273,13 +296,25 @@ def process(kunderolle):
 
         produkt["external_ref"] = crm.store_produkt(produkt_data)
 
-        update_cache = cache.update_or_insert(
-            resource="klasse",
-            payload=produkt
+    if produkt["external_ref"]:
+        produkt_update = {
+            "ava_aftale@odata.bind": lookup_aftale
+        }
+
+        # Update CRM
+        crm.update_produkt(
+            identifier=produkt["external_ref"],
+            payload=produkt_update
         )
 
-        log.info("Updating cache for produkt")
-        log.info(update_cache)
+    # Update cache
+    update_cache = cache.update_or_insert(
+        resource="klasse",
+        payload=produkt
+    )
+
+    log.info("Updating cache for produkt")
+    log.info(update_cache)
 
 
 if __name__ == "__main__":
