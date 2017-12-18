@@ -245,7 +245,7 @@ def process(kunderolle):
 
     # Update aftale lookup
     if aftale["external_ref"]:
-        lookup_account = "/ava_aftales({external_ref})".format(
+        lookup_aftale = "/ava_aftales({external_ref})".format(
             external_ref=aftale["external_ref"]
         )
 
@@ -264,6 +264,9 @@ def process(kunderolle):
         # Workaround: Just inserting billing address
         ava_kundenummer = kundeforhold["data"]["ava_kundenummer"]
         produkt_data["ava_kundenummer"] = ava_kundenummer
+
+        if lookup_aftale:
+            produkt_data["ava_aftale@odata.bind"] = lookup_aftale
 
         if lookup_billing_address:
             produkt_data["ava_adresse@odata.bind"] = lookup_billing_address
