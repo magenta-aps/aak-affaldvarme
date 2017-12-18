@@ -188,6 +188,55 @@ def post_request(resource, payload):
     return response
 
 
+def patch_request(resource, payload):
+    """
+    Generic PATCH request function
+    """
+
+    headers = {
+        "Authorization": get_token(),
+        "OData-MaxVersion": "4.0",
+        "OData-Version": "4.0",
+        "Accept": "application/json",
+        "Content-Type": "application/json; charset=utf-8",
+        "Prefer": "return=representation"
+    }
+
+    service_url = "{base}/{resource}".format(
+        base=base_endpoint,
+        resource=resource
+    )
+
+    response = requests.patch(
+        url=service_url,
+        headers=headers,
+        json=payload
+    )
+
+    if response.status_code == 401:
+        log.debug('Requesting token and retrying POST request')
+
+        # Generate a new token
+        request_token()
+
+        # Sleep 10 seconds
+        time.sleep(10)
+
+        # Set new token into the auth header
+        headers["Authorization"] = get_token()
+
+        # Perform the request again
+        response = requests.patch(
+            url=service_url,
+            headers=headers,
+            json=payload
+        )
+
+    log.debug("PATCH Request: ")
+    log.debug(response.text)
+    return response
+
+
 def delete_request(service_url):
 
     return requests.delete(
@@ -409,52 +458,25 @@ def store_produkt(payload):
     return crm_guid
 
 
-def patch_request(resource, payload):
-    """
-    Generic PATCH request function
-    """
+def update_produkt(identifier, payload):
+    """Klasse"""
 
-    headers = {
-        "Authorization": get_token(),
-        "OData-MaxVersion": "4.0",
-        "OData-Version": "4.0",
-        "Accept": "application/json",
-        "Content-Type": "application/json; charset=utf-8",
-        "Prefer": "return=representation"
-    }
-
-    service_url = "{base}/{resource}".format(
-        base=base_endpoint,
-        resource=resource
+    # REST resource
+    resource = "ava_installations({identifier})".format(
+        identifier=identifier
     )
 
-    response = requests.patch(
-        url=service_url,
-        headers=headers,
-        json=payload
-    )
+    log.info("UPDATING produkt in CRM")
+    log.debug(payload)
+    response = patch_request(resource, payload)
 
-    if response.status_code == 401:
-        log.debug('Requesting token and retrying POST request')
+    # Return False if not created
+    if response.status_code != 200:
+        log.error("Error updating produkt in CRM")
+        log.error(response.text)
+        return False
 
-        # Generate a new token
-        request_token()
-
-        # Sleep 10 seconds
-        time.sleep(10)
-
-        # Set new token into the auth header
-        headers["Authorization"] = get_token()
-
-        # Perform the request again
-        response = requests.patch(
-            url=service_url,
-            headers=headers,
-            json=payload
-        )
-
-    log.debug("PATCH Request: ")
-    log.debug(response.text)
+    log.info("Produkt updated")
     return response
 
 
