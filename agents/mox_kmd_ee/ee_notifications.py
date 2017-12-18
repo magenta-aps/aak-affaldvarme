@@ -18,9 +18,11 @@ from ee_utils import connect, int_str, cpr_cvr
 from ee_sql import CUSTOMER_SQL, RELEVANT_TREF_INSTALLATIONS_SQL
 from ee_oio import KUNDE, LIGESTILLINGSKUNDE
 from crm_utils import lookup_customer_relation, lookup_customer_roles
-from crm_utils import lookup_customer, create_customer
+from crm_utils import lookup_customer, lookup_agreements, create_customer
 from crm_utils import create_customer_relation, create_customer_role
-from crm_utils import create_agreement, create_product
+from crm_utils import create_agreement, create_product, lookup_products
+from crm_utils import delete_customer_role, delete_customer_relation
+from crm_utils import delete_agreement, delete_product
 from mox_kmd_ee import get_forbrugssted_address_uuid, VARME
 from mox_kmd_ee import get_products_for_location
 from mox_kmd_ee import get_alternativsted_address_uuid
@@ -67,10 +69,14 @@ def retrieve_customer_records():
 
 def delete_customer_record(customer_number):
         "Purge relation along with customer roles, agreements and products."
-        cr_uuid = lookup_customer_relation(k)
+        cr_uuid = lookup_customer_relation(customer_number)
         # This should exist provided everything is up to date!
         if not cr_uuid:
-            report("Customer number {} not found.".format(customer_number))
+            print("Customer number {} not found.".format(customer_number))
+            report_error(
+                "Customer number {} not found.".format(customer_number)
+            )
+            return
 
         # Look up the customer roles and customers for this customer relation.
 
@@ -81,20 +87,21 @@ def delete_customer_record(customer_number):
         for role in roles:
             delete_customer_role(role)
 
+        # Delete all agreements and products corresponding to this customer
+        # relation.
         # There can be only one agreement per customer as is, but in the future
-        # there might be more.
+        # this might change.
         agreements = lookup_agreements(customer_relation=cr_uuid)
 
         for agreement_uuid in agreements:
-            products = lookup_products(agreement=agreement_uuid)
+            products = lookup_products(agreement_uuid=agreement_uuid)
 
             for p in products:
-                delete_product(product)
+                delete_product(p)
 
             delete_agreement(agreement_uuid)
-
-        # Delete all agreements and products corresponding to this customer
-        # relation.
+        # Now go ahead and delete the customer relation
+        delete_customer_relation(cr_uuid)
 
 
 def import_customer_record(fields):
@@ -274,10 +281,11 @@ if __name__ == '__main__':
     print("Number of changed records:", len(changed_records))
 
     # Handle notifications
-
+    print("... deleting ...")
     for k in lost_keys:
         # These records are no longer active and should be deleted in LoRa
         delete_customer_record(k)
+    print("... done")
 
     # New customer relations - import along with agreements & products
     # Below, the unthreaded version
@@ -286,18 +294,18 @@ if __name__ == '__main__':
         # New customer relations - import along with agreements & products
         # import_customer_record(new_values[k])
         import_customer_record(new_values[k])
-    """
     # Threaded import
     from multiprocessing.dummy import Pool
 
-    p = Pool(50)
+    p = Pool(1)
     p.map(import_customer_record, [new_values[k] for k in new_keys])
     p.close()
     p.join()
 
+    """
     for k, changed_fields in changed_records.items():
         # Handle update of the specific changed fields.
         update_customer_record(old_values[k], changed_fields)
 
     # All's well that ends well
-    store_customer_records(new_values)
+    # store_customer_records(new_values)

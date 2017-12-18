@@ -34,7 +34,7 @@ def request(func):
     return call_and_raise
 
 
-def lookup_objects(service, oio_class, *conditions):
+def lookup_objects(service, oio_class, **conditions):
     'Lookup objects of class cls in service with the specified conditions.'
     search_results = []
     if conditions:
@@ -42,7 +42,7 @@ def lookup_objects(service, oio_class, *conditions):
             ['{0}={1}'.format(k, v) for k, v in conditions.items()]
         )
         request_string = ('{0}/{1}/{2}?{3}'.format(
-            BASE_URL, service, oio_class, conditions
+            BASE_URL, service, oio_class, condition_string
         ))
 
         result = session.get(request_string)
@@ -53,9 +53,9 @@ def lookup_objects(service, oio_class, *conditions):
     return search_results
 
 
-def lookup_one(service, oio_class, *conditions):
+def lookup_one(service, oio_class, **conditions):
     'Lookup supposedly unique object - assert/fail if more than one is found.'
-    search_results = lookup_objects(service, oio_class, *conditions)
+    search_results = lookup_objects(service, oio_class, **conditions)
 
     if len(search_results) > 0:
         # There should only be one
@@ -66,22 +66,34 @@ def lookup_one(service, oio_class, *conditions):
 
 
 @request
-def read_object(service, oio_class, uuid):
-    'Read object from LoRa, return JSON. Fail (throw 404) if not found.'
+def read_object(uuid, service, oio_class):
+    '''Read object from LoRa, return JSON. Fail (throw 404) if not found.
+
+    This function does not include more than one registration period and will
+    thus return the current registration only. Within this registration period,
+    all date dependent values will have the current Virkning period only.
+    '''
     request_string = '{0}/{1}/{2}/{3}'.format(
         BASE_URL, service, oio_class, uuid
     )
     response = session.get(request_string)
-    return response
+    object_dict = response.json()
+    # Only the current registration.
+    return object_dict[uuid][0]['registreringer'][0]
 
 
 @request
-def delete_object(service, oio_class, uuid):
+def delete_object(uuid, service, oio_class):
     'Delete object in sevice with the given UUID'
+    ALREADY_DELETED = 'Invalid [livscyklus] transition to [Slettet]'
     request_string = '{0}/{1}/{2}/{3}'.format(
         BASE_URL, service, oio_class, uuid
     )
     response = session.delete(request_string)
+    if response.status_code == 400 and ALREADY_DELETED in response.text:
+        # Already deleted, this is OK
+        print('Deleting object {} again'.format(uuid))
+        response = True
     return response
 
 # Lookup per class
@@ -102,7 +114,7 @@ lookup_organisationfunktioner = functools.partial(
     lookup_objects, service='organisation', oio_class='organisationfunktion'
 )
 lookup_indsatser = functools.partial(
-    lookup_objects, service='organisation', oio_class='indsats'
+    lookup_objects, service='indsats', oio_class='indsats'
 )
 
 
@@ -126,7 +138,8 @@ def create_organisation(cvr_number, key, name, master_id, phone="", email="",
                         mobile="", fax="", address_uuid="", company_type="",
                         industry_code="", note=""):
     # Sanity check
-    uuid = lookup_organisation(cvr_number)
+    urn = 'urn:{}'.format(cvr_number)
+    uuid = lookup_organisation(virksomhed=urn)
     if uuid:
         print("{0} already exists with UUID {1}".format(cvr_number, uuid))
 
@@ -214,7 +227,8 @@ def create_bruger(cpr_number, key, name, master_id, phone="", email="",
                   address_protection="", note=""):
 
     # Sanity check
-    uuid = lookup_bruger(cpr_number)
+    urn = 'urn:{}'.format(cpr_number)
+    uuid = lookup_bruger(tilknyttedepersoner=urn)
     if uuid:
         print("{0} already exists with UUID {1}".format(cpr_number, uuid))
 

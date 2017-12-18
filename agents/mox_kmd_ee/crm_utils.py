@@ -9,12 +9,15 @@
 
 import functools
 
+from serviceplatformen_cpr import get_cpr_data
+
 from ee_oio import lookup_organisation, lookup_bruger, lookup_organisation
 from ee_oio import lookup_interessefaellesskab, lookup_organisationfunktioner
-from ee_oio import lookup_indsats, delete_object, create_klasse
+from ee_oio import lookup_indsatser, delete_object, read_object, create_klasse
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_utils import is_cvr, is_cpr
+from service_clients import report_error, get_cvr_data
 
 
 # Delete functions
@@ -25,10 +28,16 @@ delete_customer_role = functools.partial(
     delete_object, service='organisation', oio_class='organisationfunktion'
 )
 delete_agreement = functools.partial(
-    delete_object, service='organisation', oio_class='indsats'
+    delete_object, service='indsats', oio_class='indsats'
 )
 delete_product = functools.partial(
     delete_object, service='klassifikation', oio_class='klasse'
+)
+
+
+# Read functions
+read_agreement = functools.partial(
+    read_object, service='indsats', oio_class='indsats'
 )
 
 
@@ -69,11 +78,16 @@ def lookup_agreements(customer_relation):
     return lookup_indsatser(indsatsmodtager=customer_relation)
 
 
-def lookup_products(agreement):
+def lookup_products(agreement_uuid):
     'Get products for this agreement.'
     # FIXME: This is bothersome, because we actually have to load the agreement
     # to find the products. The correct way would be to do as we do in Arosia
     # and have an AVA specific relation from Klasse to Indsats.
+    agreement = read_agreement(agreement_uuid)
+    indsatskvalitet = agreement['relationer']['indsatskvalitet']
+    product_uuids = [r['uuid'] for r in indsatskvalitet]
+
+    return product_uuids
 
 
 # Create functions
