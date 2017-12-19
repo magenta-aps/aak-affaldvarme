@@ -339,48 +339,75 @@ def update_all_installations():
 
 def update_alternative_address(installation):
 
-    # if not installation["external_ref"]:
-    #     return None
-    #
-    # Resource for access addresses
-    resource = "dawa_access"
-
-    identifier = installation["external_ref"]
-    payload = installation["data"]
+    if not installation["external_ref"]:
+        return False
 
     address_ref = installation["dawa_ref"]
 
     access_address = cache.find(resource, address_ref)
 
     if not access_address:
-        log.info("Attempting to retrieve and store access address")
+        log.info("Access address does not yet exist, creating")
 
         try:
             # Return adapted access address
+            log.info("Attempting to retrieve access address from DAWA")
             access_address = dawa.get_access_address(address_ref)
             log.debug(access_address)
 
             # Store address externally (CRM)
+            log.info("Attempting to store access address")
             access_address["external_ref"] = crm.store_address(
                 access_address["data"]
             )
 
+            # Update cache
+            log.info("Attempting to update cache for access address")
+            cache.update_or_insert("dawa_access", access_address)
+
         except Exception as error:
+            log.error("Failed to create access address:")
             log.error(error)
             return False
 
-    # Update cache
-    try:
-        log.info("Attempting to update installation (produkt) cache")
-        cache.update_or_insert(resource, access_address)
-    except Exception as error:
-        log.error(error)
-        return False
+    if not access_address["external_ref"]:
+        log.warning(
+            "No external ref found for access address: {reference}".format(
+                reference=access_address["_id"]
+            )
+        )
+
+    # Hotfix:
+    # Create fallback
+    if not "lookup_access_address" in installation:
+        log.debug("Creating access address lookup key")
+        installation["lookup_access_address"] = None
+
+    if not installation["lookup_access_address"]:
+        log.info("Creating lookup for access address")
+        lookup_utility_address = "/ava_adresses({external_ref})".format(
+            external_ref=access_address["external_ref"]
+        )
+
+        try:
+            log.info("Updating installation with access address")
+            crm.update_produkt({
+                "ava_adresse@odata.bind": lookup_utility_address
+            })
+            installation["lookup_access_address"] = lookup_utility_address
+
+            # Update cache
+            log.info("Attempting to update cache for installation")
+            cache.update_or_insert("klasse", installation)
+
+        except Exception as error:
+            log.error(
+                "Error updating access address for: {reference}".format(
+                    reference=installation["_id"]
+                )
+            )
 
     return True
-
-    # address = dawa.get_access_address(address_ref)
-    # print(address)
 
 
 if __name__ == "__main__":
