@@ -317,6 +317,72 @@ def process(kunderolle):
     log.info(update_cache)
 
 
+def update_all_installations():
+    """
+    Alternative addresses for installations (Produkt)
+    The Lora entity is "klasse"
+    """
+
+    all_installations = []
+
+    for installation in cache.find_all("klasse"):
+
+        if not installation["dawa_ref"]:
+            continue
+
+        # Append all objects that contain an alternative address
+        all_installations.append(installation)
+
+    for installation in all_installations:
+        update_alternative_address(installation)
+
+
+def update_alternative_address(installation):
+
+    # if not installation["external_ref"]:
+    #     return None
+    #
+    # Resource for access addresses
+    resource = "dawa_access"
+
+    identifier = installation["external_ref"]
+    payload = installation["data"]
+
+    address_ref = installation["dawa_ref"]
+
+    access_address = cache.find(resource, address_ref)
+
+    if not access_address:
+        log.info("Attempting to retrieve and store access address")
+
+        try:
+            # Return adapted access address
+            access_address = dawa.get_access_address(address_ref)
+            log.debug(access_address)
+
+            # Store address externally (CRM)
+            access_address["external_ref"] = crm.store_address(
+                access_address["data"]
+            )
+
+        except Exception as error:
+            log.error(error)
+            return False
+
+    # Update cache
+    try:
+        log.info("Attempting to update installation (produkt) cache")
+        cache.update_or_insert(resource, access_address)
+    except Exception as error:
+        log.error(error)
+        return False
+
+    return True
+
+    # address = dawa.get_access_address(address_ref)
+    # print(address)
+
+
 if __name__ == "__main__":
 
     # Begin
@@ -326,7 +392,8 @@ if __name__ == "__main__":
     start_logging(20, LOG_FILE)
 
     # Run
-    export_everything()
+    # export_everything()
+    update_all_installations()
 
     # Done
     print("All done")
