@@ -51,24 +51,24 @@ def get_access_address(uuid):
     if not data:
         return
 
-    adresseid = data['id']
-    vejkode = data['vejkode']
-    vejnavn = data['vejnavn']
-    husnr = data['husnr']
-    postnr = data['postnr']
-    postnrnavn = data['postnrnavn']
-    kommunekode = data['kommunekode']
+    adresseid = data["id"]
+    vejkode = data["vejkode"]
+    vejnavn = data["vejnavn"]
+    husnr = data["husnr"]
+    postnr = data["postnr"]
+    postnrnavn = data["postnrnavn"]
+    kommunekode = data["kommunekode"]
 
-    koordinat_nord = data['wgs84koordinat_bredde']
-    koordinat_oest = data['wgs84koordinat_længde']
+    koordinat_nord = data["wgs84koordinat_bredde"]
+    koordinat_oest = data["wgs84koordinat_længde"]
 
-    laengdegrad = data['etrs89koordinat_nord']
-    breddegrad = data['etrs89koordinat_øst']
+    laengdegrad = data["etrs89koordinat_nord"]
+    breddegrad = data["etrs89koordinat_øst"]
 
-    land = 'Danmark'
+    land = "Danmark"
 
-    husnr_nr = re.findall('\d+', husnr)[0]
-    husnr_bogstav = re.findall('\D+', husnr)
+    husnr_nr = re.findall("\d+", husnr)[0]
+    husnr_bogstav = re.findall("\D+", husnr)
 
     if husnr_bogstav:
         husnr_bogstav = husnr_bogstav[0]
@@ -76,34 +76,33 @@ def get_access_address(uuid):
         husnr_bogstav = None
 
     # Create address search string by combining all relevant values
-    search = '{} {}'.format(vejnavn, husnr)
+    search = "{} {}".format(vejnavn, husnr)
 
-    search += ', {} {}'.format(postnr, postnrnavn)
+    search += ", {} {}".format(postnr, postnrnavn)
 
     # Add "adgangsadresser" to the search string"
     # To distinguish between actual addresses and access addresses
-    search += ', adgangsadresse'
+    search += ", adgangsadresse"
 
     # AVA specific payload
     payload = {
-        # Hotfix:
-        # Adding redundant origin id
-        'origin_id': adresseid,
-
-        # Original payload
-        'ava_dawa_uuid': adresseid,
-        'ava_name': search,
-        'ava_gadenavn': vejnavn,
-        'ava_husnummer': husnr_nr,
-        'ava_bogstav': husnr_bogstav,
-        'ava_postnummer': postnr,
-        'ava_kommunenummer': kommunekode,
-        'ava_by': postnrnavn,
-        'ava_land': land,
-        'ava_koordinat_nord': str(koordinat_nord),
-        'ava_koordinat_oest': str(koordinat_oest),
-        'ava_laengdegrad': str(laengdegrad),
-        'ava_breddegrad': str(breddegrad)
+        "_id": adresseid,
+        "external_ref": None,
+        "data": {
+            "ava_dawa_uuid": adresseid,
+            "ava_name": search,
+            "ava_gadenavn": vejnavn,
+            "ava_husnummer": husnr_nr,
+            "ava_bogstav": husnr_bogstav,
+            "ava_postnummer": postnr,
+            "ava_kommunenummer": kommunekode,
+            "ava_by": postnrnavn,
+            "ava_land": land,
+            "ava_koordinat_nord": str(koordinat_nord),
+            "ava_koordinat_oest": str(koordinat_oest),
+            "ava_laengdegrad": str(laengdegrad),
+            "ava_breddegrad": str(breddegrad)
+        }
     }
     return payload
 
@@ -115,33 +114,33 @@ def adapter(data):
     if not data:
         return False
 
-    adresseid = data['id']
-    vejkode = data['vejkode']
-    vejnavn = data['vejnavn']
-    husnr = data['husnr']
-    etage = data['etage']
-    doer = data['dør']
-    postnr = data['postnr']
-    postnrnavn = data['postnrnavn']
-    kommunekode = data['kommunekode']
-    adgangsadresseid = data['adgangsadresseid']
-    kvhx = data['kvhx']
+    adresseid = data["id"]
+    vejkode = data["vejkode"]
+    vejnavn = data["vejnavn"]
+    husnr = data["husnr"]
+    etage = data["etage"]
+    doer = data["dør"]
+    postnr = data["postnr"]
+    postnrnavn = data["postnrnavn"]
+    kommunekode = data["kommunekode"]
+    adgangsadresseid = data["adgangsadresseid"]
+    kvhx = data["kvhx"]
 
     # Coordinates
-    koordinat_nord = data['wgs84koordinat_bredde']
-    koordinat_oest = data['wgs84koordinat_længde']
+    koordinat_nord = data["wgs84koordinat_bredde"]
+    koordinat_oest = data["wgs84koordinat_længde"]
 
-    laengdegrad = data['etrs89koordinat_nord']
-    breddegrad = data['etrs89koordinat_øst']
+    laengdegrad = data["etrs89koordinat_nord"]
+    breddegrad = data["etrs89koordinat_øst"]
 
     # Todo:
     # Country is currently hardcoded
     # This may have to be dynamically set
-    land = 'Danmark'
+    land = "Danmark"
 
     # Split building id (numbers and letters)
-    husnr_nr = re.findall('\d+', husnr)[0]
-    husnr_bogstav = re.findall('\D+', husnr)
+    husnr_nr = re.findall("\d+", husnr)[0]
+    husnr_bogstav = re.findall("\D+", husnr)
 
     if husnr_bogstav:
         husnr_bogstav = husnr_bogstav[0]
@@ -149,38 +148,38 @@ def adapter(data):
         husnr_bogstav = None
 
     # Create address search string by combining all relevant values
-    search = '{} {}'.format(vejnavn, husnr)
+    search = "{} {}".format(vejnavn, husnr)
 
     if etage:
-        search += ', {}.'.format(etage)
+        search += ", {}.".format(etage)
 
     if doer:
-        search += ' {}'.format(doer)
+        search += " {}".format(doer)
 
-    search += ', {} {}'.format(postnr, postnrnavn)
+    search += ", {} {}".format(postnr, postnrnavn)
 
     # AVA specific payload
     payload = {
         "_id": adresseid,
         "external_ref": None,
         "data": {
-            'ava_dawaadgangsadresseid': adgangsadresseid,
-            'ava_name': search,
-            'ava_gadenavn': vejnavn,
-            'ava_husnummer': husnr_nr,
-            'ava_bogstav': husnr_bogstav,
-            'ava_etage': etage,
-            'ava_doer': doer,
-            'ava_postnummer': postnr,
-            'ava_kommunenummer': kommunekode,
-            'ava_by': postnrnavn,
-            'ava_land': land,
-            'ava_kvhx': kvhx,
+            "ava_dawaadgangsadresseid": adgangsadresseid,
+            "ava_name": search,
+            "ava_gadenavn": vejnavn,
+            "ava_husnummer": husnr_nr,
+            "ava_bogstav": husnr_bogstav,
+            "ava_etage": etage,
+            "ava_doer": doer,
+            "ava_postnummer": postnr,
+            "ava_kommunenummer": kommunekode,
+            "ava_by": postnrnavn,
+            "ava_land": land,
+            "ava_kvhx": kvhx,
             "ava_vejkode": vejkode,
-            'ava_koordinat_nord': str(koordinat_nord),
-            'ava_koordinat_oest': str(koordinat_oest),
-            'ava_laengdegrad': str(laengdegrad),
-            'ava_breddegrad': str(breddegrad)
+            "ava_koordinat_nord": str(koordinat_nord),
+            "ava_koordinat_oest": str(koordinat_oest),
+            "ava_laengdegrad": str(laengdegrad),
+            "ava_breddegrad": str(breddegrad)
         }
     }
     return payload
