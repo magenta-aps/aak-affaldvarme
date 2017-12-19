@@ -34,6 +34,15 @@ def request(func):
     return call_and_raise
 
 
+class DummyResult:
+    "Return a request result when not actually calling LoRa."
+    def __init__(self, uuid):
+        self.__uuid = uuid
+
+    def json(self):
+        return {'uuid': self.__uuid}
+
+
 def lookup_objects(service, oio_class, **conditions):
     'Lookup objects of class cls in service with the specified conditions.'
     search_results = []
@@ -142,6 +151,7 @@ def create_organisation(cvr_number, key, name, master_id, phone="", email="",
     uuid = lookup_organisation(virksomhed=urn)
     if uuid:
         print("{0} already exists with UUID {1}".format(cvr_number, uuid))
+        return DummyResult(uuid)
 
     virkning = create_virkning()
     organisation_dict = {
@@ -231,6 +241,7 @@ def create_bruger(cpr_number, key, name, master_id, phone="", email="",
     uuid = lookup_bruger(tilknyttedepersoner=urn)
     if uuid:
         print("{0} already exists with UUID {1}".format(cpr_number, uuid))
+        return DummyResult(uuid)
 
     virkning = create_virkning()
     bruger_dict = {
