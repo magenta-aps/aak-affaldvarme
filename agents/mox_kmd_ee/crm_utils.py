@@ -260,3 +260,20 @@ def create_product(name, identification, installation_type, meter_number,
                            product_address)
     if result:
         return result.json()['uuid']
+
+
+def update_customer(fields, new_values):
+    "Update customer with new information."
+    print("Updating customer", fields['Kundenavn'])
+
+
+def update_customer_role(fields, new_values):
+    print("Updating customer role for", fields['Kundenavn'])
+
+
+def update_customer_relation(fields, new_values):
+    print("Updating customer relation for", fields['Kundenavn'])
+
+
+def update_agreement(fields, new_values):
+    print("Updating agreement for", fields['Kundenavn'])

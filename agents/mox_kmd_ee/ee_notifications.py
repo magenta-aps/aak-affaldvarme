@@ -21,6 +21,8 @@ from crm_utils import create_customer_relation, create_customer_role
 from crm_utils import create_agreement, create_product, lookup_products
 from crm_utils import delete_customer_role, delete_customer_relation
 from crm_utils import delete_agreement, delete_product
+from crm_utils import update_customer, update_customer_role
+from crm_utils import update_customer_relation, update_agreement
 from mox_kmd_ee import get_forbrugssted_address_uuid, VARME
 from mox_kmd_ee import get_products_for_location
 from mox_kmd_ee import get_alternativsted_address_uuid
@@ -250,11 +252,28 @@ def import_customer_record(fields):
     assert(agreement_uuid)
 
 
-def update_customer_record(fields, changed_values):
+def update_customer_record(fields, changed_fields):
     "Update relevant LoRa objects with the specific changes."
     # TODO: These if statements are most for clarity while writing this.
     # Replace with some sort of dispatcher instead.
-    for field_name in changed_values:
+    customer_fields = ['Telefon', 'MobilTlf', 'Fax', 'Kundesagsnr']
+    customer_role_fields = ['PersonnrSEnr', 'LigestPersonnr']
+    customer_relation_fields = ['ForbrStVejnavn', 'Vejkode', 'Postnr',
+                                'ForbrStPostdistrikt', 'Husnr', 'Bogstav',
+                                'Etage', 'Sidedørnr']
+    agreement_fields = ['Vejnavn', 'Postdistrikt', 'Tilflytningsdato',
+                        'Fraflytningsdato']
+    update_handlers = [(customer_fields, update_customer),
+                       (customer_role_fields, update_customer_role),
+                       (customer_relation_fields, update_customer_relation),
+                       (agreement_fields, update_agreement)]
+    changed_keys = set(changed_fields)
+
+    for fields, handler in update_handlers:
+        if changed_keys & fields:
+            handler(fields, changed_fields)
+
+    for field_name in changed_fields:
         if field_name == 'PersonnrSEnr':
             print("Change main customer!")
             assert(False)  # I don't expect this to happen.
