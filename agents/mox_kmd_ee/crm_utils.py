@@ -11,13 +11,13 @@ import functools
 
 from serviceplatformen_cpr import get_cpr_data
 
-from ee_oio import lookup_organisation, lookup_bruger, lookup_organisation
+from ee_oio import lookup_bruger, lookup_organisation
 from ee_oio import lookup_interessefaellesskab, lookup_organisationfunktioner
 from ee_oio import lookup_indsatser, delete_object, read_object, create_klasse
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_utils import is_cvr, is_cpr
-from service_clients import report_error, get_cvr_data
+from service_clients import report_error, get_cvr_data, get_address_uuid
 
 
 # Delete functions

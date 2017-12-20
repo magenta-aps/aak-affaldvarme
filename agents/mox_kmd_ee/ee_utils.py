@@ -28,8 +28,6 @@ def is_cvr(val):
 
 
 def connect(server, database, username, password):
-    driver1 = '{SQL Server}'
-    driver2 = '{ODBC Driver 13 for SQL Server}'
     cnxn = None
     try:
         cnxn = pymssql.connect(server=server, user=username,

@@ -6,8 +6,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-import os
-import datetime
 import pickle
 import warnings
 
@@ -253,6 +251,35 @@ def import_customer_record(fields):
 
 def update_customer_record(fields, changed_values):
     "Update relevant LoRa objects with the specific changes."
+    # TODO: These if statements are most for clarity while writing this.
+    # Replace with some sort of dispatcher instead.
+    for field_name in changed_values:
+        if field_name == 'PersonnrSEnr':
+            print("Change main customer!")
+            assert(False)  # I don't expect this to happen.
+        elif field_name == 'LigestPersonnr':
+            print("Change roommate/partner.")
+        elif field_name == 'KundeSagsnr':
+            print("Change master ID!")
+        elif field_name == 'Kundenavn':
+            print("Change name of customer!")
+        elif field_name == 'Telefonnr':
+            print("Change telephone number!")
+        elif field_name == 'EmailKunde':
+            print("Change customer email address!")
+        elif field_name == 'ForbrugsstedID':
+            assert('Forbrugssted' == 'Unchanged!')
+        elif field_name in ['Vejnavn', 'Postdistrikt']:
+            print("Changing invoicing address")
+        elif field_name == 'Tilflytningsdato':
+            print("Changing Tilflytningsdato")
+            assert(False)
+        elif field_name == 'Fraflytningsdato':
+            print("Changing Fraflytningsdato")
+        elif field_name in ['ForbrStVejnavn', 'Vejkode', 'Postnr',
+                            'ForbrStPostdistrikt', 'Husnr', 'Bogstav', 'Etage',
+                            'Sidedørnr']:
+            print("Changing location address")
 
 
 if __name__ == '__main__':

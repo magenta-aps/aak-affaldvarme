@@ -11,8 +11,6 @@ import pytz
 import requests
 import functools
 
-from dateutil import parser
-
 from settings import SYSTEM_USER, AVA_ORGANISATION, BASE_URL
 
 KUNDE = 'Kunde'
@@ -428,7 +426,7 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
     tz = pytz.timezone('Europe/Copenhagen')
     starttidspunkt = tz.localize(start_date)
     try:
-        sluttidspunkt = timezone.localize(end_date)
+        sluttidspunkt = tz.localize(end_date)
     except:  # noqa
         # This is only for Max date - which is 9999-12-31 =~ infinity
         sluttidspunkt = pytz.utc.localize(end_date)

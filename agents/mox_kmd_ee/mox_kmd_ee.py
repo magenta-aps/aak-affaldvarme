@@ -7,10 +7,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-import time
+from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL
+from ee_sql import ALTERNATIVSTED_ADRESSE_SQL
+from ee_oio import KUNDE, LIGESTILLINGSKUNDE
 
-import pymssql
+from ee_utils import cpr_cvr, connect, int_str
+from crm_utils import lookup_customer, create_customer, create_customer_role
+from crm_utils import create_customer_relation, create_agreement
+from crm_utils import lookup_customer_relation, create_product
 
+from service_clients import get_address_uuid, fuzzy_address_uuid
+from service_clients import report_error, access_address_uuid
+
+# FIXME:
+# The following lines allow us to import this file even where the certificates
+# for ServicePlatformen aren't properly installed.
 try:
     from serviceplatformen_cpr import get_cpr_data
 except TypeError:
@@ -18,17 +29,6 @@ except TypeError:
         pass
     print("TODO: Fix this!")
 
-from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL
-from ee_sql import ALTERNATIVSTED_ADRESSE_SQL
-from ee_oio import KUNDE, LIGESTILLINGSKUNDE
-
-from ee_utils import cpr_cvr, connect
-from crm_utils import lookup_customer, create_customer, create_customer_role
-from crm_utils import create_customer_relation, create_agreement
-from crm_utils import lookup_customer_relation, create_product
-
-from service_clients import get_address_uuid, fuzzy_address_uuid, get_cvr_data
-from service_clients import report_error, access_address_uuid
 
 # Definition of strings used for Klassifikation URNs
 
@@ -108,7 +108,7 @@ def get_alternativsted_address_uuid(alternativsted_id):
         # Send error to log:
         report_error(
             "Alternativt sted for {0} returnerer: {1}".format(
-                id_number, alternativsted_id
+                alternativsted_id, str(rows)
             )
         )
 
@@ -309,7 +309,6 @@ def import_all(connection):
     print("Fandt {0} primære kunder og {1} ligestillingskunder.".format(
         n, ligest_persons)
     )
-
 
 if __name__ == '__main__':
     from mssql_config import username, password, server, database

@@ -1,11 +1,9 @@
 #!/usr/bin/python3
 
-import argparse
 import os
 import sys
-import tempfile
 
-from installutils import Config, Service, VirtualEnv
+from installutils import Config, VirtualEnv
 
 DIR = os.path.dirname(os.path.realpath(sys.argv[0]))
 
