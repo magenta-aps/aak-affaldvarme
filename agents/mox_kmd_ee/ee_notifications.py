@@ -104,24 +104,15 @@ def delete_customer_record(customer_number):
         delete_customer_relation(cr_uuid)
 
 
-def import_customer_record(fields):
-    "Import a new customer record including relation, agreement, products."
+def import_customer(id_and_fields):
+    "Import a new customer, log if it fails."
+    id_number, fields = id_and_fields
+    id_number = cpr_cvr(int_str(id_number))
 
-    # Lookup customer in LoRa - insert if it doesn't exist already.
-    id_number = cpr_cvr(int_str(fields['PersonnrSEnr']))
-    ligest_personnr = cpr_cvr(int_str(fields['LigestPersonnr']))
-    customer_number = int_str(fields['Kundenr'])
-    master_id = int_str(fields['KundeSagsnr'])
-
-    # If customer relation already exists, please skip.
-    if lookup_customer_relation(customer_number):
-        # print("This customer relation already exists:", customer_number)
-        return
-
-    # Now start handling customers etc.
     customer_uuid = lookup_customer(id_number)
-
     if not customer_uuid:
+        master_id = int_str(fields['KundeSagsnr'])
+        customer_number = int_str(fields['Kundenr'])
         new_customer_uuid = create_customer(
             id_number=id_number,
             key=customer_number,
@@ -141,6 +132,30 @@ def import_customer_record(fields):
                          fields['KundeNavn'],
                          fields['PersonnrSEnr']))
             return
+
+
+def import_customer_record(fields):
+    """Import a new customer record including relation, agreement, products.
+
+    Assume customers themselves have already been imported.
+    """
+
+    # Lookup customer in LoRa - insert if it doesn't exist already.
+    id_number = cpr_cvr(int_str(fields['PersonnrSEnr']))
+    ligest_personnr = cpr_cvr(int_str(fields['LigestPersonnr']))
+    customer_number = int_str(fields['Kundenr'])
+
+    # If customer relation already exists, please skip.
+    if lookup_customer_relation(customer_number):
+        # print("This customer relation already exists:", customer_number)
+        return
+
+    # Now start handling customers etc.
+    customer_uuid = lookup_customer(id_number)
+    # Customer *must* have been created during previous import step
+    if not customer_uuid:
+        # This must have failed
+        print("Customer not found:", id_number, fields['KundeNavn'])
 
     # Create customer relation
     # NOTE: In KMD EE, there's always one customer relation for each row in
@@ -170,21 +185,14 @@ def import_customer_record(fields):
     if len(ligest_personnr) > 1:
 
         ligest_uuid = lookup_customer(ligest_personnr)
+        # Customer was already created before this step
+        if not customer_uuid:
+            # This must have failed
+            print("Ligest Customer not found:", id_number, fields['KundeNavn'])
 
-        if not ligest_uuid:
-            new_ligest_uuid = create_customer(
-                id_number=ligest_personnr,
-                key=customer_number,
-                name=fields['KundeNavn'],
-                master_id=master_id
-            )
-            if new_ligest_uuid:
-                ligest_uuid = new_ligest_uuid
-
-        if ligest_uuid:
-            create_customer_role(
-                ligest_uuid, cr_uuid, LIGESTILLINGSKUNDE
-            )
+        create_customer_role(
+            ligest_uuid, cr_uuid, LIGESTILLINGSKUNDE
+        )
 
     # Create agreement
     name = 'Fjernvarmeaftale'
@@ -279,14 +287,14 @@ if __name__ == '__main__':
     }
 
     print("Number of changed records:", len(changed_records))
-
+    """
     # Handle notifications
     print("... deleting ...")
     for k in lost_keys:
         # These records are no longer active and should be deleted in LoRa
         delete_customer_record(k)
     print("... done")
-
+    """
     # New customer relations - import along with agreements & products
     # Below, the unthreaded version
     """
@@ -294,18 +302,35 @@ if __name__ == '__main__':
         # New customer relations - import along with agreements & products
         # import_customer_record(new_values[k])
         import_customer_record(new_values[k])
+    """
     # Threaded import
-    from multiprocessing.dummy import Pool
 
-    p = Pool(1)
+    from multiprocessing.dummy import Pool
+    # First explicitly create the new customers
+
+    new_customer_fields = {**{
+        new_values[k]['PersonnrSEnr']: new_values[k]
+        for k in new_keys}, **{
+            new_values[k]['LigestPersonnr']: new_values[k]
+            for k in new_keys
+        }}
+    # Now import all the new customers using threads
+    print("Importing {} new customers".format(len(new_customer_fields)))
+    p = Pool(15)
+    p.map(import_customer, new_customer_fields.items())
+    p.close()
+    p.join()
+    print("... done")
+    print('Importing new customer relations ...')
+    p = Pool(15)
     p.map(import_customer_record, [new_values[k] for k in new_keys])
     p.close()
     p.join()
 
-    """
+    print("... done")
+
     for k, changed_fields in changed_records.items():
         # Handle update of the specific changed fields.
         update_customer_record(old_values[k], changed_fields)
-
     # All's well that ends well
-    # store_customer_records(new_values)
+    store_customer_records(new_values)
