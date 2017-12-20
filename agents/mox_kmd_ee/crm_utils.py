@@ -90,6 +90,35 @@ def lookup_products(agreement_uuid):
     return product_uuids
 
 
+def lookup_address_from_sp_data(sp_dict):
+    "Lookup DAWA address from data returned by SP."
+    address = {
+        "vejkode": sp_dict["vejkode"]
+    }
+
+    if "postnummer" in sp_dict:
+        address["postnr"] = sp_dict["postnummer"]
+
+    if "etage" in sp_dict:
+        address["etage"] = sp_dict["etage"].lstrip('0')
+    if "sidedoer" in sp_dict:
+        address["dør"] = sp_dict["sidedoer"].lstrip('0')
+    if "husnummer" in sp_dict:
+        address["husnr"] = sp_dict["husnummer"]
+
+    try:
+        address_uuid = get_address_uuid(address)
+    except Exception as e:
+        report_error(
+            "Unable to lookup address for customer: {0}".format(
+                id_number
+            ), error_stack=None, error_object=address
+        )
+        address_uuid = None
+
+    return address_uuid
+
+
 # Create functions
 def create_customer(id_number, key, name, master_id, phone="", email="",
                     mobile="", fax="", note=""):
@@ -97,7 +126,6 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
     if is_cvr(id_number):
 
         # Collect info from SP and include in call creating user.
-        # Avoid getting throttled by SP
         try:
             company_dir = get_cvr_data(id_number)
         except Exception as e:
@@ -149,7 +177,6 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
                 # These must be manually processed
                 report_error(
                     error_message=error_message,
-                    error_stack=e,
                     error_object=id_number
                 )
                 return None
@@ -158,32 +185,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         middle_name = person_dir.get('mellemnavn', '')
         last_name = person_dir['efternavn']
 
-        # Address related stuff
-        address = {
-            "vejnavn": person_dir["vejnavn"]
-        }
-
-        # Hotfix:
-        if "postnummer" in person_dir:
-            address["postnr"] = person_dir["postnummer"]
-
-        if "etage" in person_dir:
-            address["etage"] = person_dir["etage"].lstrip('0')
-        if "sidedoer" in person_dir:
-            address["dør"] = person_dir["sidedoer"].lstrip('0')
-        if "husnummer" in person_dir:
-            address["husnr"] = person_dir["husnummer"]
-
-        try:
-            address_uuid = get_address_uuid(address)
-        except Exception as e:
-            report_error(
-                "Unable to lookup address for customer: {0}".format(
-                    id_number
-                ), error_stack=None, error_object=address
-            )
-            address_uuid = None
-
+        address_uuid = lookup_address_from_sp_data(person_dir)
         # Cache address for customer relation
         address_string = "{0}".format(
             person_dir['standardadresse']

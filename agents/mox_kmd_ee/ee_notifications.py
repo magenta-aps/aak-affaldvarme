@@ -111,6 +111,7 @@ def import_customer(id_and_fields):
     if not customer_uuid:
         master_id = int_str(fields['KundeSagsnr'])
         customer_number = int_str(fields['Kundenr'])
+
         new_customer_uuid = create_customer(
             id_number=id_number,
             key=customer_number,
