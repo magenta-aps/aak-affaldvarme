@@ -98,14 +98,15 @@ def _get_address_uuid(address):
 
     params = address
     params['struktur'] = "mini"
-
     response = requests.get(
         url=DAWA_SERVICE_URL,
         params=params
     )
-    try:
-        address_uuid = response.json()[0]['id']
-    except IndexError:
-        address_uuid = None
+    address_uuid = None
+    if response: 
+        try:
+            address_uuid = response.json()[0]['id']
+        except (IndexError, KeyError):
+            pass
 
     return address_uuid
