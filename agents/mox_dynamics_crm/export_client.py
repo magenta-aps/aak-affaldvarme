@@ -339,9 +339,19 @@ def update_all_installations():
 
 def update_alternative_address(installation):
 
+    # Identifier
+    identifier = installation["_id"]
+
+    # DEBUG
+    log.debug(
+        "Processing installation: {id}".format(id=identifier)
+    )
+    log.debug(installation)
+
     resource = "dawa_access"
 
     if not installation["external_ref"]:
+        log.info("No external reference found")
         return False
 
     address_ref = installation["dawa_ref"]
@@ -393,14 +403,22 @@ def update_alternative_address(installation):
 
         try:
             log.info("Updating installation with access address")
-            crm.update_produkt({
+            update_response = crm.update_produkt({
                 "ava_adresse@odata.bind": lookup_utility_address
             })
+
+            if not update_response:
+                log.debug("Update failed: ")
+                log.debug(update_response.text)
+
             installation["lookup_access_address"] = lookup_utility_address
 
             # Update cache
             log.info("Attempting to update cache for installation")
-            cache.update_or_insert("klasse", installation)
+            update_cache = cache.update_or_insert("klasse", installation)
+
+            if not update_cache:
+                log.debug(update_cache)
 
         except Exception as error:
             log.error(
@@ -408,6 +426,7 @@ def update_alternative_address(installation):
                     reference=installation["_id"]
                 )
             )
+            log.error(error)
 
     return True
 
