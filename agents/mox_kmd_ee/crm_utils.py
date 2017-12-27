@@ -90,7 +90,7 @@ def lookup_products(agreement_uuid):
     return product_uuids
 
 
-def lookup_address_from_sp_data(sp_dict):
+def lookup_address_from_sp_data(sp_dict, id_number):
     "Lookup DAWA address from data returned by SP."
     address = {
         "vejkode": sp_dict["vejkode"]
@@ -110,9 +110,9 @@ def lookup_address_from_sp_data(sp_dict):
         address_uuid = get_address_uuid(address)
     except Exception as e:
         report_error(
-            "Unable to lookup address for customer: {0}".format(
-                id_number
-            ), error_stack=None, error_object=address
+            "Unable to lookup address for {0}: {1}".format(
+                id_number, str(address)
+            ), error_stack=None
         )
         address_uuid = None
 
@@ -140,6 +140,8 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
 
         name = company_dir['organisationsnavn']
         address_uuid = company_dir['dawa_uuid']
+        if not address_uuid:
+            address_uuid = lookup_address_from_sp_data(company_dir, id_number)
         company_type = company_dir['virksomhedsform']
         industry_code = company_dir['branchekode']
         address_string = "{0} {1}, {2}".format(
@@ -159,13 +161,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         try:
             person_dir = get_cpr_data(id_number)
         except Exception as e:
-            # Deprecate:
-            # report_error(traceback.format_exc())
-
-            # Print to screen instead
-            error_message = "SP CPR Lookup failed for ID: {0}".format(
-                id_number
-            )
+            error_message = "SP CPR Lookup failed, ID: {0}".format(id_number)
 
             # Retry *once*
             try:
@@ -185,7 +181,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         middle_name = person_dir.get('mellemnavn', '')
         last_name = person_dir['efternavn']
 
-        address_uuid = lookup_address_from_sp_data(person_dir)
+        address_uuid = lookup_address_from_sp_data(person_dir, id_number)
         # Cache address for customer relation
         address_string = "{0}".format(
             person_dir['standardadresse']

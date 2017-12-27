@@ -276,7 +276,7 @@ def update_customer_record(fields, changed_fields):
     for field_name in changed_fields:
         if field_name == 'PersonnrSEnr':
             print("Change main customer!")
-            assert(False)  # I don't expect this to happen.
+            print("    I  didn't expect this to happen.")
         elif field_name == 'LigestPersonnr':
             print("Change roommate/partner.")
         elif field_name == 'KundeSagsnr':
@@ -293,7 +293,7 @@ def update_customer_record(fields, changed_fields):
             print("Changing invoicing address")
         elif field_name == 'Tilflytningsdato':
             print("Changing Tilflytningsdato")
-            assert(False)
+            print("    I  didn't expect this to happen.")
         elif field_name == 'Fraflytningsdato':
             print("Changing Fraflytningsdato")
         elif field_name in ['ForbrStVejnavn', 'Vejkode', 'Postnr',
@@ -334,22 +334,14 @@ if __name__ == '__main__':
     }
 
     print("Number of changed records:", len(changed_records))
-    """
     # Handle notifications
     print("... deleting ...")
     for k in lost_keys:
         # These records are no longer active and should be deleted in LoRa
         delete_customer_record(k)
     print("... done")
-    """
     # New customer relations - import along with agreements & products
     # Below, the unthreaded version
-    """
-    for k in new_keys:
-        # New customer relations - import along with agreements & products
-        # import_customer_record(new_values[k])
-        import_customer_record(new_values[k])
-    """
     # Threaded import
 
     from multiprocessing.dummy import Pool
@@ -373,11 +365,10 @@ if __name__ == '__main__':
     p.map(import_customer_record, [new_values[k] for k in new_keys])
     p.close()
     p.join()
-
     print("... done")
 
+    # Now (and finally) handle update of the specific changed fields.
     for k, changed_fields in changed_records.items():
-        # Handle update of the specific changed fields.
         update_customer_record(old_values[k], changed_fields)
     # All's well that ends well
-    store_customer_records(new_values)
+    # store_customer_records(new_values)

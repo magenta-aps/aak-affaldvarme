@@ -310,6 +310,7 @@ def import_all(connection):
         n, ligest_persons)
     )
 
+
 if __name__ == '__main__':
     from mssql_config import username, password, server, database
 
