@@ -403,9 +403,15 @@ def update_alternative_address(installation):
 
         try:
             log.info("Updating installation with access address")
-            update_response = crm.update_produkt({
+
+            payload = {
                 "ava_adresse@odata.bind": lookup_utility_address
-            })
+            }
+
+            update_response = crm.update_produkt(
+                identifier=installation["external_ref"],
+                payload=payload
+            )
 
             if not update_response:
                 log.debug("Update failed: ")
