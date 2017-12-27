@@ -339,6 +339,8 @@ def update_all_installations():
 
 def update_alternative_address(installation):
 
+    resource = "dawa_access"
+
     if not installation["external_ref"]:
         return False
 
