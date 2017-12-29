@@ -105,6 +105,16 @@ def delete_object(uuid, service, oio_class):
     return response
 
 
+@request
+def write_object(uuid, properties, relations, service, oio_class):
+    "Update bruger with UUID uuid with the given properties and relations."
+    object_dict = create_object_dict(oio_class, properties, relations, note="")
+    url = "{0}/{1}/{2}".format(BASE_URL, service, oio_class)
+    response = requests.put(url, json=object_dict)
+
+    return response
+
+
 # Lookup one
 lookup_organisation = functools.partial(
     lookup_one, service='organisation', oio_class='organisation'
@@ -114,6 +124,9 @@ lookup_bruger = functools.partial(
 )
 lookup_interessefaellesskab = functools.partial(
     lookup_one, service='organisation', oio_class='interessefaellesskab'
+)
+lookup_organisationfunktion = functools.partial(
+    lookup_one, service='organisation', oio_class='organisationfunktion'
 )
 
 # Lookup many
@@ -140,12 +153,14 @@ def create_virkning(frm=datetime.datetime.now(),
     return virkning
 
 
-Relation = collections.namedtuple('Relation', 'mode value')
+Relation = collections.namedtuple('Relation', 'mode value virkning')
+# Virkning gets default value None
+Relation.__new__.defaults = (None,)
 
 org_default_state = {"gyldighed": "Aktiv"}
 
 
-def create_object_dict(class_name, properties, relations, note,
+def create_object_dict(oio_class, properties, relations, note,
                        states=org_default_state, virkning=None):
     '''Create a dictionary for updating or creating an OIO object.
 
@@ -161,7 +176,7 @@ def create_object_dict(class_name, properties, relations, note,
     object_dict = {
         "note": note,
         "attributter": {
-            "{}egenskaber".format(class_name): [
+            "{}egenskaber".format(oio_class): [
                 {
                     **properties,
                     **{"virkning": virkning}
@@ -169,7 +184,7 @@ def create_object_dict(class_name, properties, relations, note,
             ]
         },
         "tilstande": {
-            "{}{}".format(class_name, state_name): [
+            "{}{}".format(oio_class, state_name): [
                 {
                     state_name: state_value,
                     "virkning": virkning
@@ -180,7 +195,7 @@ def create_object_dict(class_name, properties, relations, note,
             name: [
                 {
                     relation.mode: relation.value,
-                    "virkning": virkning
+                    "virkning": relation.virkning or virkning
                 } for relation in rels
             ] for name, rels in relations.items()
         }

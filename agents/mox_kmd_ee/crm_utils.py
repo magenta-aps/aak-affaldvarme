@@ -8,6 +8,7 @@
 #
 
 import functools
+import collections
 
 from serviceplatformen_cpr import get_cpr_data
 
@@ -16,9 +17,11 @@ from ee_oio import lookup_interessefaellesskab, lookup_organisationfunktioner
 from ee_oio import lookup_indsatser, delete_object, read_object, create_klasse
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
+from ee_oio import Relation, create_virkning, KUNDE, LIGESTILLINGSKUNDE
 from ee_utils import is_cvr, is_cpr
 from service_clients import report_error, get_cvr_data, get_address_uuid
 
+VARME = "Varme"
 
 # Delete functions
 delete_customer_relation = functools.partial(
@@ -64,6 +67,13 @@ def lookup_customer(id_number):
 def lookup_customer_relation(customer_number):
     'Look up customer relations belonging to customer number.'
     return lookup_interessefaellesskab(brugervendtnoegle=customer_number)
+
+
+def lookup_customer_role(customer_relation, role):
+    return lookup_organisationfunktion(
+        tilknyttedeinteressefaellesskaber=customer_relation,
+        funktionsnavn=role
+    )
 
 
 # Lookup of more than one object
@@ -260,16 +270,174 @@ def create_product(name, identification, installation_type, meter_number,
 
 def update_customer(fields, new_values):
     "Update customer with new information."
-    print("Updating customer", fields['Kundenavn'])
+    properties = {}
+    relations = defaultdict(list)
+    # TODO: Replace this explicit mapping with an automation iterating through
+    # property_fields and relation_fields. E.g., defining
+    #   property_fields =  ['KundeSagsnr']
+    #   relation_fields = ['Telefon', 'MobilTlf']
+    if 'KundeSagsnr' in new_values:
+        properties['ava_masterid'] = new_values['KundeSagsnr']
 
+    id_number = cpr_cvr(int_str(id_number))
 
-def update_customer_role(fields, new_values):
-    print("Updating customer role for", fields['Kundenavn'])
+    customer_uuid = lookup_customer(id_number)
+
+    if is_cpr(id_number):
+        customer_class = "bruger"
+    else:
+        customer_class = "organisation"
+    if 'MobilTlf' in new_values or 'Telefon' in new_values:
+        # Handle the addresses - read the addresses
+        # and replace mobile and telephone with the new ones
+        # as appropriate.
+        virkning = create_virkning()
+        customer = read_object(uuid, "organisation", customer_class)
+        adresser = customer['relationer']['adresser']
+        for addr in addresser:
+            if "uuid" in addr:
+                relations['adresser'].append(Relation("uuid", addr["uuid"],
+                                                      addr["virkning"]))
+            elif "urn" in addr:
+                if "Telefon" in new_values and addr["urn"].startswith(
+                    "urn:tel"
+                ):
+                    relations['adresser'].append(
+                        Relation("urn",
+                                 "urn:tel:{}".format(new_values['Telefon']))
+                    )
+                elif "MobilTlf" in new_values and addr["urn"].startswith(
+                    "urn:mobile"
+                ):
+                    relations['adresser'].append(
+                        Relation(
+                            "urn",
+                            "urn:mobile:{}".format(new_values['MobilTlf']))
+                    )
+                else:
+                    relations['adresser'].append(Relation("urn", addr["urn"],
+                                                          addr["virkning"]))
+    write_object(customer_uuid, properties, relations, "organisation",
+                 customer_class)
 
 
 def update_customer_relation(fields, new_values):
-    print("Updating customer relation for", fields['Kundenavn'])
+    address_fields = ['ForbrStVejnavn', 'Vejkode', 'Postnr',
+                      'ForbrStPostdistrikt', 'Husnr', 'Bogstav',
+                      'Etage', 'Sidedørnr']
+    customer_role_fields = ['PersonnrSEnr', 'LigestPersonnr']
+    customer_roles = [KUNDE, LIGESTILLINGSKUNDE]
+    customer_number = int_str(fields['Kundenr'])
+    cr_uuid = lookup_customer_relation(customer_number)
+    customer_relation = read_object(cr_uuid, "organisation",
+                                    "interessefaellesskab")
+    # Dictionary of updated values - no need to exclusively check new_values.
+    new_fields = {**fields, **new_values}
+
+    if set(new_values) & set(address_fields):
+        # If there's any change at all in address fields we need to recalculate
+        # address to see if it's still correct.
+        # NOTE: Normally this will be a spelling correction and should yield
+        # the same address, but DAR addresses may actually change once in a
+        # while.
+
+        properties = {}
+        relations = {}
+        old_addresses = customer_relation['relationer']['adresser']
+        assert(len(old_addresses) <= 1)
+        old_address_uuid = old_addresses[0] if old_addresses else None
+        # Recalculate address & set correct address link.
+        (new_address,
+         new_address_uuid) = get_forbrugssted_address_uuid(new_fields)
+        if not new_address_uuid:
+            report_error(new_address)
+
+        if new_address_uuid and new_address_uuid != old_address_uuid:
+            relations['adresser'] = [Relation("uuid", new_address_uuid)]
+
+        # Recalculate customer relation name and set if it has changed.
+        old_name = customer_relation["attributter"][
+            "interessefaellesskabegenskaber"
+        ]["interessefaellesskabsnavn"]
+        new_name = "{0}, {1}".format(VARME, new_address)
+        if old_name != new_name:
+            properties["interessefaellesskabsnavn"] = old_name
+
+        write_object(uuid, properties, relations, "organisation",
+                     "interessefaellesskab")
+
+    for field, role in zip(customer_role_fields, customer_roles):
+        # Handle customer role changes.
+        if field in new_values:
+            old_customer_role = lookup_customer_role(cr_uuid, role)
+            delete_customer_role(old_customer_role)
+            id_number = cpr_cvr(int_str(new_values[field]))
+            customer_uuid = lookup_customer(id_number)
+            if not customer_uuid:
+                # No such customer - we need to create one
+                master_id = int_str(new_fields['KundeSagsnr'])
+                customer_number = int_str(new_fields['Kundenr'])
+
+                customer_uuid = create_customer(
+                    id_number=id_number,
+                    key=customer_number,
+                    name=new_fields['KundeNavn'],
+                    master_id=master_id,
+                    phone=new_fields['Telefonnr'],
+                    email=new_fields['EmailKunde'],
+                    mobile=new_fields['MobilTlf'],
+                )
+            if not customer_uuid:
+                report_error("Unable to lookup or create customer {}".format(
+                    field
+                ))
+                return
+            create_customer_role(customer_uuid, cr_uuid, KUNDE)
 
 
 def update_agreement(fields, new_values):
-    print("Updating agreement for", fields['Kundenavn'])
+    address_fields = ['Vejnavn', 'Postdistrikt']
+    date_fields = ['Tilflytningsdato', 'Fraflytningsdato']
+    date_properties = ['startdato', 'slutdato']
+    new_fields = {**fields, **new_values}
+
+    # Look up agreement, we know we're going to need this.
+    customer_number = int_str(fields['Kundenr'])
+    # The should be one and only one agreement for each CR.
+    agreement_uuid = lookup_agreements(customer_number)[0]
+
+    properties = {}
+    relations = {}
+
+    if set(new_values) & set(address_fields):
+        # Handle possible new invoicing address
+        invoice_address = (new_fields['VejNavn'].replace(',-', ' ') +
+                           ', ' + new_fields['Postdistrikt'])
+        try:
+            invoice_address_uuid = fuzzy_address_uuid(invoice_address)
+        except Exception as e:
+            invoice_address_uuid = None
+            report_error(
+                "Customer {1}: Unable to lookup invoicing address: {0}".format(
+                    str(e), id_number
+                )
+            )
+        if invoice_address_uuid:
+            relations['indsatsdokument'] = Relation("uuid",
+                                                    invoice_address_uuid)
+
+    # Now handle the date change(s).
+    tz = pytz.timezone('Europe/Copenhagen')
+    for field, property in zip(date_fields, date_properties):
+        if field in new_values:
+            date_str = new_fields[field]
+            try:
+                date = tz.localize(date_str)
+            except:  # noqa
+                # This is only for Max date - which is 9999-12-31 =~ infinity
+                date = pytz.utc.localize(date_str)
+            properties[property] = str(date)
+
+    # Update agreement if we arrived at any changes.
+    if relations or properties:
+        write_object(uuid, properties, relations, "indsats", "indsats")

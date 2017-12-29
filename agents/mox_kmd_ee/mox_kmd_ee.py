@@ -14,7 +14,7 @@ from ee_oio import KUNDE, LIGESTILLINGSKUNDE
 from ee_utils import cpr_cvr, connect, int_str
 from crm_utils import lookup_customer, create_customer, create_customer_role
 from crm_utils import create_customer_relation, create_agreement
-from crm_utils import lookup_customer_relation, create_product
+from crm_utils import lookup_customer_relation, create_product, VARME
 
 from service_clients import get_address_uuid, fuzzy_address_uuid
 from service_clients import report_error, access_address_uuid
@@ -28,11 +28,6 @@ except TypeError:
     def get_cpr_data(s):
         pass
     print("TODO: Fix this!")
-
-
-# Definition of strings used for Klassifikation URNs
-
-VARME = "Varme"
 
 
 def get_products_for_location(forbrugssted):
