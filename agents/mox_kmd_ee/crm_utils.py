@@ -12,12 +12,13 @@ import collections
 
 from serviceplatformen_cpr import get_cpr_data
 
-from ee_oio import lookup_bruger, lookup_organisation
+from ee_oio import lookup_bruger, lookup_organisation, lookup_klasse
 from ee_oio import lookup_interessefaellesskab, lookup_organisationfunktioner
 from ee_oio import lookup_indsatser, delete_object, read_object, create_klasse
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_oio import Relation, create_virkning, KUNDE, LIGESTILLINGSKUNDE
+from ee_oio import write_object
 from ee_utils import is_cvr, is_cpr
 from service_clients import report_error, get_cvr_data, get_address_uuid
 
@@ -76,6 +77,14 @@ def lookup_customer_role(customer_relation, role):
     )
 
 
+def lookup_product(productid):
+    return lookup_klasse(brugervendtnoegle=productid)
+
+
+def lookup_agreement_from_product(product_uuid):
+    return lookup_indsats(indsatskvalitet=product_uuid)
+
+
 # Lookup of more than one object
 def lookup_customer_roles(customer_relation):
     return lookup_organisationfunktioner(
@@ -100,6 +109,18 @@ def lookup_products(agreement_uuid):
     return product_uuids
 
 
+# Write functions
+
+write_agreement_dict = functools.partial(write_object_dict, service='indsats',
+                                         oio_class='indsats')
+
+
+def add_product_to_agreement(product_uuid, agreement_uuid):
+    relations = {'indsatskvalitet': [Relation('uuid', product_uuid)]}
+    write_object(agreement_uuid, {}, relations, 'indsats', 'indsats')
+
+
+# Address lookup
 def lookup_address_from_sp_data(sp_dict, id_number):
     "Lookup DAWA address from data returned by SP."
     address = {

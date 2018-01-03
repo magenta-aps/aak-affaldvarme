@@ -12,7 +12,7 @@
 # Only relevant fields (please).
 
 CUSTOMER_SQL = """
-SELECT [PersonnrSEnr]
+SELECT top(100) [PersonnrSEnr]
       ,[LigestPersonnr]
       ,[Kundenr]
       ,[KundeSagsnr]
@@ -80,7 +80,8 @@ RELEVANT_ALT_ADRESSE_SQL = """SELECT [HusnrAltern],
                                      [Postnr],
                                      [Bogstav],
                                      [EtageAltAdr],
-                                     [SidedørnrAltern]
+                                     [SidedørnrAltern],
+                                     [ForbrugsstedID]
                             FROM AlternativSted
                             WHERE AlternativStedID IN (
                 SELECT AlternativStedID FROM TrefInstallation

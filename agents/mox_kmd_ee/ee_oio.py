@@ -106,6 +106,15 @@ def delete_object(uuid, service, oio_class):
 
 
 @request
+def write_object_dict(uuid, object_dict, service, oio_class):
+    "Write object dict provided by caller."
+    url = "{0}/{1}/{2}".format(BASE_URL, service, oio_class)
+    response = requests.put(url, json=object_dict)
+
+    return response
+
+
+@request
 def write_object(uuid, properties, relations, service, oio_class):
     "Update bruger with UUID uuid with the given properties and relations."
     object_dict = create_object_dict(oio_class, properties, relations, note="")
@@ -127,6 +136,14 @@ lookup_interessefaellesskab = functools.partial(
 )
 lookup_organisationfunktion = functools.partial(
     lookup_one, service='organisation', oio_class='organisationfunktion'
+)
+
+lookup_klasse = functools.partial(
+    lookup_one, service='klassifikation', oio_class='klasse'
+)
+
+lookup_indsats = functools.partial(
+    lookup_one, service='indsats', oio_class='indsats'
 )
 
 # Lookup many
