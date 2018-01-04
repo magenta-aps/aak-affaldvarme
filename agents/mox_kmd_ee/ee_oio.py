@@ -108,7 +108,7 @@ def delete_object(uuid, service, oio_class):
 @request
 def write_object_dict(uuid, object_dict, service, oio_class):
     "Write object dict provided by caller."
-    url = "{0}/{1}/{2}".format(BASE_URL, service, oio_class)
+    url = "{0}/{1}/{2}/{3}".format(BASE_URL, service, oio_class, uuid)
     response = requests.put(url, json=object_dict)
 
     return response
@@ -118,7 +118,7 @@ def write_object_dict(uuid, object_dict, service, oio_class):
 def write_object(uuid, properties, relations, service, oio_class):
     "Update bruger with UUID uuid with the given properties and relations."
     object_dict = create_object_dict(oio_class, properties, relations, note="")
-    url = "{0}/{1}/{2}".format(BASE_URL, service, oio_class)
+    url = "{0}/{1}/{2}/{3}".format(BASE_URL, service, oio_class, uuid)
     response = requests.put(url, json=object_dict)
 
     return response
@@ -172,7 +172,7 @@ def create_virkning(frm=datetime.datetime.now(),
 
 Relation = collections.namedtuple('Relation', 'mode value virkning')
 # Virkning gets default value None
-Relation.__new__.defaults = (None,)
+Relation.__new__.__defaults__ = (None,)
 
 org_default_state = {"gyldighed": "Aktiv"}
 

@@ -5,9 +5,9 @@
 
 while true
 do
-    echo -ne $(psql mox1 -U mox1 -c "select (select count(*) from bruger)+(select count(*) from organisation) as kunder")
+    echo -ne $(psql mox -U mox -c "select (select count(*) from bruger)+(select count(*) from organisation) as kunder")
     echo -ne " "
-    echo -ne $(psql mox1 -U mox1 -c "select count(*) as kundeforhold from interessefaellesskab")
+    echo -ne $(psql mox -U mox -c "select count(*) as kundeforhold from interessefaellesskab")
     echo -ne "\r"
     sleep 1
 done

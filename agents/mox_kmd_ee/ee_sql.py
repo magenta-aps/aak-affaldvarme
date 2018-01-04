@@ -12,7 +12,7 @@
 # Only relevant fields (please).
 
 CUSTOMER_SQL = """
-SELECT top(100) [PersonnrSEnr]
+SELECT [PersonnrSEnr]
       ,[LigestPersonnr]
       ,[Kundenr]
       ,[KundeSagsnr]
@@ -62,12 +62,14 @@ RELEVANT_TREF_INSTALLATIONS_SQL = """SELECT [InstalNummer],
                                  [MaalerTypeBetegnel],
                                  [Målertypefabrikat],
                                  [DatoFra],
-                                 [DatoTil]
-    FROM TrefInstallation a, TrefMaaler b
+                                 [DatoTil],
+                                 [Kundenr]
+    FROM TrefInstallation a, TrefMaaler b, Kunde c
     WHERE
     a.InstallationID = b.InstallationID
     AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
-    AND ForbrugsstedID IN (SELECT a.ForbrugsstedID from Kunde a, Forbrugssted b
+    AND a.ForbrugsstedID = c.ForbrugsstedID
+    AND a.ForbrugsstedID IN (SELECT a.ForbrugsstedID from Kunde a, Forbrugssted b
   WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
   and Afregningsgrpnr <> 999
   and a.ForbrugsstedID = b.ForbrugsstedID)

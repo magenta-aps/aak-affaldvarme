@@ -15,19 +15,19 @@ from mssql_config import username, password, server, database
 from ee_utils import connect, int_str, cpr_cvr
 from ee_sql import CUSTOMER_SQL, RELEVANT_TREF_INSTALLATIONS_SQL
 from ee_oio import KUNDE, LIGESTILLINGSKUNDE
-from crm_utils import lookup_customer_relation, lookup_customer_roles
+from crm_utils import lookup_customer_relation, lookup_customer_roles, VARME
 from crm_utils import lookup_customer, lookup_agreements, lookup_product
 from crm_utils import lookup_agreement_from_product, create_customer
 from crm_utils import create_customer_relation, create_customer_role
 from crm_utils import create_agreement, create_product, lookup_products
 from crm_utils import delete_customer_role, delete_customer_relation
-from crm_utils import delete_agreement, delete_product
+from crm_utils import delete_agreement, delete_product, add_product_to_agreement
 from crm_utils import update_customer, update_agreement, read_agreement
 from crm_utils import update_customer_relation, write_agreement_dict
 
-from mox_kmd_ee import get_forbrugssted_address_uuid, VARME
-from mox_kmd_ee import get_products_for_location
-from mox_kmd_ee import get_alternativsted_address_uuid
+from ee_utils import get_forbrugssted_address_uuid
+from ee_utils import get_products_for_location
+from ee_utils import get_alternativsted_address_uuid
 from service_clients import report_error, fuzzy_address_uuid
 
 
@@ -49,8 +49,11 @@ def store_productid(productid):
 
 
 def retrieve_productids():
-    with open(PRODUCTIDS_FILE, "r") as f:
-        return [line.rstrip('\n') for line in f]
+    try:
+        with open(PRODUCTIDS_FILE, "r") as f:
+            return [line.rstrip('\n') for line in f]
+    except FileNotFoundError:
+        return []
 
 
 def read_customer_records(cursor):
@@ -292,14 +295,14 @@ def read_installation_records(cursor):
     """
     cursor.execute(RELEVANT_TREF_INSTALLATIONS_SQL)
     rows = cursor.fetchall()
-    data_dict = {int_str(row['Instalnummer']): row for row in rows}
+    data_dict = {int_str(row['InstalNummer']): row for row in rows}
 
     return data_dict
 
 
 def store_installation_records(installations):
     with open(INSTALLATIONS_FILE, 'wb') as f:
-        pickle.dump(customer_relations, f, protocol=4)
+        pickle.dump(installations, f, protocol=4)
 
 
 def retrieve_installation_records():
@@ -319,7 +322,7 @@ def delete_installation_record(product_id):
         agreement_uuid = lookup_agreement_from_product(product_uuid)
     if agreement_uuid:
         # remove product from agreement
-        agreement_json = read_agreement(uuid)
+        agreement_json = read_agreement(agreement_uuid)
         products = agreement_json['relationer']['indsatskvalitet']
         for p in products:
             if p["uuid"] == product_uuid:
@@ -333,8 +336,10 @@ def import_installation_record(fields):
     # check there's an agreement corresponding to this Forbrugssted
     customer_number = int_str(fields['Kundenr'])
     cr_uuid = lookup_customer_relation(customer_number)
-    agreement_uuid = lookup_agreements(cr_uuid)[0]
+    agreement_uuid = lookup_agreements(cr_uuid)[0] if cr_uuid else None
     if agreement_uuid:
+        print("Agreement ***FOUND*** for customer number {}".format(
+            customer_number))
         # create the product
         meter_number = fields['Målernr']
         meter_type = fields['MaalerTypeBetegnel']
@@ -355,10 +360,14 @@ def import_installation_record(fields):
         if product_uuid:
             # add it to the agreement
             add_product_to_agreement(product_uuid, agreement_uuid)
+    else:
+        print("No agreement found for customer number {}".format(
+            customer_number))
 
 
-def update_installation_record(old_installation_values[k], changed_fields):
+def update_installation_record(old_fields, changed_fields):
     "Update relevant LoRa objects with the specific changes."
+    # TODO: Investigate if this is ever relevant.
     ...
 
 
@@ -409,8 +418,8 @@ if __name__ == '__main__':
                                 old_installation_values.keys())
 
     print("new installations:", len(new_installation_keys))
-    print("lost customers:", len(lost_installation_keys))
-    print("existing customers:", len(common_installation_keys))
+    print("lost installations:", len(lost_installation_keys))
+    print("existing installations:", len(common_installation_keys))
 
     changed_installation_records = {
         k: {
@@ -434,7 +443,9 @@ if __name__ == '__main__':
         new_values[k]['PersonnrSEnr']: new_values[k]
         for k in new_keys}, **{
             new_values[k]['LigestPersonnr']: new_values[k]
-            for k in new_keys if len(new_values[k]['LigestPersonnr']) > 1
+            for k in new_keys if len(
+                int_str(new_values[k]['LigestPersonnr'])
+            ) > 1
         }}
     # Now import all the new customers using threads
     print("Importing {} new customers".format(len(new_customer_fields)))
@@ -457,20 +468,32 @@ if __name__ == '__main__':
     #  Those that disappear are expired, either by the customer disappearing or
     #  by crossing the expiry date. If the customer disappeared, it should
     #  already be gone.
+    print("Deleting {} expired installations".format(
+        len(lost_installation_keys)
+    ))
     for k in lost_installation_keys:
         delete_installation_record(k)
+    print("... done")
 
     # New records may come into being by entering the valid period.
     # if so, they should be attached to the Aftale corresponding to this
     # Forbrugssted. If none such exists, they should not be created.
     # Skip products that were created when creating new customers.
+    print("Importing {} new installations".format(
+        len(new_installation_values)
+    ))
     for k in new_installation_keys:
-        import_installation_record(new_installation_values(k))
+        import_installation_record(new_installation_values[k])
+    print("... done")
 
     # Now handle updates
+    print("Updating {} changed installations".format(
+        len(changed_installation_records)
+    ))
     for k, changed_fields in changed_installation_records.items():
         update_installation_record(old_installation_values[k], changed_fields)
+    print("... done")
 
     # All's well that ends well
-    # store_customer_records(new_values)
-    # store_installation_records(new_installation_values)
+    store_customer_records(new_values)
+    store_installation_records(new_installation_values)

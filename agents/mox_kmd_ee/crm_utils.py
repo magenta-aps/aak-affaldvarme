@@ -8,19 +8,24 @@
 #
 
 import functools
-import collections
+import pytz
+
+from collections import defaultdict
 
 from serviceplatformen_cpr import get_cpr_data
 
 from ee_oio import lookup_bruger, lookup_organisation, lookup_klasse
 from ee_oio import lookup_interessefaellesskab, lookup_organisationfunktioner
+from ee_oio import lookup_organisationfunktion, lookup_indsats
 from ee_oio import lookup_indsatser, delete_object, read_object, create_klasse
 from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
-from ee_oio import Relation, create_virkning, KUNDE, LIGESTILLINGSKUNDE
-from ee_oio import write_object
-from ee_utils import is_cvr, is_cpr
+from ee_oio import Relation, KUNDE, LIGESTILLINGSKUNDE
+from ee_oio import write_object, write_object_dict
+from ee_utils import is_cvr, is_cpr, int_str, cpr_cvr
+from ee_utils import get_forbrugssted_address_uuid
 from service_clients import report_error, get_cvr_data, get_address_uuid
+from service_clients import fuzzy_address_uuid
 
 VARME = "Varme"
 
@@ -300,7 +305,9 @@ def update_customer(fields, new_values):
     if 'KundeSagsnr' in new_values:
         properties['ava_masterid'] = new_values['KundeSagsnr']
 
-    id_number = cpr_cvr(int_str(id_number))
+    id_number = cpr_cvr(int_str(
+        new_values.get('PersonnrSEnr', None) or fields.get('PersonnrSEnr')
+    ))
 
     customer_uuid = lookup_customer(id_number)
 
@@ -312,10 +319,9 @@ def update_customer(fields, new_values):
         # Handle the addresses - read the addresses
         # and replace mobile and telephone with the new ones
         # as appropriate.
-        virkning = create_virkning()
-        customer = read_object(uuid, "organisation", customer_class)
+        customer = read_object(customer_uuid, "organisation", customer_class)
         adresser = customer['relationer']['adresser']
-        for addr in addresser:
+        for addr in adresser:
             if "uuid" in addr:
                 relations['adresser'].append(Relation("uuid", addr["uuid"],
                                                       addr["virkning"]))
@@ -384,7 +390,7 @@ def update_customer_relation(fields, new_values):
         if old_name != new_name:
             properties["interessefaellesskabsnavn"] = old_name
 
-        write_object(uuid, properties, relations, "organisation",
+        write_object(cr_uuid, properties, relations, "organisation",
                      "interessefaellesskab")
 
     for field, role in zip(customer_role_fields, customer_roles):
@@ -440,7 +446,7 @@ def update_agreement(fields, new_values):
             invoice_address_uuid = None
             report_error(
                 "Customer {1}: Unable to lookup invoicing address: {0}".format(
-                    str(e), id_number
+                    str(e), customer_number
                 )
             )
         if invoice_address_uuid:
@@ -461,4 +467,6 @@ def update_agreement(fields, new_values):
 
     # Update agreement if we arrived at any changes.
     if relations or properties:
-        write_object(uuid, properties, relations, "indsats", "indsats")
+        write_object(
+            agreement_uuid, properties, relations, "indsats", "indsats"
+        )
