@@ -9,8 +9,8 @@ dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
 
 # General
-DO_VERIFY_SSL_SIGNATURE = True
-DO_DISABLE_SSL_WARNINGS = False
+DO_VERIFY_SSL_SIGNATURE = False
+DO_DISABLE_SSL_WARNINGS = True
 DO_RUN_IN_TEST_MODE = True
 
 # Logging
@@ -20,10 +20,21 @@ LOG_FILE = "/var/log/mox/mox_dynamics_crm.log"
 OIO_REST_URL = os.environ.get('OIO_REST_URL')
 ORGANISATION_UUID = os.environ.get('ORGANISATION_UUID')
 
+# DAR/DAWA settings
+AREA_CODE = "0751"
+
 # RabbitMQ settings
 MQ_HOST = os.environ.get("MQ_HOST")
 MQ_PORT = os.environ.get("MQ_PORT")
 MQ_EXCHANGE = os.environ.get("MQ_EXCHANGE")
+
+# Cache settings
+CACHE_HOST = os.environ.get("CACHE_HOST", "localhost")
+CACHE_PORT = os.environ.get("CACHE_PORT", 27017)
+CACHE_USERNAME = os.environ.get("CACHE_USERNAME")
+CACHE_PASSWORD = os.environ.get("CACHE_PASSWORD")
+CACHE_DATABASE = "loracache"
+CACHE_ROLES = ["readWrite"]
 
 # MS CRM Dynamics 365
 CRM_RESOURCE = os.environ.get("RESOURCE")

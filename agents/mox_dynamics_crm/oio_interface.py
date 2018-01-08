@@ -4,20 +4,121 @@ import json
 import logging
 import requests
 
+import cache_adapter as adapter
+
 # Local settings
 from settings import OIO_REST_URL
 from settings import DO_VERIFY_SSL_SIGNATURE
+from settings import ORGANISATION_UUID
+
+
+# Init logging
+log = logging.getLogger(__name__)
+
 
 # Switch statement workaround
 # TODO: Please replace with sane code
 resources = {
-    "bruger": "organisation/bruger",
-    "organisation": "organisation/organisation",
-    "organisationfunktion": "organisation/organisationfunktion",
-    "interessefaellesskab": "organisation/interessefaellesskab",
-    "indsats": "indsats/indsats",
-    "klasse": "klassifikation/klasse"
+    "bruger": {
+        "resource": "organisation/bruger",
+        "adapter": adapter.ava_bruger
+    },
+    "organisation": {
+        "resource": "organisation/organisation",
+        "adapter": adapter.ava_organisation
+    },
+    "organisationfunktion": {
+        "resource": "organisation/organisationfunktion",
+        "adapter": adapter.ava_kunderolle
+    },
+    "interessefaellesskab": {
+        "resource": "organisation/interessefaellesskab",
+        "adapter": adapter.ava_account
+    },
+    "indsats": {
+        "resource": "indsats/indsats",
+        "adapter": adapter.ava_aftale
+    },
+    "klasse": {
+        "resource": "klassifikation/klasse",
+        "adapter": adapter.ava_installation
+    }
 }
+
+
+def batch_generator(resource, list_of_uuids):
+    """Generate and return batches of objects"""
+
+    # Use switch to determine resource path
+    switch = resources.get(resource)
+
+    resource = switch.get("resource")
+    adapter = switch.get("adapter")
+
+    # Amount of chuncks a batch contains
+    chunck = 50
+
+    # Generate batches until done
+    while len(list_of_uuids) > 0:
+        uuid_batch = list_of_uuids[:chunck]
+        list_of_uuids = list_of_uuids[chunck:]
+
+        params = {
+            'uuid': uuid_batch
+        }
+
+        # Call GET request function
+        results = get_request(resource, params)
+
+        if not results:
+            log.error("No results for batch: ")
+            log.error(uuid_batch)
+            return False
+
+        # Return iterator
+        for result in results:
+            adapted = adapter(result)
+
+            if not adapted:
+                log.error("One faulty result: ")
+                log.error(result)
+                break
+
+            yield adapted
+
+
+def get_all(resource):
+
+    # Use switch to determine resource path
+    switch = resources.get(resource)
+
+    resource = switch.get("resource")
+
+    # Belongs to parent organisation
+    params = {
+        "tilhoerer": ORGANISATION_UUID
+    }
+
+    # Generate list of contacts (uuid)
+    log.info(
+        "Attempting to import: {0}".format(resource)
+    )
+
+    list_of_uuids = get_request(resource, params)
+
+    # Debug:
+    total = len(list_of_uuids)
+
+    log.debug(
+        "{0} {1} uuid(s) returned".format(total, resource)
+    )
+
+    # TODO: Log error when nothing is returned
+    if not list_of_uuids:
+        log.error("No uuids returned")
+        return None
+
+    return list_of_uuids
 
 
 def fetch_relation(identifier):
