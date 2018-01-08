@@ -7,6 +7,21 @@ import cache_interface as cache
 
 # Local settings
 from settings import LOG_FILE
+from settings import DO_RUN_IN_TEST_MODE
+from settings import DO_DISABLE_SSL_WARNINGS
+
+
+# In test mode log is written to a local logfile
+# This is to prevent the test log from being collected for analysis
+if DO_RUN_IN_TEST_MODE:
+    LOG_FILE = "debug.log"
+
+
+# If the SSL signature is not valid requests will print errors
+# To circumvent this, warnings can be disabled for testing purposes
+if DO_DISABLE_SSL_WARNINGS:
+    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 # LOG
