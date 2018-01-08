@@ -320,16 +320,15 @@ def create_interessefaellesskab(customer_number, customer_relation_name,
     properties = dict(brugervendtnoegle=customer_number,
                       interessefaellesskabsnavn=customer_relation_name,
                       interessefaellesskabstype=customer_type)
-    adresser = []
+    relations = dict(tilhoerer=[Relation("uuid", AVA_ORGANISATION)])
     if address_uuid:
-        adresser.append(Relation("uuid", address_uuid))
-    relations = dict(tilhoerer=[Relation("uuid", AVA_ORGANISATION)],
-                     adresser=adresser)
+        relations['adresser'] = [Relation("uuid", address_uuid)]
     interessefaellesskab_dict = create_object_dict("interessefaellesskab",
                                                    properties, relations, note)
-
     url = "{0}/organisation/interessefaellesskab".format(BASE_URL)
     response = requests.post(url, json=interessefaellesskab_dict)
+    if not response:
+        print(interessefaellesskab_dict)
 
     return response
 

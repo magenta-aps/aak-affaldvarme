@@ -8,6 +8,8 @@
 
 import pickle
 import warnings
+    
+from multiprocessing.dummy import Pool
 
 import settings
 
@@ -192,7 +194,10 @@ def import_customer_record(fields):
         customer_number, cr_name, cr_type, cr_address_uuid
     )
 
-    assert(cr_uuid)
+    if not cr_uuid:
+        print( "Unable to create customer relation for customer {}".format(
+            customer_number)
+        )
 
     # This done, create customer roles & link customer and relation
     role_uuid = create_customer_role(customer_uuid, cr_uuid, KUNDE)
@@ -338,8 +343,6 @@ def import_installation_record(fields):
     cr_uuid = lookup_customer_relation(customer_number)
     agreement_uuid = lookup_agreements(cr_uuid)[0] if cr_uuid else None
     if agreement_uuid:
-        print("Agreement ***FOUND*** for customer number {}".format(
-            customer_number))
         # create the product
         meter_number = fields['Målernr']
         meter_type = fields['MaalerTypeBetegnel']
@@ -410,8 +413,6 @@ if __name__ == '__main__':
     already_created = set(retrieve_productids())
     new_installation_keys = (new_installation_values.keys() -
                              old_installation_values.keys())
-    # Disregard products that were created during import of new customers.
-    new_installation_keys = new_installation_keys - already_created
     lost_installation_keys = (old_installation_values.keys() -
                               new_installation_values.keys())
     common_installation_keys = (new_installation_values.keys() &
@@ -428,7 +429,7 @@ if __name__ == '__main__':
           } for k in common_installation_keys if
         new_installation_values[k] != old_installation_values[k]
     }
-
+ 
     # Handle notifications for customer part, do the installations afterwards.
     print("... deleting ...")
     for k in lost_keys:
@@ -437,7 +438,6 @@ if __name__ == '__main__':
     print("... done")
     # New customer relations - import along with agreements & products
     # First explicitly create the new customers
-    from multiprocessing.dummy import Pool
 
     new_customer_fields = {**{
         new_values[k]['PersonnrSEnr']: new_values[k]
@@ -454,6 +454,7 @@ if __name__ == '__main__':
     p.close()
     p.join()
     print("... done")
+ 
     print('Importing new customer relations ...')
     p = Pool(15)
     p.map(import_customer_record, [new_values[k] for k in new_keys])
@@ -478,9 +479,12 @@ if __name__ == '__main__':
     # New records may come into being by entering the valid period.
     # if so, they should be attached to the Aftale corresponding to this
     # Forbrugssted. If none such exists, they should not be created.
+
     # Skip products that were created when creating new customers.
+    new_installation_keys = new_installation_keys - already_created
+
     print("Importing {} new installations".format(
-        len(new_installation_values)
+        len(new_installation_keys)
     ))
     for k in new_installation_keys:
         import_installation_record(new_installation_values[k])

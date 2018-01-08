@@ -204,7 +204,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
                 person_dir = get_cpr_data(id_number)
             except Exception as e:
                 # Hotfix:
-                print("CPR lookukup failed after retrying, logging error")
+                print("CPR lookup failed after retrying, logging error")
                 # Certain CPR ID's are actually P-Numbers
                 # These must be manually processed
                 report_error(
