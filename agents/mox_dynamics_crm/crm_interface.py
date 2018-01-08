@@ -303,6 +303,28 @@ def store_contact(payload):
     return crm_guid
 
 
+def update_contact(identifier, payload):
+    """Bruger/Organisation"""
+
+    # REST resource
+    resource = "contacts({identifier})".format(
+        identifier=identifier
+    )
+
+    log.info("UPDATING contact in CRM")
+    log.debug(payload)
+    response = patch_request(resource, payload)
+
+    # Return False if not created
+    if response.status_code != 200:
+        log.error("Error updating contact in CRM")
+        log.error(response.text)
+        return False
+
+    log.info("Contact updated")
+    return response
+
+
 def store_kunderolle(payload):
     """Organisationsfunktion"""
 
