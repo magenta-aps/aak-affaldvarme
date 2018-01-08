@@ -8,7 +8,7 @@
 
 import pickle
 import warnings
-    
+
 from multiprocessing.dummy import Pool
 
 import settings
@@ -23,7 +23,8 @@ from crm_utils import lookup_agreement_from_product, create_customer
 from crm_utils import create_customer_relation, create_customer_role
 from crm_utils import create_agreement, create_product, lookup_products
 from crm_utils import delete_customer_role, delete_customer_relation
-from crm_utils import delete_agreement, delete_product, add_product_to_agreement
+from crm_utils import delete_agreement, delete_product
+from crm_utils import add_product_to_agreement
 from crm_utils import update_customer, update_agreement, read_agreement
 from crm_utils import update_customer_relation, write_agreement_dict
 
@@ -195,7 +196,7 @@ def import_customer_record(fields):
     )
 
     if not cr_uuid:
-        print( "Unable to create customer relation for customer {}".format(
+        print("Unable to create customer relation for customer {}".format(
             customer_number)
         )
 
@@ -429,7 +430,7 @@ if __name__ == '__main__':
           } for k in common_installation_keys if
         new_installation_values[k] != old_installation_values[k]
     }
- 
+
     # Handle notifications for customer part, do the installations afterwards.
     print("... deleting ...")
     for k in lost_keys:
@@ -454,7 +455,7 @@ if __name__ == '__main__':
     p.close()
     p.join()
     print("... done")
- 
+
     print('Importing new customer relations ...')
     p = Pool(15)
     p.map(import_customer_record, [new_values[k] for k in new_keys])

@@ -41,6 +41,7 @@ def connect(server, database, username, password):
         raise
     return cnxn
 
+
 def get_products_for_location(forbrugssted):
     "Get locations for this customer ID from the Forbrugssted table"
     from mssql_config import username, password, server, database
@@ -155,4 +156,3 @@ def get_alternativsted_address_uuid(alternativsted_id):
         address_uuid = None
 
     return address_uuid
-

@@ -69,7 +69,8 @@ RELEVANT_TREF_INSTALLATIONS_SQL = """SELECT [InstalNummer],
     a.InstallationID = b.InstallationID
     AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
     AND a.ForbrugsstedID = c.ForbrugsstedID
-    AND a.ForbrugsstedID IN (SELECT a.ForbrugsstedID from Kunde a, Forbrugssted b
+    AND a.ForbrugsstedID IN (SELECT a.ForbrugsstedID from Kunde a,
+    Forbrugssted b
   WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
   and Afregningsgrpnr <> 999
   and a.ForbrugsstedID = b.ForbrugsstedID)
