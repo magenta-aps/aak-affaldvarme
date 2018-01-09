@@ -289,8 +289,8 @@ def update_customer_record(fields, changed_fields):
                        (agreement_fields, update_agreement)]
     changed_keys = set(changed_fields)
 
-    for fields, handler in update_handlers:
-        if changed_keys & fields:
+    for field_list, handler in update_handlers:
+        if changed_keys & set(field_list):
             handler(fields, changed_fields)
 
 
@@ -425,7 +425,7 @@ if __name__ == '__main__':
 
     changed_installation_records = {
         k: {
-            f: v for f, v in new_values[k].items() if
+            f: v for f, v in new_installation_values[k].items() if
             new_installation_values[k][f] != old_installation_values[k][f]
           } for k in common_installation_keys if
         new_installation_values[k] != old_installation_values[k]

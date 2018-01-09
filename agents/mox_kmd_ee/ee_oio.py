@@ -67,7 +67,7 @@ def lookup_one(service, oio_class, **conditions):
 
     if len(search_results) > 0:
         # There should only be one
-        assert(len(search_results) == 1)
+        # assert(len(search_results) == 1)
         return search_results[0]
     else:
         return None
@@ -85,9 +85,14 @@ def read_object(uuid, service, oio_class):
         BASE_URL, service, oio_class, uuid
     )
     response = requests.get(request_string)
-    object_dict = response.json()
-    # Only the current registration.
-    return object_dict[uuid][0]['registreringer'][0]
+    if response:
+        object_dict = response.json()
+        # Only the current registration.
+
+        return object_dict[uuid][0]['registreringer'][0]
+    else:
+        print("UUID {} not found".format(uuid))
+        return response
 
 
 @request

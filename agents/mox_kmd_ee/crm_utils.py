@@ -310,6 +310,9 @@ def update_customer(fields, new_values):
     ))
 
     customer_uuid = lookup_customer(id_number)
+    if not customer_uuid:
+        print("Customer {} not found when updating: ERROR".format(id_number))
+        return
 
     if is_cpr(id_number):
         customer_class = "bruger"
@@ -320,30 +323,30 @@ def update_customer(fields, new_values):
         # and replace mobile and telephone with the new ones
         # as appropriate.
         customer = read_object(customer_uuid, "organisation", customer_class)
-        adresser = customer['relationer']['adresser']
+        adresser = customer['relationer'].get('adresser', {})
+        telephone_needed = 'Telefon' in new_values
+        mobile_needed = 'MobilTlf' in new_values
         for addr in adresser:
             if "uuid" in addr:
                 relations['adresser'].append(Relation("uuid", addr["uuid"],
                                                       addr["virkning"]))
             elif "urn" in addr:
-                if "Telefon" in new_values and addr["urn"].startswith(
-                    "urn:tel"
-                ):
-                    relations['adresser'].append(
-                        Relation("urn",
-                                 "urn:tel:{}".format(new_values['Telefon']))
-                    )
-                elif "MobilTlf" in new_values and addr["urn"].startswith(
-                    "urn:mobile"
-                ):
-                    relations['adresser'].append(
-                        Relation(
-                            "urn",
-                            "urn:mobile:{}".format(new_values['MobilTlf']))
-                    )
+                if telephone_needed and addr["urn"].startswith("urn:tel"):
+                    pass
+                elif mobile_needed and addr["urn"].startswith("urn:mobile"):
+                    pass
                 else:
                     relations['adresser'].append(Relation("urn", addr["urn"],
                                                           addr["virkning"]))
+        if telephone_needed:
+            relations['adresser'].append(
+                Relation("urn", "urn:tel:{}".format(new_values['Telefon']))
+            )
+        if mobile_needed:
+            relations['adresser'].append(
+                Relation("urn", "urn:mobile:{}".format(new_values['MobilTlf']))
+            )
+
     write_object(customer_uuid, properties, relations, "organisation",
                  customer_class)
 
@@ -383,9 +386,21 @@ def update_customer_relation(fields, new_values):
             relations['adresser'] = [Relation("uuid", new_address_uuid)]
 
         # Recalculate customer relation name and set if it has changed.
-        old_name = customer_relation["attributter"][
-            "interessefaellesskabegenskaber"
-        ]["interessefaellesskabsnavn"]
+        # Note: We exploit that these properties always have virkning to
+        # infinity and that the current period is always the last.
+        try:
+            current_egenskaber = max(
+                customer_relation["attributter"][
+                    "interessefaellesskabegenskaber"
+                ], key=lambda elem: elem['virkning']['to']
+            )
+        except KeyError:
+            print(
+                customer_relation["attributter"][
+                    "interessefaellesskabegenskaber"])
+            # This should *not* happen
+            raise
+        old_name = current_egenskaber["interessefaellesskabsnavn"]
         new_name = "{0}, {1}".format(VARME, new_address)
         if old_name != new_name:
             properties["interessefaellesskabsnavn"] = old_name
@@ -397,7 +412,8 @@ def update_customer_relation(fields, new_values):
         # Handle customer role changes.
         if field in new_values:
             old_customer_role = lookup_customer_role(cr_uuid, role)
-            delete_customer_role(old_customer_role)
+            if old_customer_role:
+                delete_customer_role(old_customer_role)
             id_number = cpr_cvr(int_str(new_values[field]))
             customer_uuid = lookup_customer(id_number)
             if not customer_uuid:
@@ -431,7 +447,12 @@ def update_agreement(fields, new_values):
     # Look up agreement, we know we're going to need this.
     customer_number = int_str(fields['Kundenr'])
     # The should be one and only one agreement for each CR.
-    agreement_uuid = lookup_agreements(customer_number)[0]
+    agreements = lookup_agreements(customer_number)
+    if len(agreements) > 0:
+        agreement_uuid = agreements[0]
+    else:
+        print("Agreement not found for customer:", customer_number)
+        return
 
     properties = {}
     relations = {}
