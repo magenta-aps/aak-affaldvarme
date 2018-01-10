@@ -7,6 +7,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
+import sys
 import pickle
 
 from multiprocessing.dummy import Pool
@@ -35,6 +36,13 @@ from service_clients import report_error, fuzzy_address_uuid
 CUSTOMER_RELATIONS_FILE = 'var/customer_relations'
 INSTALLATIONS_FILE = 'var/installations'
 PRODUCTIDS_FILE = 'var/productids'
+
+VERBOSE = False
+
+
+def say(*args):
+    if __name__ == '__main__' and VERBOSE:
+        print(*args)
 
 
 """PRODUCTID CACHE/DATA STORE"""
@@ -389,22 +397,33 @@ def update_installation_record(old_fields, changed_fields):
 
 if __name__ == '__main__':
 
-    # Connect and get rows for customer records
+    # argument parsing
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--verbose', action='store_true',
+                        help='print helpful comments during execution')
+    parser.add_argument('--import-only', action='store_true',
+                        help='only perform inital import')
+    args = parser.parse_args()
+    VERBOSE = args.verbose
+
+    """CUSTOMERS AND CUSTOMER RELATIONS"""
     connection = connect(server, database, username, password)
     cursor = connection.cursor(as_dict=True)
     new_values = read_customer_records(cursor)
 
     old_values = retrieve_customer_records()
 
-    print('Comparison, new_values == old_values:', new_values == old_values)
+    say('Comparison, new_values == old_values:', new_values == old_values)
 
     new_keys = new_values.keys() - old_values.keys()
     lost_keys = old_values.keys() - new_values.keys()
     common_keys = new_values.keys() & old_values.keys()
 
-    print("new customers:", len(new_keys))
-    print("lost customers:", len(lost_keys))
-    print("existing customers:", len(common_keys))
+    say("new customers:", len(new_keys))
+    say("lost customers:", len(lost_keys))
+    say("existing customers:", len(common_keys))
 
     # Now calculate diff between new values and old values.
     # Build a mapping between customer numbers and
@@ -417,39 +436,13 @@ if __name__ == '__main__':
           } for k in common_keys if new_values[k] != old_values[k]
     }
 
-    print("Number of changed customer records:", len(changed_records))
-
-    new_installation_values = read_installation_records(cursor)
-    old_installation_values = retrieve_installation_records()
-    connection.close()
-
-    already_created = set(retrieve_productids())
-    new_installation_keys = (new_installation_values.keys() -
-                             old_installation_values.keys())
-    lost_installation_keys = (old_installation_values.keys() -
-                              new_installation_values.keys())
-    common_installation_keys = (new_installation_values.keys() &
-                                old_installation_values.keys())
-
-    print("new installations:", len(new_installation_keys))
-    print("lost installations:", len(lost_installation_keys))
-    print("existing installations:", len(common_installation_keys))
-
-    changed_installation_records = {
-        k: {
-            f: v for f, v in new_installation_values[k].items() if
-            new_installation_values[k][f] != old_installation_values[k][f]
-          } for k in common_installation_keys if
-        new_installation_values[k] != old_installation_values[k]
-    }
-
-    print("Number of changed installation records:", len(changed_records))
+    say("Number of changed customer records:", len(changed_records))
     # Handle notifications for customer part, do the installations afterwards.
-    print("... deleting {} customers...").format(len(new_keys))
+    say("... deleting {} customers...".format(len(new_keys)))
     for k in lost_keys:
         # These records are no longer active and should be deleted in LoRa
         delete_customer_record(k)
-    print("... done")
+    say("... done")
     # New customer relations - import along with agreements & products
     # First explicitly create the new customers
 
@@ -462,59 +455,92 @@ if __name__ == '__main__':
             ) > 1
         }}
     # Now import all the new customers using threads
-    print("... importing {} new customers ...".format(
-        len(new_customer_fields))
-    )
+    say("... importing {} new customers ...".format(len(new_customer_fields)))
     p = Pool(15)
     p.map(import_customer, new_customer_fields.items())
     p.close()
     p.join()
-    print("... done")
+    say("... done")
 
-    print('... importing {} new customer relations ...'.format(len(new_keys)))
+    say('... importing {} new customer relations ...'.format(len(new_keys)))
     p = Pool(15)
     p.map(import_customer_record, [new_values[k] for k in new_keys])
     p.close()
     p.join()
-    print("... done")
+    say("... done")
+
+    # End now if we're only importing
+    if args.import_only:
+        store_customer_records(new_values)
+        sys.exit()
 
     # Now (and finally) handle update of the specific changed fields.
-    print('... updating {} customer records ...'.format(len(changed_records)))
+    say('... updating {} customer records ...'.format(len(changed_records)))
     for k, changed_fields in changed_records.items():
         update_customer_record(old_values[k], changed_fields)
-    print("... done")
+    say("... done")
 
+    """INSTALLATIONS AND PRODUCTS"""
+    new_installation_values = read_installation_records(cursor)
+    old_installation_values = retrieve_installation_records()
+    connection.close()
+
+    new_installation_keys = (new_installation_values.keys() -
+                             old_installation_values.keys())
+    lost_installation_keys = (old_installation_values.keys() -
+                              new_installation_values.keys())
+    common_installation_keys = (new_installation_values.keys() &
+                                old_installation_values.keys())
+
+    say("new installations:", len(new_installation_keys))
+    say("lost installations:", len(lost_installation_keys))
+    say("existing installations:", len(common_installation_keys))
+
+    changed_installation_records = {
+        k: {
+            f: v for f, v in new_installation_values[k].items() if
+            new_installation_values[k][f] != old_installation_values[k][f]
+          } for k in common_installation_keys if
+        new_installation_values[k] != old_installation_values[k]
+    }
+
+    say("Number of changed installation records:", len(changed_records))
     #  Those that disappear are expired, either by the customer disappearing or
     #  by crossing the expiry date. If the customer disappeared, it should
     #  already be gone.
-    print("... deleting {} expired installations ...".format(
+    say("... deleting {} expired installations ...".format(
         len(lost_installation_keys)
     ))
     for k in lost_installation_keys:
         delete_installation_record(k)
-    print("... done")
+    say("... done")
 
     # New records may come into being by entering the valid period.
     # if so, they should be attached to the Aftale corresponding to this
     # Forbrugssted. If none such exists, they should not be created.
 
     # Skip products that were created when creating new customers.
+    already_created = set(retrieve_productids())
     new_installation_keys = new_installation_keys - already_created
 
-    print("... importing {} new installations ...".format(
-        len(new_installation_keys)
-    ))
+    say(
+        "... importing {} new installations ...".format(
+            len(new_installation_keys)
+        )
+    )
     for k in new_installation_keys:
         import_installation_record(new_installation_values[k])
-    print("... done")
+    say("... done")
 
     # Now handle updates
-    print("... updating {} changed installations ...".format(
-        len(changed_installation_records)
-    ))
+    say(
+        "... updating {} changed installations ...".format(
+            len(changed_installation_records)
+        )
+    )
     for k, changed_fields in changed_installation_records.items():
         update_installation_record(old_installation_values[k], changed_fields)
-    print("... done")
+    say("... done")
 
     # All's well that ends well
     store_customer_records(new_values)
