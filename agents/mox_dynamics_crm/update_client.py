@@ -121,7 +121,7 @@ def remove_duplicate_contacts():
             identifier=lora_identifier
         )
 
-        if not delete_contact.status_code == 200:
+        if not delete_contact.status_code == 204:
             log.error("Error deleting contact: lora_identifier")
             log.error(delete_contact.text)
 
