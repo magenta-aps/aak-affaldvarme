@@ -102,6 +102,8 @@ def parse_cpr_person_lookup_xml_to_dict(soap_response_xml):
         citizen_dict[key] = v
 
     address = root['ns4:adresse']['ns4:aktuelAdresse']
+    if not address:
+        address = {}
     for k, v in address.items():
         key = k[4:]
         citizen_dict[key] = v
