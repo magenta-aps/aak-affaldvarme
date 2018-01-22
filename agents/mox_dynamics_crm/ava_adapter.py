@@ -91,7 +91,7 @@ def ava_bruger(entity):
 
     # CRM formatted payload
     payload = {
-        "_id": origin_id,
+        "id": origin_id,
         "external_ref": None,
         "dawa_ref": dawa_address,
         "data": {
@@ -182,7 +182,7 @@ def ava_organisation(entity):
 
     # Format CRM payload
     payload = {
-        "_id": origin_id,
+        "id": origin_id,
         "external_ref": None,
         "dawa_ref": dawa_address,
         "data": {
@@ -252,7 +252,7 @@ def ava_kunderolle(entity):
 
     # Format CRM payload
     payload = {
-        "_id": origin_id,
+        "id": origin_id,
         "external_ref": None,
         "contact_ref": customer_ref,
         "interessefaellesskab_ref": ava_kundeforhold,
@@ -307,7 +307,7 @@ def ava_account(entity):
 
     # Format CRM payload
     payload = {
-        "_id": origin_id,
+        "id": origin_id,
         "external_ref": None,
         # NOTE: Reference added
         "dawa_ref": ava_adresse,
@@ -387,7 +387,7 @@ def ava_aftale(entity):
 
     # Format CRM payload
     payload = {
-        "_id": origin_id,
+        "id": origin_id,
         "external_ref": None,
         "interessefaellesskab_ref": ava_kundeforhold,
         "dawa_ref": ava_faktureringsgrad,
@@ -461,7 +461,7 @@ def ava_installation(entity):
 
     # Format CRM payload
     payload = {
-        "_id": origin_id,
+        "id": origin_id,
         "external_ref": None,
         "indsats_ref": ava_aftale,
         "dawa_ref": ava_adresse,

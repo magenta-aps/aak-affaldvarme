@@ -86,7 +86,7 @@ def get_access_address(uuid):
 
     # AVA specific payload
     payload = {
-        "_id": adresseid,
+        "id": adresseid,
         "external_ref": None,
         "data": {
             "ava_dawa_uuid": adresseid,
