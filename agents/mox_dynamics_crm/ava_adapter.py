@@ -13,7 +13,7 @@ def ava_bruger(entity):
     """
 
     # CRM meta field references Lora entity
-    ava_lora_uuid = entity["id"]
+    origin_id = entity["id"]
 
     # Map data object
     data = entity["registreringer"][0]
@@ -52,7 +52,7 @@ def ava_bruger(entity):
 
     except:
         # TODO: Must be sent to error queue for manual processing
-        log.error("Error getting address from: {0}".format(ava_lora_uuid))
+        log.error("Error getting address from: {0}".format(origin_id))
         log.error("Relationer: {0}".format(relationer))
 
     # Convert gender to CRM values
@@ -89,43 +89,36 @@ def ava_bruger(entity):
     ava_parking_id = None
     aegtefaelle = None
 
-    # HOTFIX:
-    # Redundant identifier for linking Lora and CRM references
-    origin_id = entity["id"]
-
     # CRM formatted payload
     payload = {
-        # Adding origin identifier to the payload
-        # MUST be removed at the insert stage
-        "origin_id": origin_id,
+        "_id": origin_id,
+        "external_ref": None,
+        "dawa_ref": dawa_address,
+        "data": {
+            "firstname": egenskaber.get("ava_fornavn"),
+            "middlename": egenskaber.get("ava_mellemnavn"),
+            "lastname": egenskaber.get("ava_efternavn"),
+            "ava_eradressebeskyttet": egenskaber.get("ava_adressebeskyttelse"),
+            "ava_modtag_sms_notifikation": egenskaber.get("ava_sms_notifikation"),
+            # Pending: family status code may not be needed
+            # "familystatuscode": ava_family.get(civilstand),
+            "ava_aegtefaelle_samlever": aegtefaelle,
+            "ava_cpr_nummer": ava_cpr_id,
+            "gendercode":  ava_gender.get(gender),
+            "ava_p_nummer": ava_parking_id,
 
-        # Original payload
-        "ava_lora_uuid": ava_lora_uuid,
-        "firstname": egenskaber.get("ava_fornavn"),
-        "middlename": egenskaber.get("ava_mellemnavn"),
-        "lastname": egenskaber.get("ava_efternavn"),
-        "ava_adresse": dawa_address,
-        "ava_eradressebeskyttet": egenskaber.get("ava_adressebeskyttelse"),
-        "ava_modtag_sms_notifikation": egenskaber.get("ava_sms_notifikation"),
-        # Pending: family status code may not be needed
-        # "familystatuscode": ava_family.get(civilstand),
-        "ava_aegtefaelle_samlever": aegtefaelle,
-        "ava_cpr_nummer": ava_cpr_id,
-        "gendercode":  ava_gender.get(gender),
-        "ava_p_nummer": ava_parking_id,
+            # KMD EE
+            # AVA masterid currently appears to be missing from the CRM schema
+            "ava_kmdeemasterid": egenskaber.get("ava_masterid"),
+            "ava_mobilkmdee": kmd_ee.get("mobile"),
+            "ava_fastnetkmdee": kmd_ee.get("landline"),
+            "ava_emailkmdee": kmd_ee.get("email"),
 
-        # KMD EE
-        # AVA masterid currently appears to be missing from the CRM schema
-        "ava_kmdeemasterid": egenskaber.get("ava_masterid"),
-        "ava_mobilkmdee": kmd_ee.get("mobile"),
-        "ava_fastnetkmdee": kmd_ee.get("landline"),
-        "ava_emailkmdee": kmd_ee.get("email"),
-
-
-        # Currently commented out Arosia fields (Not supported by CRM)
-        # "telephone1": None,
-        # "arosia_telephone": None,
-        # "ava_arosiaid": None
+            # Currently commented out Arosia fields (Not supported by CRM)
+            # "telephone1": None,
+            # "arosia_telephone": None,
+            # "ava_arosiaid": None
+        }
     }
 
     return payload
@@ -138,7 +131,7 @@ def ava_organisation(entity):
     """
 
     # CRM meta field references Lora entity
-    ava_lora_uuid = entity["id"]
+    origin_id = entity["id"]
 
     # Map data object
     data = entity["registreringer"][0]
@@ -187,38 +180,32 @@ def ava_organisation(entity):
     ava_parking_id = None
     ava_kreditstatus = None
 
-    # HOTFIX:
-    # Redundant identifier for linking Lora and CRM references
-    origin_id = entity["id"]
-
     # Format CRM payload
     payload = {
-        # Adding origin identifier to the payload
-        # MUST be removed at the insert stage
-        "origin_id": origin_id,
+        "_id": origin_id,
+        "external_ref": None,
+        "dawa_ref": dawa_address,
+        "data": {
+            "firstname": egenskaber.get("organisationsnavn"),
+            "ava_eradressebeskyttet": egenskaber.get("ava_adressebeskyttelse"),
+            "ava_modtag_sms_notifikation": egenskaber.get("ava_sms_notification"),
+            "ava_cvr_nummer": ava_cvr_id,
+            "ava_kreditstatus": ava_kreditstatus,
+            "ava_p_nummer": ava_parking_id,
+            "ava_virksomhedsform": ava_virksomhedsform,
 
-        # Original payload
-        "ava_lora_uuid": ava_lora_uuid,
-        "firstname": egenskaber.get("organisationsnavn"),
-        "ava_adresse": dawa_address,
-        "ava_eradressebeskyttet": egenskaber.get("ava_adressebeskyttelse"),
-        "ava_modtag_sms_notifikation": egenskaber.get("ava_sms_notification"),
-        "ava_cvr_nummer": ava_cvr_id,
-        "ava_kreditstatus": ava_kreditstatus,
-        "ava_p_nummer": ava_parking_id,
-        "ava_virksomhedsform": ava_virksomhedsform,
+            # KMD EE
+            # AVA masterid currently appears to be missing from the CRM schema
+            "ava_kmdeemasterid": egenskaber.get("ava_masterid"),
+            "ava_mobilkmdee": kmd_ee.get("mobile"),
+            "ava_fastnetkmdee": kmd_ee.get("landline"),
+            "ava_emailkmdee": kmd_ee.get("email"),
 
-        # KMD EE
-        # AVA masterid currently appears to be missing from the CRM schema
-        "ava_kmdeemasterid": egenskaber.get("ava_masterid"),
-        "ava_mobilkmdee": kmd_ee.get("mobile"),
-        "ava_fastnetkmdee": kmd_ee.get("landline"),
-        "ava_emailkmdee": kmd_ee.get("email"),
-
-        # Arosia
-        # "telephone1": None,
-        # "arosia_telephone": None,
-        # "ava_arosiaid": None,
+            # Arosia
+            # "telephone1": None,
+            # "arosia_telephone": None,
+            # "ava_arosiaid": None,
+        }
     }
 
     return payload
@@ -231,7 +218,7 @@ def ava_kunderolle(entity):
     """
 
     # CRM meta field references Lora entity
-    ava_lora_uuid = entity["id"]
+    origin_id = entity["id"]
 
     # Map data object
     data = entity["registreringer"][0]
@@ -240,8 +227,8 @@ def ava_kunderolle(entity):
     egenskaber = attributter["organisationfunktionegenskaber"][0]
 
     # Fetch references
-    lookup_customer = egenskaber.get("brugervendtnoegle").split()
-    ava_aktoer = lookup_customer[-1]
+    tilknyttedebrugere = relationer.get("tilknyttedebrugere")[0]
+    customer_ref = tilknyttedebrugere["uuid"]
 
     rolle_ref = egenskaber.get("funktionsnavn")
 
@@ -263,20 +250,15 @@ def ava_kunderolle(entity):
     kundeforhold = relationer.get("tilknyttedeinteressefaellesskaber")[0]
     ava_kundeforhold = kundeforhold.get("uuid")
 
-    # HOTFIX:
-    # Redundant identifier for linking Lora and CRM references
-    origin_id = entity["id"]
-
     # Format CRM payload
     payload = {
-        # Adding origin identifier to the payload
-        # MUST be removed at the insert stage
-        "origin_id": origin_id,
-
-        # Original payload
-        "ava_aktoer": ava_aktoer,
-        "ava_kundeforhold": ava_kundeforhold,
-        "ava_rolle": ava_rolle.get(rolle_ref)
+        "_id": origin_id,
+        "external_ref": None,
+        "contact_ref": customer_ref,
+        "interessefaellesskab_ref": ava_kundeforhold,
+        "data": {
+            "ava_rolle": ava_rolle.get(rolle_ref)
+        }
     }
 
     return payload
@@ -284,12 +266,12 @@ def ava_kunderolle(entity):
 
 def ava_account(entity):
     """
-    Lora:   Interessefaelleskab
+    Lora:   Interessefaellesskab
     CRM:    Kundeforhold
     """
 
     # CRM meta field references Lora entity
-    ava_lora_uuid = entity["id"]
+    origin_id = entity["id"]
 
     # Map data object
     registeringer = entity["registreringer"][0]
@@ -323,27 +305,21 @@ def ava_account(entity):
     ava_kundeforholdstype = None
     ava_ejendom = None
 
-    # HOTFIX:
-    # Redundant identifier for linking Lora and CRM references
-    origin_id = entity["id"]
-
     # Format CRM payload
     payload = {
-        # Adding origin identifier to the payload
-        # MUST be removed at the insert stage
-        "origin_id": origin_id,
-
-        # Original payload
-        "name": account_name,
-        "ava_kundenummer": ava_kundenummer,
-        "ava_kundetype": ava_kundetype.get(type_ref),
-
+        "_id": origin_id,
+        "external_ref": None,
         # NOTE: Reference added
-        "ava_adresse": ava_adresse,
+        "dawa_ref": ava_adresse,
+        "data": {
+            "name": account_name,
+            "ava_kundenummer": ava_kundenummer,
+            "ava_kundetype": ava_kundetype.get(type_ref),
 
-        # Currently not in use
-        # "ava_kundeforholdstype": ava_kundeforholdstype,
-        # "ava_ejendom": ava_ejendom,
+            # Currently not in use
+            # "ava_kundeforholdstype": ava_kundeforholdstype,
+            # "ava_ejendom": ava_ejendom,
+        }
     }
 
     return payload
@@ -356,7 +332,7 @@ def ava_aftale(entity):
     """
 
     # CRM meta field references Lora entity
-    ava_lora_uuid = entity["id"]
+    origin_id = entity["id"]
 
     # Map data object
     data = entity["registreringer"][0]
@@ -397,28 +373,32 @@ def ava_aftale(entity):
     # if ava_slutdato == "infinity":
     #     ava_slutdato = None
 
-    indsatsdokument = relationer.get("indsatsdokument")[0]
-    ava_faktureringsgrad = indsatsdokument.get("uuid")
+    ava_faktureringsgrad = None
 
-    # HOTFIX:
-    # Redundant identifier for linking Lora and CRM references
-    origin_id = entity["id"]
+    try:
+        indsatsdokument = relationer.get("indsatsdokument")[0]
+        ava_faktureringsgrad = indsatsdokument.get("uuid")
+    except:
+        log.error(
+            "Error getting address for: {0}".format(origin_id)
+        )
+
+        log.debug(relationer.get("indsatsdokument"))
 
     # Format CRM payload
     payload = {
-        # Adding origin identifier to the payload
-        # MUST be removed at the insert stage
-        "origin_id": origin_id,
-
-        # Original payload
-        "ava_name": ava_name,
-        "ava_kundeforhold": ava_kundeforhold,
-        "ava_aftaletype": ava_aftaletype.get(type_ref),
-        "ava_antal_produkter": ava_antal_produkter,
-        "ava_faktureringsgrad": ava_faktureringsgrad,
-        "ava_startdato": ava_startdato,
-        "ava_slutdato": ava_slutdato,
-        "ava_produkter": ava_produkter
+        "_id": origin_id,
+        "external_ref": None,
+        "interessefaellesskab_ref": ava_kundeforhold,
+        "dawa_ref": ava_faktureringsgrad,
+        "klasse_ref": ava_produkter,
+        "data": {
+            "ava_name": ava_name,
+            "ava_aftaletype": ava_aftaletype.get(type_ref),
+            "ava_antal_produkter": ava_antal_produkter,
+            "ava_startdato": ava_startdato,
+            "ava_slutdato": ava_slutdato
+        }
     }
 
     return payload
@@ -432,7 +412,7 @@ def ava_installation(entity):
     """
 
     # CRM meta field references Lora entity
-    ava_lora_uuid = entity["id"]
+    origin_id = entity["id"]
 
     # Map data object
     registeringer = entity["registreringer"][0]
@@ -479,27 +459,22 @@ def ava_installation(entity):
     ava_afhentningstype = None
     ava_beskrivelse = None
 
-    # HOTFIX:
-    # Redundant identifier for linking Lora and CRM references
-    origin_id = entity["id"]
-
     # Format CRM payload
     payload = {
-        # Adding origin identifier to the payload
-        # MUST be removed at the insert stage
-        "origin_id": origin_id,
-
-        # Original payload
-        "ava_name": ava_name,
-        "ava_identifikation": ava_identifikation,
-        "ava_aftale": ava_aftale,
-        "ava_adresse": ava_adresse,
-        "ava_installationstype": ava_installationstype.get(type_ref),
-        # "ava_afhentningstype": ava_afhentningstype,  # Currently not supported
-        "ava_maalernummer": ava_maalernummer,
-        "ava_maalertype": ava_maalertype,
-        # "ava_beskrivelse": ava_beskrivelse,  # Currently not supported
-        "ava_kundenummer": ava_kundenummer
+        "_id": origin_id,
+        "external_ref": None,
+        "indsats_ref": ava_aftale,
+        "dawa_ref": ava_adresse,
+        "data": {
+            "ava_name": ava_name,
+            "ava_identifikation": ava_identifikation,
+            "ava_installationstype": ava_installationstype.get(type_ref),
+            "ava_maalernummer": ava_maalernummer,
+            "ava_maalertype": ava_maalertype,
+            "ava_kundenummer": ava_kundenummer,
+            # "ava_afhentningstype": ava_afhentningstype,  # Currently not supported
+            # "ava_beskrivelse": ava_beskrivelse,  # Currently not supported
+        }
     }
 
     return payload
