@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import logging
 import rethinkdb as r
-# from helper import get_config
+
+from helper import get_config
+from logging import getLogger
 
 # Temporary mapping
 mapping = {
@@ -15,18 +16,23 @@ mapping = {
     "klasse": "ava_installations",
 }
 
-# Temporary configuration
-# TODO: Provide config dynamically
-config = {
-    "db_name": "somedb",
-    "db_pass": "somepassword",
-    "db_user": "someuser",
-    "db_host": "localhost",
-    "db_port": 28015
-}
+# Init logger
+log = getLogger(__name__)
 
 
 def connect():
+    """
+    Create database connection (object).
+    This is NOT a connection pool and must be closed after use.
+
+    :return: Connection object
+    """
+
+    # Get configuration
+    config = get_config("cache_layer")
+
+    if not config:
+        raise Exception("Unable to connect")
 
     return r.connect(
         host=config["db_host"],
@@ -37,14 +43,43 @@ def connect():
     )
 
 
-# Init logger
-log = logging.getLogger(__name__)
+def insert(table, payload, conflict="error"):
+    """
+    Parent function to insert objects into the database
+    Primarily used by wrapper functions
 
+    TODO:   The option for 'return_changes' may be needed.
+            If set to true:
 
-def insert(table, payload):
+            A dataset containing the previous value (if any)
+            and the new value:
 
-    if not table:
-        return False
+            {
+                new_val: <new value>,
+                old_val: null
+            }
+
+    :param table:       Table name (required)
+    :param payload:     JSON (dictionary) payload to insert
+                        a document into the database
+
+    :param conflict:    This will return an error if a document has
+                        a conflicting 'id'.
+
+                        By setting conflict to 'update'
+                        a document is updated if it already exists.
+
+    :return:            Returns status object
+                        Example:
+                        {
+                            'unchanged': 0,
+                            'skipped': 0,
+                            'deleted': 0,
+                            'errors': 0,
+                            'replaced': 0,
+                            'inserted': 1
+                        }
+    """
 
     # Debug
     log.debug(payload)
@@ -72,10 +107,19 @@ def insert(table, payload):
         return run
 
 
-def update_or_insert(table, payload):
+def update(table, payload):
+    """
+    Parent function to update objects
+    May be redundant as the upsert (conflict=update) functionality
+    is more flexible.
 
-    if not table:
-        return False
+    Use case: when when documents should not be inserted
+    if they do not exist
+
+    :param table:       Table name (required)
+    :param payload:     JSON (dictionary) payload/document to be updated
+    :return:            Returns status object
+    """
 
     # Debug
     log.debug(payload)
@@ -103,10 +147,15 @@ def update_or_insert(table, payload):
         return run
 
 
-def find(table, uuid):
+def get(table, uuid):
+    """
+    Parent function to retrieve a specific document by 'id'.
 
-    if not table:
-        return None
+    :param table:  Table name (required)
+    :param uuid:   The object identifier 'id' (Type: uuid)
+
+    :return:       Returns either a document or 'None'
+    """
 
     with connect() as connection:
         query = r.table(table).get(uuid)
@@ -123,7 +172,49 @@ def find(table, uuid):
         return run
 
 
-def find_all(table):
+def filter(table, **params):
+    """
+    Parent function to find a specific document using a filter.
+
+    :param table:   Table name
+    :param params:  Filter parameters, e.g.
+                    {
+                        external_ref:   <value>
+                    }
+
+    :return:        Returns a list of documents
+                    If no documents are found, an empty list is returned
+    """
+
+    if not params:
+        return None
+
+    with connect() as connection:
+        query = r.table(table).filter(params)
+        run = query.run(connection)
+
+        # Info
+        log.info(
+            "{table}: {query}".format(
+                table=table,
+                query=run
+            )
+        )
+
+        return run
+
+
+def all(table):
+    """
+    Parent function to retrieve all documents from a specific table.
+    The underlying method returns a cursor.
+
+    For compatibility reasons this function returns a full list of documents.
+
+    :param table:   Table name
+    :return:        A list of documents (or None), e.g.
+                    [<document1>, <document2>, <document3>...]
+    """
 
     with connect() as connection:
         query = r.table(table)
@@ -137,8 +228,11 @@ def find_all(table):
             )
         )
 
+        # Temporary result list
         result = []
 
+        # Temporarily returning a full list for compatibility
+        # TODO: Must be reworked
         for item in run:
             result.append(item)
 
@@ -146,34 +240,50 @@ def find_all(table):
 
 
 def find_address(uuid):
+    """
+    Wrapper function to retrieve an address by 'id'
 
-    if not uuid:
-        return False
+    :param uuid:    Document identifier (Type: uuid)
+    :return:        Returns either document or None
+    """
 
-    # Set resource
-    table = mapping.get("dawa")
-
-    return find(table, uuid)
+    return get(
+        table=mapping.get("dawa"),  # Get table name from temporary map
+        uuid=uuid
+    )
 
 
 def store_address(payload):
+    """
+    Wrapper function to insert an address document into the database
 
+    :param payload:     Payload (dictionary) to insert
+    :return:            Returns status object (See 'insert' function)
+    """
+
+    # Checking that payload is not empty
     if not payload:
         return False
 
-    # Set resource
-    table = mapping.get("dawa")
-
-    return insert(table, payload)
+    return insert(
+        table=mapping.get("dawa"),
+        payload=payload
+    )
 
 
 def find_indsats(uuid):
+    """
+    Wrapper function to retrieve an 'indsats' document by 'id'.
 
-    # Set resource
-    table = mapping.get("indsats")
+    See mapping:
+        LORA:   indsats
+        CRM:    ava_aftales
 
-    params = {
-        "interessefaellesskab_ref": uuid
-    }
+    :param uuid:    Document identifier (Type: uuid)
+    :return:        Returns either empty list or list of documents
+    """
 
-    return find(table, params)
+    return filter(
+        table=mapping.get("indsats"),
+        interessefaellesskab_ref=uuid
+    )
