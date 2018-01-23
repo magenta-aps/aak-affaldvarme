@@ -12,7 +12,7 @@ mapping = {
     "dawa_access": "access",
     "interessefaelleskab": "accounts",
     "indsats": "ava_aftales",
-    "organisationsfunktion": "ava_kunderolles",
+    "organisationfunktion": "ava_kunderolles",
     "klasse": "ava_installations",
 }
 
@@ -287,3 +287,22 @@ def find_indsats(uuid):
         table=mapping.get("indsats"),
         interessefaellesskab_ref=uuid
     )
+
+
+def store(resource, payload):
+    """
+    Wrapper function to insert documents by resource name.
+    This is a temporary solution to translate the entity names using the map.
+    (See mapping dictionary above)
+
+    :param resource:
+    :param payload:
+    :return:
+    """
+
+    table = mapping.get(resource)
+
+    if not table:
+        return False
+
+    return insert(table, payload)
