@@ -1,92 +1,148 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from pymongo import MongoClient
+import rethinkdb as r
+# from helper import get_config
 
-# Local settings
-from settings import CACHE_HOST
-from settings import CACHE_PORT
-from settings import CACHE_USERNAME
-from settings import CACHE_PASSWORD
-from settings import CACHE_DATABASE
+# Temporary mapping
+mapping = {
+    "contact": "contacts",
+    "dawa": "ava_adresses",
+    "dawa_access": "access",
+    "interessefaelleskab": "accounts",
+    "indsats": "ava_aftales",
+    "organisationsfunktion": "ava_kunderolles",
+    "klasse": "ava_installations",
+}
+
+# Temporary configuration
+# TODO: Provide config dynamically
+config = {
+    "db_name": "somedb",
+    "db_pass": "somepassword",
+    "db_user": "someuser",
+    "db_host": "localhost",
+    "db_port": 28015
+}
+
+
+def connect():
+
+    return r.connect(
+        host=config["db_host"],
+        port=config["db_port"],
+        db=config["db_name"],
+        user=config["db_user"],
+        password=config["db_pass"]
+    )
+
 
 # Init logger
 log = logging.getLogger(__name__)
 
 
-client = MongoClient(
-    host=CACHE_HOST,
-    port=CACHE_PORT,
-    authSource=CACHE_DATABASE,
-    username=CACHE_USERNAME,
-    password=CACHE_PASSWORD
-)
+def insert(table, payload):
 
-db = client[CACHE_DATABASE]
+    if not table:
+        return False
 
+    # Debug
+    log.debug(payload)
 
-def insert(resource, payload):
+    with connect() as connection:
+        query = r.table(table).insert(payload, conflict="error")
+        run = query.run(connection)
 
-    # do stuff
-    collection = db[resource]
+        # Info
+        log.info(
+            "{table}: {query}".format(
+                table=table,
+                query=run
+            )
+        )
 
-    query = collection.insert(
-        doc_or_docs=payload,
-        check_keys=False
-    )
+        if run["errors"]:
+            log.error(
+                "Error inserting into {table}: {stack}".format(
+                    table=table,
+                    stack=run
+                )
+            )
 
-    return query
-
-
-def update_or_insert(resource, payload):
-
-    # Get id
-    identifier = payload.get("_id")
-
-    # do stuff
-    collection = db[resource]
-
-    query = collection.update(
-        spec={"_id": identifier},
-        document=payload,
-        upsert=True,
-        check_keys=False
-    )
-
-    return query
+        return run
 
 
-def unset(resource, identifier, instructions):
+def update_or_insert(table, payload):
 
-    # do stuff
-    collection = db[resource]
+    if not table:
+        return False
 
-    query = collection.update(
-        spec={"_id": identifier},
-        document=instructions,
-    )
+    # Debug
+    log.debug(payload)
 
-    return query
+    with connect() as connection:
+        query = r.table(table).insert(payload, conflict="update")
+        run = query.run(connection)
+
+        # Info
+        log.info(
+            "{table}: {query}".format(
+                table=table,
+                query=run
+            )
+        )
+
+        if run["errors"]:
+            log.error(
+                "Error inserting into {table}: {stack}".format(
+                    table=table,
+                    stack=run
+                )
+            )
+
+        return run
 
 
-def find(resource, uuid):
+def find(table, uuid):
 
-    # do stuff
-    collection = db[resource]
+    if not table:
+        return None
 
-    params = {
-        "_id": uuid
-    }
+    with connect() as connection:
+        query = r.table(table).get(uuid)
+        run = query.run(connection)
 
-    return collection.find_one(params)
+        # Info
+        log.info(
+            "{table}: {query}".format(
+                table=table,
+                query=run
+            )
+        )
+
+        return run
 
 
-def find_all(resource, params=None):
+def find_all(table):
 
-    # do stuff
-    collection = db[resource]
+    with connect() as connection:
+        query = r.table(table)
+        run = query.run(connection)
 
-    return collection.find(params)
+        # Info
+        log.info(
+            "{table}: {query}".format(
+                table=table,
+                query=run
+            )
+        )
+
+        result = []
+
+        for item in run:
+            result.append(item)
+
+        return result
 
 
 def find_address(uuid):
@@ -95,9 +151,9 @@ def find_address(uuid):
         return False
 
     # Set resource
-    resource = "addresses"
+    table = mapping.get("dawa")
 
-    return find(resource, uuid)
+    return find(table, uuid)
 
 
 def store_address(payload):
@@ -106,34 +162,18 @@ def store_address(payload):
         return False
 
     # Set resource
-    resource = "dawa"
+    table = mapping.get("dawa")
 
-    return insert(resource, payload)
+    return insert(table, payload)
 
 
 def find_indsats(uuid):
 
     # Set resource
-    resource = "indsats"
-
-    # do stuff
-    collection = db[resource]
+    table = mapping.get("indsats")
 
     params = {
         "interessefaellesskab_ref": uuid
     }
 
-    return collection.find_one(params)
-
-
-def disconnect():
-    return client.close()
-
-if __name__ == "__main__":
-    # address = find_address("0a3f50c2-6335-32b8-e044-0003ba298018s")
-    # print(address)
-    addresses = []
-    for address in find_all("addresses"):
-        addresses.append(address)
-
-    print(len(addresses))
+    return find(table, params)
