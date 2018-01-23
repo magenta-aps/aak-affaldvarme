@@ -1,19 +1,32 @@
 # -*- coding: utf-8 -*-
 
-import json
-import logging
 import requests
+import ava_adapter as adapter
 
-import cache_adapter as adapter
+from helper import get_config
+from logging import getLogger
 
-# Local settings
-from settings import OIO_REST_URL
-from settings import DO_VERIFY_SSL_SIGNATURE
-from settings import ORGANISATION_UUID
 
+# Settings (For compatibility)
+# TODO: Make general use of config (Configparser)
+config = get_config()
+
+# OIO Rest Interface endpoint
+OIO_REST_URL = config["oio_rest_endpoint"] or "localhost"
+
+# Parent organisation
+# Reference to which organisation an object belongs to
+# NOTE: Only some entities support this reference
+ORGANISATION_UUID = config["parent_organisation"] or None
+
+# Optionally the signature of the SSL certificate can be verified
+# This should be disabled when no commercial certificate is installed
+# (E.g. should be disabled or set to 'no' when using a self signed signature)
+# By default this is set to 'Yes'
+DO_VERIFY_SSL_SIGNATURE = config.getboolean("do_verify_ssl_signature", "yes")
 
 # Init logging
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 
 # Switch statement workaround
@@ -47,7 +60,20 @@ resources = {
 
 
 def batch_generator(resource, list_of_uuids):
-    """Generate and return batches of objects"""
+    """
+    Utility function to generate batches of database objects.
+    The size of the batches are determined from the 'chunk' value.
+
+    TODO:   There may be a need to accept a size parameter
+            (To dynamically set the batch sizes)
+
+    :param resource:        Resource or name of the database entity
+    :param list_of_uuids:   A list of identifiers (Type: uuid)
+
+    :return:                Returns a generator (iterator).
+                            Objects returned by the generator
+                            are converted by the adapter (See ava_adapter.py).
+    """
 
     # Use switch to determine resource path
     switch = resources.get(resource)
@@ -63,12 +89,11 @@ def batch_generator(resource, list_of_uuids):
         uuid_batch = list_of_uuids[:chunck]
         list_of_uuids = list_of_uuids[chunck:]
 
-        params = {
-            'uuid': uuid_batch
-        }
-
         # Call GET request function
-        results = get_request(resource, params)
+        results = get_request(
+            resource=resource,
+            uuid=uuid_batch
+        )
 
         if not results:
             log.error("No results for batch: ")
@@ -88,32 +113,38 @@ def batch_generator(resource, list_of_uuids):
 
 
 def get_all(resource):
+    """
+    Wrapper function to retrieve all objects uuids,
+    which belong to the parent organisation (see settings on top).
+
+    :param resource:    Name of the resource path/entity
+    :return:            Returns a list of entity uuids
+                        (References only, not the actual database objects)
+    """
 
     # Use switch to determine resource path
     switch = resources.get(resource)
 
     resource = switch.get("resource")
 
-    # Belongs to parent organisation
-    params = {
-        "tilhoerer": ORGANISATION_UUID
-    }
-
     # Generate list of contacts (uuid)
     log.info(
         "Attempting to import: {0}".format(resource)
     )
 
-    list_of_uuids = get_request(resource, params)
-
-    # Debug:
-    total = len(list_of_uuids)
-
-    log.debug(
-        "{0} {1} uuid(s) returned".format(total, resource)
+    list_of_uuids = get_request(
+        resource=resource,
+        tilhoerer=ORGANISATION_UUID
     )
 
-    # TODO: Log error when nothing is returned
+    # Debug
+    log.debug(
+        "{total_amount} {resource} uuid(s) returned".format(
+            total_amount=len(list_of_uuids),
+            resource=resource
+        )
+    )
+
     if not list_of_uuids:
         log.error("No uuids returned")
         return None
@@ -121,117 +152,23 @@ def get_all(resource):
     return list_of_uuids
 
 
-def fetch_relation(identifier):
+def get_request(resource, **params):
     """
-    Helper function
-    Returns fetch_entity() with paramters
-    """
+    Parent function to perform the underlying GET request,
+    Returns object (or false if no objects are retrieved)
 
-    resource = resources.get("organisationfunktion")
-
-    # Check if the option corresponds with any switch key
-    if not resource:
-        return False
-
-    params = {
-        "tilknyttedebrugere": identifier
-    }
-
-    # Call GET request function
-    query = get_request(resource, params)
-
-    # Check if a result was returned
-    if not query:
-        return False
-
-    # Reference uuid
-    reference = query[0]
-
-    return query
-
-
-def fetch_relation_indsats(identifier):
-    """
-    Helper function
-    Returns fetch_entity() with paramters
+    :param resource:    Resource path, e.g. /service/path
+    :param params:      Query parameters
+    :return:
     """
 
-    resource = resources.get("indsats")
+    # Generate service url
+    service_url = "{base_url}/{resource}".format(
+        base_url=OIO_REST_URL,
+        resource=resource
+    )
 
-    # Check if the option corresponds with any switch key
-    if not resource:
-        return False
-
-    params = {
-        "indsatsmodtager": identifier
-    }
-
-    # Call GET request function
-    query = get_request(resource, params)
-
-    # Check if a result was returned
-    if not query:
-        return False
-
-    # Reference uuid
-    reference = query[0]
-
-    # Check for entities with more than one result
-    if len(query) > 1:
-        print("AFTALE: {}".format(query))
-
-    return fetch_entity("indsats", reference)
-
-
-def fetch_entity(option, identifier):
-    """
-    Higher function for performing a GET request
-    Returns object or list of objects
-        :option: Resource key for using the resources switch
-        :identifier: Usually object uuid
-    TODO: Resource switch and options is a convoluted mechanic
-    MUST: Be replaced rather sooner than later!
-    """
-
-    resource = resources.get(option)
-
-    # Check if the option corresponds with any switch key
-    if not resource:
-        return False
-
-    params = {
-        "uuid": identifier
-    }
-
-    # Call GET request function
-    query = get_request(resource, params)
-
-    # Check if a result was returned
-    if not query:
-        return False
-
-    # If the list contains only 1 object
-    # Return the object instead of a list
-    if len(query) is 1:
-        return query[0]
-
-    # Return list of objects
-    return query
-
-
-def get_request(resource, params={}):
-    """
-    Perform the underlying GET request, 
-    Returns object (or false if no objects are retrieved) 
-        :resource: Service path, e.g. /service/path
-        :params: e.g. dict({ "answer": 42 })
-    """
-
-    # REST endpoint / resource
-    # (https://oio.rest.dk/resource)
-    service_url = "{0}/{1}".format(OIO_REST_URL, resource)
-
-    # TODO: Verify SSL signature must dynamically be set
+    # GET REQUEST
     oio_response = requests.get(
         url=service_url,
         params=params,
@@ -256,3 +193,107 @@ def get_request(resource, params={}):
     #   ]
     # }
     return results[0]
+
+
+# DEPRECATED:
+# The following functions are no longer used
+# Functionality has been replaced by the cache layer implementation
+
+# def fetch_relation(identifier):
+#     """
+#     Wrapper function for retriving related 'organisationfunktion' by id.
+#     LORA:   organisationfunktion
+#     CRM:    kunderolle
+#
+#     :param identifier:  Entity id (Type: uuid) for owner reference
+#                         Owner is a contact (bruger / organisation)
+#     :return:            Returns OIO rest object
+#     """
+#
+#     resource = resources.get("organisationfunktion")
+#
+#     # Check if the option corresponds with any switch key
+#     if not resource:
+#         return False
+#
+#     # Call GET request function
+#     query = get_request(
+#         resource=resource,
+#         tilknyttedebrugere=identifier
+#     )
+#
+#     # Check if a result was returned
+#     if not query:
+#         return False
+#
+#     return query
+
+
+# def fetch_relation_indsats(identifier):
+#     """
+#     Wrapper function for retriving related 'indsats' by id.
+#     LORA:   indsats
+#     CRM:    aftale
+#
+#     :param identifier:  Entity id (Type: uuid) for owner reference
+#                         Owner is a contact (bruger / organisation)
+#     :return:            Returns OIO rest object
+#     """
+#
+#     resource = resources.get("indsats")
+#
+#     # Check if the option corresponds with any switch key
+#     if not resource:
+#         return False
+#
+#     # Call GET request function
+#     query = get_request(
+#         resource=resource,
+#         indsatsmodtager=identifier
+#     )
+#
+#     # Check if a result was returned
+#     if not query:
+#         return False
+#
+#     # Reference uuid
+#     reference = query[0]
+#
+#     # Check for entities with more than one result
+#     if len(query) > 1:
+#         print("AFTALE: {}".format(query))
+#
+#     return fetch_entity("indsats", reference)
+#
+#
+# def fetch_entity(option, identifier):
+#     """
+#     Wrapper function for performing a GET request
+#
+#     :param option:      Resource key for using the resources switch
+#     :param identifier:  Object identifier (Type: uuid)
+#     :return:
+#     """
+#
+#     resource = resources.get(option)
+#
+#     # Check if the option corresponds with any switch key
+#     if not resource:
+#         return False
+#
+#     # Call GET request function
+#     query = get_request(
+#         resource=resource,
+#         uuid=identifier)
+#
+#     # Check if a result was returned
+#     if not query:
+#         return False
+#
+#     # If the list contains only 1 object
+#     # Return the object instead of a list
+#     if len(query) is 1:
+#         return query[0]
+#
+#     # Return list of objects
+#     return query
