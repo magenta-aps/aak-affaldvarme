@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import sys
 import string
 import random
 from configparser import ConfigParser
@@ -17,13 +18,21 @@ def get_config(section="DEFAULT"):
     :return:        Dictionary containing the config parameters
     """
 
-    # Read "config.ini"
-    read_config = config.read("config.ini")
+    config_file = "config.ini"
 
-    # If file does not exist or cannot be read
-    # Return False
+    # Read "config.ini"
+    read_config = config.read(config_file)
+
+    # Exit if file does not exist
     if not read_config:
-        return False
+        sys.exit(
+            "Configuration file {0} does not exist".format(config_file)
+        )
+
+    if section not in config:
+        sys.exit(
+            "Configuration section: {0} is missing".format(section)
+        )
 
     return config[section]
 
