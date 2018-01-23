@@ -7,12 +7,14 @@ from configparser import ConfigParser
 config = ConfigParser()
 
 
-def get_config():
+def get_config(section="DEFAULT"):
     """
     Helper function to get a configuration section from config.ini
     This file is required
 
-    :return: Dictionary containing the config parameters
+    :param section: Name of the configuration section
+                    (If empty, revert to default)
+    :return:        Dictionary containing the config parameters
     """
 
     # Read "config.ini"
@@ -23,7 +25,7 @@ def get_config():
     if not read_config:
         return False
 
-    return config
+    return config[section]
 
 
 def generate_password(length: int):
