@@ -1,3 +1,8 @@
+"""OIO utility functions for the KMD EE Mox agent.
+
+Many of these functions are generic, but are limited to the functionality
+needed for integrating with KMD EE.
+"""
 #
 # Copyright (c) 2017, Magenta ApS
 #
@@ -25,6 +30,7 @@ ROLE_MAP = {KUNDE: '915240004', LIGESTILLINGSKUNDE: '915240006'}
 
 
 def request(func):
+    """Decorator to wrap OIO API requests (excluding lookups)."""
     def call_and_raise(*args, **kwargs):
         result = func(*args, **kwargs)
         if not result:
@@ -34,16 +40,19 @@ def request(func):
 
 
 class DummyResult:
-    "Return a request result when not actually calling LoRa."
+    """Return a request result when not actually calling LoRa."""
+
     def __init__(self, uuid):
+        """Create new DummyResult."""
         self.__uuid = uuid
 
     def json(self):
+        """JSON representation of DummyResult."""
         return {'uuid': self.__uuid}
 
 
 def lookup_objects(service, oio_class, **conditions):
-    'Lookup objects of class cls in service with the specified conditions.'
+    """Lookup objects of class cls in service with the specified conditions."""
     search_results = []
     if conditions:
         condition_string = '&'.join(
@@ -62,7 +71,7 @@ def lookup_objects(service, oio_class, **conditions):
 
 
 def lookup_one(service, oio_class, **conditions):
-    'Lookup supposedly unique object - assert/fail if more than one is found.'
+    """Lookup supposedly unique object - fail if more than one is found."""
     search_results = lookup_objects(service, oio_class, **conditions)
 
     if len(search_results) > 0:
@@ -75,12 +84,12 @@ def lookup_one(service, oio_class, **conditions):
 
 @request
 def read_object(uuid, service, oio_class):
-    '''Read object from LoRa, return JSON. Fail (throw 404) if not found.
+    """Read object from LoRa, return JSON. Fail (throw 404) if not found.
 
     This function does not include more than one registration period and will
     thus return the current registration only. Within this registration period,
     all date dependent values will have the current Virkning period only.
-    '''
+    """
     request_string = '{0}/{1}/{2}/{3}'.format(
         BASE_URL, service, oio_class, uuid
     )
@@ -97,7 +106,7 @@ def read_object(uuid, service, oio_class):
 
 @request
 def delete_object(uuid, service, oio_class):
-    'Delete object in sevice with the given UUID'
+    """Delete object in sevice with the given UUID."""
     ALREADY_DELETED = 'Invalid [livscyklus] transition to [Slettet]'
     request_string = '{0}/{1}/{2}/{3}'.format(
         BASE_URL, service, oio_class, uuid
@@ -112,7 +121,7 @@ def delete_object(uuid, service, oio_class):
 
 @request
 def write_object_dict(uuid, object_dict, service, oio_class):
-    "Write object dict provided by caller."
+    """Write object dict provided by caller."""
     url = "{0}/{1}/{2}/{3}".format(BASE_URL, service, oio_class, uuid)
     response = requests.put(url, json=object_dict)
 
@@ -121,7 +130,7 @@ def write_object_dict(uuid, object_dict, service, oio_class):
 
 @request
 def write_object(uuid, properties, relations, service, oio_class):
-    "Update bruger with UUID uuid with the given properties and relations."
+    """Update bruger with UUID uuid with the given properties and relations."""
     object_dict = create_object_dict(oio_class, properties, relations, note="")
     url = "{0}/{1}/{2}/{3}".format(BASE_URL, service, oio_class, uuid)
     response = requests.put(url, json=object_dict)
@@ -164,6 +173,7 @@ def create_virkning(frm=datetime.datetime.now(),
                     to="infinity",
                     user=SYSTEM_USER,
                     note=""):
+    """Create a Virkning with the dates and other info as given."""
     virkning = {
         "from": str(frm),
         "to": str(to),
@@ -184,15 +194,14 @@ org_default_state = {"gyldighed": "Aktiv"}
 
 def create_object_dict(oio_class, properties, relations, note,
                        states=org_default_state, virkning=None):
-    '''Create a dictionary for updating or creating an OIO object.
+    """Create a dictionary for updating or creating an OIO object.
 
     Note, "properties" should really be "attributes", but we'll not handle this
     level of nesting here.
 
     The parameter relations should be a dictionary mapping relation names to
     Relation values as specified above.
-    '''
-
+    """
     if not virkning:
         virkning = create_virkning()
     object_dict = {
@@ -229,6 +238,7 @@ def create_object_dict(oio_class, properties, relations, note,
 def create_organisation(cvr_number, key, name, master_id, phone="", email="",
                         mobile="", fax="", address_uuid="", company_type="",
                         industry_code="", note=""):
+    """Create organisation with the given information."""
     # Sanity check
     urn = 'urn:{}'.format(cvr_number)
     uuid = lookup_organisation(virksomhed=urn)
@@ -281,7 +291,7 @@ def create_bruger(cpr_number, key, name, master_id, phone="", email="",
                   mobile="", fax="", first_name="", middle_name="",
                   last_name="", address_uuid="", gender="", marital_status="",
                   address_protection="", note=""):
-
+    """Create a Bruger from the given parameters."""
     # Sanity check
     urn = 'urn:{}'.format(cpr_number)
     uuid = lookup_bruger(tilknyttedepersoner=urn)
@@ -322,6 +332,7 @@ def create_bruger(cpr_number, key, name, master_id, phone="", email="",
 
 def create_interessefaellesskab(customer_number, customer_relation_name,
                                 customer_type, address_uuid, note=""):
+    """Create an Interessefællesskab with the info from the parameters."""
     properties = dict(brugervendtnoegle=customer_number,
                       interessefaellesskabsnavn=customer_relation_name,
                       interessefaellesskabstype=customer_type)
@@ -341,6 +352,7 @@ def create_interessefaellesskab(customer_number, customer_relation_name,
 def create_organisationfunktion(customer_uuid,
                                 customer_relation_uuid,
                                 role, note=""):
+    """Create an OrganisationFunktion, representing a Kunderolle in CRM."""
     numeric_role = ROLE_MAP[role]
 
     properties = dict(brugervendtnoegle=numeric_role, funktionsnavn=role)
@@ -365,6 +377,7 @@ def create_organisationfunktion(customer_uuid,
 def create_indsats(name, agreement_type, no_of_products, invoice_address,
                    start_date, end_date, location,
                    customer_relation_uuid, product_uuids, note=""):
+    """Create an Indsats from the parameters."""
     tz = pytz.timezone('Europe/Copenhagen')
     starttidspunkt = tz.localize(start_date)
     try:
@@ -402,6 +415,7 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
 def create_klasse(name, identification, installation_type,
                   meter_number, meter_type, start_date, end_date,
                   product_address, note=""):
+    """Create a Klasse, representing a Produkt in CRM."""
     virkning = create_virkning(start_date, end_date)
     properties = dict(brugervendtnoegle=identification, titel=name,
                       eksempel=meter_number, beskrivelse=meter_type)

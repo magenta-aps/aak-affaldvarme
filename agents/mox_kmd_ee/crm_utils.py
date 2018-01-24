@@ -1,4 +1,4 @@
-'Utility functions etc. based on the CRM data model and mapped to LoRa.'
+"""Utility functions etc. based on the CRM data model and mapped to LoRa."""
 #
 # Copyright (c) 2017, Magenta ApS
 #
@@ -52,18 +52,19 @@ read_agreement = functools.partial(
 
 # Lookup of one object
 def lookup_customer_from_cvr(id_number):
-    'Look up customer (organisation) from the CVR number of its Virksomhed.'
+    """Look up customer from the CVR number of its Virksomhed."""
     urn = 'urn:{}'.format(id_number)
     return lookup_organisation(virksomhed=urn)
 
 
 def lookup_customer_from_cpr(id_number):
-    'Look up customer (user) from CPR number.'
+    """Look up customer (user) from CPR number."""
     urn = 'urn:{}'.format(id_number)
     return lookup_bruger(tilknyttedepersoner=urn)
 
 
 def lookup_customer(id_number):
+    """Look up customer by ID number."""
     if is_cpr(id_number):
         return lookup_customer_from_cpr(id_number)
     elif is_cvr(id_number):
@@ -71,11 +72,12 @@ def lookup_customer(id_number):
 
 
 def lookup_customer_relation(customer_number):
-    'Look up customer relations belonging to customer number.'
+    """Look up customer relations belonging to customer number."""
     return lookup_interessefaellesskab(brugervendtnoegle=customer_number)
 
 
 def lookup_customer_role(customer_relation, role):
+    """Look up customer role from customer and role specification."""
     return lookup_organisationfunktion(
         tilknyttedeinteressefaellesskaber=customer_relation,
         funktionsnavn=role
@@ -83,27 +85,30 @@ def lookup_customer_role(customer_relation, role):
 
 
 def lookup_product(productid):
+    """Look up product (installation and meter) from ID."""
     return lookup_klasse(brugervendtnoegle=productid)
 
 
 def lookup_agreement_from_product(product_uuid):
+    """Lookup agreement from the UUID of a product."""
     return lookup_indsats(indsatskvalitet=product_uuid)
 
 
 # Lookup of more than one object
 def lookup_customer_roles(customer_relation):
+    """Find all customer roles for a given customer relation."""
     return lookup_organisationfunktioner(
         tilknyttedeinteressefaellesskaber=customer_relation
     )
 
 
 def lookup_agreements(customer_relation):
-    'Lookup agreement(s) for customer relation.'
+    """Lookup agreement(s) for customer relation, by UUID."""
     return lookup_indsatser(indsatsmodtager=customer_relation)
 
 
 def lookup_products(agreement_uuid):
-    'Get products for this agreement.'
+    """Get products for this agreement."""
     # FIXME: This is bothersome, because we actually have to load the agreement
     # to find the products. The correct way would be to do as we do in Arosia
     # and have an AVA specific relation from Klasse to Indsats.
@@ -121,13 +126,14 @@ write_agreement_dict = functools.partial(write_object_dict, service='indsats',
 
 
 def add_product_to_agreement(product_uuid, agreement_uuid):
+    """Add product to agreement."""
     relations = {'indsatskvalitet': [Relation('uuid', product_uuid)]}
     write_object(agreement_uuid, {}, relations, 'indsats', 'indsats')
 
 
 # Address lookup
 def lookup_address_from_sp_data(sp_dict, id_number):
-    "Lookup DAWA address from data returned by SP."
+    """Lookup DAWA address from data returned by SP."""
     address = {}
 
     if "vejkode" in sp_dict:
@@ -158,7 +164,7 @@ def lookup_address_from_sp_data(sp_dict, id_number):
 # Create functions
 def create_customer(id_number, key, name, master_id, phone="", email="",
                     mobile="", fax="", note=""):
-
+    """Create customer from data extracted from KMD EE."""
     if is_cvr(id_number):
 
         # Collect info from SP and include in call creating user.
@@ -249,7 +255,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
 
 
 def create_customer_role(customer_uuid, customer_relation_uuid, role):
-    "Create an OrgFunktion from this info and return UUID"
+    """Create an OrgFunktion from this info and return UUID."""
     result = create_organisationfunktion(
         customer_uuid,
         customer_relation_uuid,
@@ -262,7 +268,7 @@ def create_customer_role(customer_uuid, customer_relation_uuid, role):
 
 def create_customer_relation(customer_number, customer_relation_name,
                              customer_type, address_uuid):
-    "Create an Interessefællesskab from this info and return UUID"
+    """Create an Interessefællesskab from this info and return UUID."""
     result = create_interessefaellesskab(
         customer_number,
         customer_relation_name,
@@ -276,7 +282,7 @@ def create_customer_relation(customer_number, customer_relation_name,
 def create_agreement(name, agreement_type, no_of_products, invoice_address,
                      start_date, end_date, location,
                      customer_relation_uuid, product_uuids):
-    "Create an Indsats from this info and return UUID"
+    """Create an Indsats from this info and return UUID."""
     result = create_indsats(name, agreement_type, no_of_products,
                             invoice_address, start_date, end_date,
                             location, customer_relation_uuid, product_uuids)
@@ -286,7 +292,7 @@ def create_agreement(name, agreement_type, no_of_products, invoice_address,
 
 def create_product(name, identification, installation_type, meter_number,
                    meter_type, start_date, end_date, product_address):
-    "Create a Klasse from this info and return UUID"
+    """Create a Klasse from this info and return UUID."""
     result = create_klasse(name, identification, installation_type,
                            meter_number, meter_type, start_date, end_date,
                            product_address)
@@ -295,7 +301,7 @@ def create_product(name, identification, installation_type, meter_number,
 
 
 def update_customer(fields, new_values):
-    "Update customer with new information."
+    """Update customer with new information."""
     properties = {}
     relations = defaultdict(list)
     # TODO: Replace this explicit mapping with an automation iterating through
@@ -352,6 +358,7 @@ def update_customer(fields, new_values):
 
 
 def update_customer_relation(fields, new_values):
+    """Update customer relation with the changed values."""
     address_fields = ['ForbrStVejnavn', 'Vejkode', 'Postnr',
                       'ForbrStPostdistrikt', 'Husnr', 'Bogstav',
                       'Etage', 'Sidedørnr']
@@ -439,6 +446,7 @@ def update_customer_relation(fields, new_values):
 
 
 def update_agreement(fields, new_values):
+    """Update agreement based on the changed fields."""
     address_fields = ['Vejnavn', 'Postdistrikt']
     date_fields = ['Tilflytningsdato', 'Fraflytningsdato']
     date_properties = ['startdato', 'slutdato']

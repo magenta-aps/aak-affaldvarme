@@ -1,3 +1,4 @@
+"""Miscellaneous utility functions specific to the KMD EE agent."""
 import pymssql
 
 from ee_sql import TREFINSTALLATION_SQL
@@ -8,11 +9,12 @@ from service_clients import report_error, access_address_uuid
 
 
 def int_str(s):
-    "Normalize numbers, e.g. customer or CPR numbers that are Float in MS SQL"
+    """Normalize numbers, e.g. CPR numbers, that are Float in MS SQL."""
     return str(int(float(s)))
 
 
 def cpr_cvr(val):
+    """Normalize a customer number as either a CPR or CVR number."""
     assert(type(val) == str)
     val = str(int(val))
     if not (8 <= len(val) <= 10) and (len(val) > 1):
@@ -23,14 +25,17 @@ def cpr_cvr(val):
 
 
 def is_cpr(val):
+    """Determine if this is a CPR number."""
     return len(val) == 10 and val.isdigit()
 
 
 def is_cvr(val):
+    """Determine if this is a CVR number."""
     return len(val) == 8 and val.isdigit()
 
 
 def connect(server, database, username, password):
+    """Connect to an MS SQL database."""
     cnxn = None
     try:
         cnxn = pymssql.connect(server=server, user=username,
@@ -43,7 +48,7 @@ def connect(server, database, username, password):
 
 
 def get_products_for_location(forbrugssted):
-    "Get locations for this customer ID from the Forbrugssted table"
+    """Get locations for this customer ID from the Forbrugssted table."""
     from mssql_config import username, password, server, database
     connection = connect(server, database, username, password)
     cursor = connection.cursor(as_dict=True)
@@ -54,8 +59,7 @@ def get_products_for_location(forbrugssted):
 
 
 def get_forbrugssted_address_uuid(row):
-    "Get UUID of the address for this Forbrugssted"
-
+    """Get UUID of the address for this Forbrugssted."""
     vejnavn = row['ForbrStVejnavn']
     vejkode = row['Vejkode']
     postnr = row['Postnr']
@@ -101,7 +105,7 @@ def get_forbrugssted_address_uuid(row):
 
 
 def get_alternativsted_address_uuid(alternativsted_id):
-    "Get UUID of the address for this AlternativSted"
+    """Get UUID of the address for this AlternativSted."""
     if not alternativsted_id:
         return None
     from mssql_config import username, password, server, database

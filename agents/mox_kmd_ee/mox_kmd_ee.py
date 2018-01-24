@@ -41,6 +41,7 @@ VERBOSE = False
 
 
 def say(*args):
+    """Give output in verbose mode."""
     if __name__ == '__main__' and VERBOSE:
         print(*args)
 
@@ -69,11 +70,15 @@ def read_customer_records(cursor):
 
 
 def store_customer_records(customer_relations):
+    """Store customer records on disk.
+    
+    This is a simple, no-frills cache using the pickle module."""
     with open(CUSTOMER_RELATIONS_FILE, 'wb') as f:
         pickle.dump(customer_relations, f, protocol=4)
 
 
 def retrieve_customer_records():
+    """Retrieve customer records from disk."""
     try:
         with open(CUSTOMER_RELATIONS_FILE, 'rb') as f:
             return pickle.load(f)
@@ -82,7 +87,7 @@ def retrieve_customer_records():
 
 
 def delete_customer_record(customer_number):
-        "Purge relation along with customer roles, agreements and products."
+        """Purge relation and customer roles, agreements and products."""
         cr_uuid = lookup_customer_relation(customer_number)
         # This should exist provided everything is up to date!
         if not cr_uuid:
@@ -119,7 +124,7 @@ def delete_customer_record(customer_number):
 
 
 def import_customer(id_and_fields):
-    "Import a new customer, log if it fails."
+    """Import a new customer, log if it fails."""
     id_number, fields = id_and_fields
     id_number = cpr_cvr(int_str(id_number))
 
