@@ -45,22 +45,6 @@ def say(*args):
         print(*args)
 
 
-"""PRODUCTID CACHE/DATA STORE"""
-
-
-def store_productid(productid):
-    with open(PRODUCTIDS_FILE, "a") as f:
-        print(productid, file=f)
-
-
-def retrieve_productids():
-    try:
-        with open(PRODUCTIDS_FILE, "r") as f:
-            return [line.rstrip('\n') for line in f]
-    except FileNotFoundError:
-        return []
-
-
 """CUSTOMER RELATED FUNCTIONS.
 
 Read customer related data from database, write to file, retrieve from
@@ -146,7 +130,7 @@ def import_customer(id_and_fields):
 
         new_customer_uuid = create_customer(
             id_number=id_number,
-            key=customer_number,
+            key=id_number,
             name=fields['KundeNavn'],
             master_id=master_id,
             phone=fields['Telefonnr'],
@@ -159,9 +143,16 @@ def import_customer(id_and_fields):
             customer_uuid = new_customer_uuid
         else:
             # No customer created or found.
-            report_error("No customer created: %s %s" % (
-                         fields['KundeNavn'],
-                         fields['PersonnrSEnr']))
+            main_customer = cpr_cvr(int_str(fields['PersonnrSEnr']))
+            if id_number == main_customer:
+                role = 'hovedkunde'
+            else:
+                role = 'ligestilling'
+            report_error(
+                "No customer created: {} {} {} ({})".format(
+                    fields['KundeNavn'], id_number, customer_number, role
+                )
+            )
             return
 
 
@@ -274,7 +265,6 @@ def import_customer_record(fields):
         )
         if product_uuid:
             product_uuids.append(product_uuid)
-            store_productid(p['InstalNummer'])
 
     agreement_name = "Varme, " + name
     agreement_uuid = create_agreement(
@@ -344,6 +334,8 @@ def delete_installation_record(product_id):
     if product_uuid:
         delete_product(product_uuid)
         agreement_uuid = lookup_agreement_from_product(product_uuid)
+    else:
+        return
     if agreement_uuid:
         # remove product from agreement
         agreement_json = read_agreement(agreement_uuid)
@@ -361,7 +353,14 @@ def import_installation_record(fields):
     customer_number = int_str(fields['Kundenr'])
     cr_uuid = lookup_customer_relation(customer_number)
     agreement_uuid = lookup_agreements(cr_uuid)[0] if cr_uuid else None
+    if not agreement_uuid:
+        import pdb
+        pdb.set_trace()
     if agreement_uuid:
+        # Only do this if the products doesn't already exist
+        product_uuid = lookup_product(fields['InstalNummer'])
+        if product_uuid:
+            return
         # create the product
         meter_number = fields['Målernr']
         meter_type = fields['MaalerTypeBetegnel']
@@ -391,8 +390,9 @@ def update_installation_record(old_fields, changed_fields):
     "Update relevant LoRa objects with the specific changes."
     # TODO: Investigate if this is ever relevant.
     print("UPDATED INSTALLATION INFO")
+
     for field in changed_fields:
-        print(field + ":", changed_fields[field])
+        print(field + ":", changed_fields[field], "-- was:", old_fields[field])
 
 
 if __name__ == '__main__':
@@ -403,15 +403,19 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--verbose', action='store_true',
                         help='print helpful comments during execution')
-    parser.add_argument('--import-only', action='store_true',
+    parser.add_argument('--initial-import', action='store_true',
                         help='only perform inital import')
     args = parser.parse_args()
     VERBOSE = args.verbose
+    initial_import = args.initial_import
 
     """CUSTOMERS AND CUSTOMER RELATIONS"""
     connection = connect(server, database, username, password)
     cursor = connection.cursor(as_dict=True)
     new_values = read_customer_records(cursor)
+    new_installation_values = read_installation_records(cursor)
+    old_installation_values = retrieve_installation_records()
+    connection.close()
 
     old_values = retrieve_customer_records()
 
@@ -438,11 +442,12 @@ if __name__ == '__main__':
 
     say("Number of changed customer records:", len(changed_records))
     # Handle notifications for customer part, do the installations afterwards.
-    say("... deleting {} customers...".format(len(new_keys)))
-    for k in lost_keys:
-        # These records are no longer active and should be deleted in LoRa
-        delete_customer_record(k)
-    say("... done")
+    if len(lost_keys) > 0:
+        say("... deleting {} customers...".format(len(lost_keys)))
+        for k in lost_keys:
+            # These records are no longer active and should be deleted in LoRa
+            delete_customer_record(k)
+        say("... done")
     # New customer relations - import along with agreements & products
     # First explicitly create the new customers
 
@@ -455,35 +460,43 @@ if __name__ == '__main__':
             ) > 1
         }}
     # Now import all the new customers using threads
-    say("... importing {} new customers ...".format(len(new_customer_fields)))
-    p = Pool(15)
-    p.map(import_customer, new_customer_fields.items())
-    p.close()
-    p.join()
-    say("... done")
+    if len(new_customer_fields) > 0:
+        say("... importing {} new customers ...".format(
+            len(new_customer_fields)
+        ))
+        p = Pool(15)
+        p.map(import_customer, new_customer_fields.items())
+        p.close()
+        p.join()
+        say("... done")
 
-    say('... importing {} new customer relations ...'.format(len(new_keys)))
-    p = Pool(15)
-    p.map(import_customer_record, [new_values[k] for k in new_keys])
-    p.close()
-    p.join()
-    say("... done")
-
-    # End now if we're only importing
-    if args.import_only:
-        store_customer_records(new_values)
-        sys.exit()
+    if len(new_keys) > 0:
+        say('... importing {} new customer relations ...'.format(
+            len(new_keys)
+        ))
+        p = Pool(16)
+        p.map(import_customer_record, [new_values[k] for k in new_keys])
+        p.close()
+        p.join()
+        say("... done")
 
     # Now (and finally) handle update of the specific changed fields.
-    say('... updating {} customer records ...'.format(len(changed_records)))
-    for k, changed_fields in changed_records.items():
-        update_customer_record(old_values[k], changed_fields)
-    say("... done")
+    if len(changed_records) > 0:
+        say('... updating {} customer records ...'.format(
+            len(changed_records)
+        ))
+        for k, changed_fields in changed_records.items():
+            update_customer_record(old_values[k], changed_fields)
+        say("... done")
+
+    if initial_import:
+        # In this case, we shouldn't handle changed installations, only
+        # record the ones we've seen.
+        store_customer_records(new_values)
+        store_installation_records(new_installation_values)
+        sys.exit()
 
     """INSTALLATIONS AND PRODUCTS"""
-    new_installation_values = read_installation_records(cursor)
-    old_installation_values = retrieve_installation_records()
-    connection.close()
 
     new_installation_keys = (new_installation_values.keys() -
                              old_installation_values.keys())
@@ -519,10 +532,6 @@ if __name__ == '__main__':
     # if so, they should be attached to the Aftale corresponding to this
     # Forbrugssted. If none such exists, they should not be created.
 
-    # Skip products that were created when creating new customers.
-    already_created = set(retrieve_productids())
-    new_installation_keys = new_installation_keys - already_created
-
     say(
         "... importing {} new installations ...".format(
             len(new_installation_keys)
@@ -533,11 +542,9 @@ if __name__ == '__main__':
     say("... done")
 
     # Now handle updates
-    say(
-        "... updating {} changed installations ...".format(
-            len(changed_installation_records)
-        )
-    )
+    say("... updating {} changed installations ...".format(
+        len(changed_installation_records)
+    ))
     for k, changed_fields in changed_installation_records.items():
         update_installation_record(old_installation_values[k], changed_fields)
     say("... done")

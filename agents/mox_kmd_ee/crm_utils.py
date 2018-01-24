@@ -108,7 +108,7 @@ def lookup_products(agreement_uuid):
     # to find the products. The correct way would be to do as we do in Arosia
     # and have an AVA specific relation from Klasse to Indsats.
     agreement = read_agreement(agreement_uuid)
-    indsatskvalitet = agreement['relationer']['indsatskvalitet']
+    indsatskvalitet = agreement['relationer'].get('indsatskvalitet', [])
     product_uuids = [r['uuid'] for r in indsatskvalitet]
 
     return product_uuids
@@ -128,10 +128,10 @@ def add_product_to_agreement(product_uuid, agreement_uuid):
 # Address lookup
 def lookup_address_from_sp_data(sp_dict, id_number):
     "Lookup DAWA address from data returned by SP."
-    address = {
-        "vejkode": sp_dict["vejkode"]
-    }
+    address = {}
 
+    if "vejkode" in sp_dict:
+        address["vejkode"] = sp_dict["vejkode"]
     if "postnummer" in sp_dict:
         address["postnr"] = sp_dict["postnummer"]
 
@@ -170,7 +170,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
                 company_dir = get_cvr_data(id_number)
             except Exception as e:
                 report_error(
-                    "CVR number not found: {0}".format(id_number)
+                    "CVR number {0} not found: {1}".format(id_number, str(e))
                 )
                 return None
 
@@ -181,8 +181,8 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         company_type = company_dir['virksomhedsform']
         industry_code = company_dir['branchekode']
         address_string = "{0} {1}, {2}".format(
-            company_dir['vejnavn'], company_dir['husnummer'],
-            company_dir['postnummer']
+            company_dir.get('vejnavn'), company_dir.get('husnummer'),
+            company_dir.get('postnummer')
         )
 
         result = create_organisation(
@@ -204,7 +204,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
                 person_dir = get_cpr_data(id_number)
             except Exception as e:
                 # Hotfix:
-                print("CPR lookup failed after retrying, logging error")
+                print("CPR lookup failed after retrying:", id_number, name)
                 # Certain CPR ID's are actually P-Numbers
                 # These must be manually processed
                 report_error(
@@ -220,7 +220,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         address_uuid = lookup_address_from_sp_data(person_dir, id_number)
         # Cache address for customer relation
         address_string = "{0}".format(
-            person_dir['standardadresse']
+            person_dir.get('standardadresse', '')
         )
 
         # Hotfix:
@@ -275,11 +275,11 @@ def create_customer_relation(customer_number, customer_relation_name,
 
 def create_agreement(name, agreement_type, no_of_products, invoice_address,
                      start_date, end_date, location,
-                     customer_role_uuid, product_uuids):
+                     customer_relation_uuid, product_uuids):
     "Create an Indsats from this info and return UUID"
     result = create_indsats(name, agreement_type, no_of_products,
                             invoice_address, start_date, end_date,
-                            location, customer_role_uuid, product_uuids)
+                            location, customer_relation_uuid, product_uuids)
     if result:
         return result.json()['uuid']
 
@@ -373,7 +373,7 @@ def update_customer_relation(fields, new_values):
 
         properties = {}
         relations = {}
-        old_addresses = customer_relation['relationer']['adresser']
+        old_addresses = customer_relation['relationer'].get('adresser', [])
         assert(len(old_addresses) <= 1)
         old_address_uuid = old_addresses[0] if old_addresses else None
         # Recalculate address & set correct address link.
@@ -446,8 +446,12 @@ def update_agreement(fields, new_values):
 
     # Look up agreement, we know we're going to need this.
     customer_number = int_str(fields['Kundenr'])
+    cr_uuid = lookup_customer_relation(customer_number)
+    if not cr_uuid:
+        print("Customer not found when updating agreement:", customer_number)
+        return
     # The should be one and only one agreement for each CR.
-    agreements = lookup_agreements(customer_number)
+    agreements = lookup_agreements(cr_uuid)
     if len(agreements) > 0:
         agreement_uuid = agreements[0]
     else:
