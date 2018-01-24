@@ -1,55 +1,100 @@
 # -*- coding: utf-8 -*-
 
 import re
-import json
 import requests
-
-from settings import DO_VERIFY_SSL_SIGNATURE
-
+from logging import getLogger
 
 # DAR Service settings
 BASE_URL = "https://dawa.aws.dk"
 
+# Init logging
+log = getLogger(__name__)
 
-def get_request(resource, uuid):
-    """GET ADDRESS"""
+
+def get_request(resource, **params):
+    """
+    Parent GET request primarily used by wrapper functions
+
+    :param resource:    REST API resource path (e.g. /adresser/<uuid>)
+    :param uuid:        Address object identifier (Type: uuid)
+    :param params:      Query parameters, by default 'flad'
+                        which provides a flattened object structure
+
+    :return:            Returns address object
+    """
 
     # Generate url
-    url = "{base}/{resource}/{uuid}".format(
-        base=BASE_URL,
-        resource=resource,
-        uuid=uuid
+    url = "{base_url}/{resource_path}".format(
+        base_url=BASE_URL,
+        resource_path=resource
     )
 
-    # Params
-    params = {
-        "struktur": "flad"
-    }
+    # INFO
+    log.info(
+        "GET request: {url} (Params: {params})".format(
+            url=url,
+            params=params
+        )
+    )
 
-    # TODO: Verify SSL signature must dynamically be set
     response = requests.get(
         url=url,
-        params=params,
-        verify=DO_VERIFY_SSL_SIGNATURE
+        params=params
     )
 
-    if response.status_code != 200:
+    if not response.status_code == 200:
+        # Log error
+        log.error(response.text)
+
         return False
 
     return response.json()
 
 
 def get_access_address(uuid):
+    """
+    Helper function for retrieving access addresses.
+    Buildings with multiple sections/appartments
+    usually have limited entry points.
 
-    resource = "adgangsadresser"
+    Access address points towards such an entry point.
+    For more information, see service documentation (http://dawa.aws.dk)
+
+    :param uuid:    Address object identifier
+
+    :return:        Returns access_adapter (document)
+    """
+
+    resource = "adgangsadresser/{identifier}".format(
+        identifier=uuid
+    )
 
     data = get_request(
         resource=resource,
-        uuid=uuid
+        struktur="flad"
     )
 
     if not data:
-        return
+        return False
+
+    return access_adapter(data)
+
+
+def access_adapter(data):
+    """
+    Adapter to convert an access address object to cache layer document.
+    The document contains both transport meta data and the original content.
+
+    :param data:    Accepts DAR address (REST) object
+
+    :return:        Cache document containing meta data and CRM data object.
+                    Example:
+                    {
+                        "id": <DAR reference (uuid)>,
+                        "external_ref": <CRM reference (guid)>,
+                        "data": <CRM data object>
+                    }
+    """
 
     adresseid = data["id"]
     vejkode = data["vejkode"]
@@ -84,17 +129,17 @@ def get_access_address(uuid):
     # To distinguish between actual addresses and access addresses
     search += ", adgangsadresse"
 
-    # AVA specific payload
-    payload = {
+    # Cache layer compliant document
+    document = {
         "id": adresseid,
         "external_ref": None,
         "data": {
-            "ava_dawa_uuid": adresseid,
             "ava_name": search,
             "ava_gadenavn": vejnavn,
             "ava_husnummer": husnr_nr,
             "ava_bogstav": husnr_bogstav,
             "ava_postnummer": postnr,
+            "ava_vejkode": vejkode,
             "ava_kommunenummer": kommunekode,
             "ava_by": postnrnavn,
             "ava_land": land,
@@ -104,15 +149,48 @@ def get_access_address(uuid):
             "ava_breddegrad": str(breddegrad)
         }
     }
-    return payload
+    return document
 
 
-# IMPORT ALL ADDRESSES
-# TODO: Implement adapter for every function
-def adapter(data):
+def get_address(uuid):
+    """
+    Helper function for retrieving addresses.
+
+    :param uuid:    Address object identifier
+
+    :return:        Returns adapter (document)
+    """
+
+    resource = "adresser/{identifier}".format(
+        identifier=uuid
+    )
+
+    data = get_request(
+        resource=resource,
+        struktur="flad"
+    )
 
     if not data:
         return False
+
+    return adapter(data)
+
+
+def adapter(data):
+    """
+    Adapter to convert an address object to cache layer document.
+    The document contains both transport meta data and the original content.
+
+    :param data:    Accepts DAR address (REST) object
+
+    :return:        Cache document containing meta data and CRM data object.
+                    Example:
+                    {
+                        "id": <DAR reference (uuid)>,
+                        "external_ref": <CRM reference (guid)>,
+                        "data": <CRM data object>
+                    }
+    """
 
     adresseid = data["id"]
     vejkode = data["vejkode"]
@@ -158,9 +236,9 @@ def adapter(data):
 
     search += ", {} {}".format(postnr, postnrnavn)
 
-    # AVA specific payload
-    payload = {
-        "_id": adresseid,
+    # Cache layer compliant document
+    document = {
+        "id": adresseid,
         "external_ref": None,
         "data": {
             "ava_dawaadgangsadresseid": adgangsadresseid,
@@ -182,60 +260,35 @@ def adapter(data):
             "ava_breddegrad": str(breddegrad)
         }
     }
-    return payload
-
-
-def get_address(uuid):
-
-    resource = "adresser"
-
-    data = get_request(
-        resource=resource,
-        uuid=uuid
-    )
-
-    if not data:
-        return False
-
-    return adapter(data)
+    return document
 
 
 def get_all(area_code):
-    """GET ADDRESS"""
+    """
+    Helper function for retrieving all addresses within an area code.
+
+    :param area_code:   4 digit area code identifier
+
+    :return:            Returns list of converted documents
+    """
 
     resource = "adresser"
 
-    # Generate url
-    url = "{base}/{resource}".format(
-        base=BASE_URL,
-        resource=resource
+    addresses = get_request(
+        resource=resource,
+        kommunekode=area_code,
+        struktur="flad"
     )
 
-    # Params
-    params = {
-        "kommunekode": area_code,
-        "struktur": "flad"
-    }
-
-    # TODO: Verify SSL signature must dynamically be set
-    response = requests.get(
-        url=url,
-        params=params,
-        verify=DO_VERIFY_SSL_SIGNATURE
-    )
-
-    if response.status_code != 200:
-        return False
+    if not addresses:
+        return
 
     # Create empty payload:
-    payload = []
+    list_of_documents = []
 
-    for address in response.json():
+    # Iterate and append converted documents to the list
+    for address in addresses:
         converted = adapter(address)
-        payload.append(converted)
+        list_of_documents.append(converted)
 
-    return payload
-
-if __name__ == "__main__":
-    address = get_access_address("0a3f5096-68f7-32b8-e044-0003ba298018")
-    print(address)
+    return list_of_documents
