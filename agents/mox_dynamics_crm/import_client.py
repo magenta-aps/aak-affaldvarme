@@ -113,7 +113,7 @@ def import_to_cache(resource):
 
     # Batch generate fetches n amount of entities
     # Returns iterator
-    for entity in oio.batch_generator(resource, list_of_uuids):
+    for batch in oio.batch_generator(resource, list_of_uuids):
 
         # Info
         log.info(
@@ -125,7 +125,7 @@ def import_to_cache(resource):
         # Store in the cache layer
         store = cache.store(
             resource=resource,
-            payload=entity
+            payload=batch
         )
 
         # Log database status object
@@ -160,10 +160,10 @@ def run_import():
     """
 
     # Import addresses
-    import_all_addresses()
+    # import_all_addresses()
 
     # Import Lora objects
-    import_to_cache("bruger")
+    # import_to_cache("bruger")
     import_to_cache("organisation")
     import_to_cache("organisationfunktion")
     import_to_cache("indsats")

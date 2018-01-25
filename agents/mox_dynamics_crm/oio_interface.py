@@ -100,6 +100,8 @@ def batch_generator(resource, list_of_uuids):
             log.error(uuid_batch)
             return False
 
+        batch = []
+
         # Return iterator
         for result in results:
             adapted = adapter(result)
@@ -109,7 +111,9 @@ def batch_generator(resource, list_of_uuids):
                 log.error(result)
                 break
 
-            yield adapted
+            batch.append(adapted)
+
+        yield batch
 
 
 def get_all(resource):
