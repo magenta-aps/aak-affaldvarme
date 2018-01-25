@@ -1,3 +1,4 @@
+"""Clients for various Internet services."""
 #
 # Copyright (c) 2017, Magenta ApS
 #
@@ -23,8 +24,7 @@ DAWA_ACCESS_URL = 'https://dawa.aws.dk/adgangsadresser'
 
 
 def get_address_from_service(dawa_service, address):
-    "Get DAWA UUID from dictionary with correct fields."
-
+    """Get DAWA UUID from dictionary with correct fields."""
     address['struktur'] = 'mini'
 
     response = requests.get(
@@ -50,8 +50,7 @@ access_address_uuid = functools.partial(get_address_from_service,
 
 
 def fuzzy_address_uuid(addr_str):
-    "Get DAWA UUID from string using the 'datavask' API."
-
+    """Get DAWA UUID from string using the 'datavask' API."""
     DAWA_DATAVASK_URL = "https://dawa.aws.dk/datavask/adresser"
 
     params = {'betegnelse': addr_str}
@@ -78,10 +77,16 @@ def fuzzy_address_uuid(addr_str):
 
 
 def get_cvr_data(cvr_number):
+    """Get CVR data from Serviceplatformen."""
     return _get_cvr_data(cvr_number, SP_UUIDS, CERTIFICATE_FILE)
 
 
 def report_error(error_message, error_stack=None, error_object=None):
+    """Report error, logging to file and sending to an AMQP Queue.
+
+    The AMQP queue will decide what to do with the various errors depending on
+    their gravity - e.g inform users by email, log to a special log or discard.
+    """
     source = "MOX KMD EE"
     error_msg = {
         "source": source,

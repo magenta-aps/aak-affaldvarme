@@ -71,8 +71,9 @@ def read_customer_records(cursor):
 
 def store_customer_records(customer_relations):
     """Store customer records on disk.
-    
-    This is a simple, no-frills cache using the pickle module."""
+
+    This is a simple, no-frills cache using the pickle module.
+    """
     with open(CUSTOMER_RELATIONS_FILE, 'wb') as f:
         pickle.dump(customer_relations, f, protocol=4)
 
@@ -166,7 +167,6 @@ def import_customer_record(fields):
 
     Assume customers themselves have already been imported.
     """
-
     # Lookup customer in LoRa - insert if it doesn't exist already.
     id_number = cpr_cvr(int_str(fields['PersonnrSEnr']))
     ligest_personnr = cpr_cvr(int_str(fields['LigestPersonnr']))
@@ -281,7 +281,7 @@ def import_customer_record(fields):
 
 
 def update_customer_record(fields, changed_fields):
-    "Update relevant LoRa objects with the specific changes."
+    """Update relevant LoRa objects with the specific changes."""
     customer_fields = ['Telefon', 'MobilTlf', 'Fax', 'Kundesagsnr']
     customer_relation_fields = ['ForbrStVejnavn', 'Vejkode', 'Postnr',
                                 'ForbrStPostdistrikt', 'Husnr', 'Bogstav',
@@ -320,11 +320,13 @@ def read_installation_records(cursor):
 
 
 def store_installation_records(installations):
+    """Store installation information in file for later use."""
     with open(INSTALLATIONS_FILE, 'wb') as f:
         pickle.dump(installations, f, protocol=4)
 
 
 def retrieve_installation_records():
+    """Read installation information from disk."""
     try:
         with open(INSTALLATIONS_FILE, 'rb') as f:
             return pickle.load(f)
@@ -333,6 +335,7 @@ def retrieve_installation_records():
 
 
 def delete_installation_record(product_id):
+    """Delete product from LoRa when no longer relevant."""
     # get product UUID
     product_uuid = lookup_product(product_id)
     # delete product & find agreement for this product UUID, if any
@@ -354,6 +357,7 @@ def delete_installation_record(product_id):
 
 
 def import_installation_record(fields):
+    """Import product from KMD EE installation record."""
     # check there's an agreement corresponding to this Forbrugssted
     customer_number = int_str(fields['Kundenr'])
     cr_uuid = lookup_customer_relation(customer_number)
@@ -392,7 +396,7 @@ def import_installation_record(fields):
 
 
 def update_installation_record(old_fields, changed_fields):
-    "Update relevant LoRa objects with the specific changes."
+    """Update relevant LoRa objects with the specific changes."""
     # TODO: Investigate if this is ever relevant.
     print("UPDATED INSTALLATION INFO")
 
