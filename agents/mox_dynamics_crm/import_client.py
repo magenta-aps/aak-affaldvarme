@@ -87,7 +87,10 @@ def import_all_addresses():
         addresses = addresses[size:]
 
         try:
-            cache.store_address(batch_of_addresses)
+            cache.store(
+                resource="dawa",
+                payload=batch_of_addresses
+            )
 
         except Exception as error:
             log.error(batch_of_addresses)
@@ -108,19 +111,27 @@ def import_to_cache(resource):
     # Get all uuids
     list_of_uuids = oio.get_all(resource)
 
-    # Workaround for consolidating bruger/organisation
-    cache_resource = resource
-
-    if resource == "bruger" or resource == "organisation":
-        cache_resource = "contact"
-
     # Batch generate fetches n amount of entities
     # Returns iterator
     for entity in oio.batch_generator(resource, list_of_uuids):
-        # # Append to the payload
-        # cache_payload.append(entity)
-        store = cache.store(cache_resource, entity)
-        print(store)
+
+        # Info
+        log.info(
+            "Attempting to import batch of {resource}".format(
+                resource=resource
+            )
+        )
+
+        # Store in the cache layer
+        store = cache.store(
+            resource=resource,
+            payload=entity
+        )
+
+        # Log database status object
+        log.info(store)
+
+
 
 
 def import_sanity_check():
@@ -160,7 +171,7 @@ def run_import():
     import_to_cache("klasse")
 
     # Run sanity check
-    # import_sanity_check()
+    import_sanity_check()
 
     # Done
     print("Import procedure completed - Exiting")
