@@ -7,10 +7,11 @@ from logging import getLogger
 
 # Temporary mapping
 mapping = {
-    "contact": "contacts",
+    "bruger": "contacts",
+    "organisation": "contacts",
     "dawa": "ava_adresses",
     "dawa_access": "access",
-    "interessefaelleskab": "accounts",
+    "interessefaellesskab": "accounts",
     "indsats": "ava_aftales",
     "organisationfunktion": "ava_kunderolles",
     "klasse": "ava_installations",
@@ -60,8 +61,7 @@ def insert(table, payload, conflict="error"):
             }
 
     :param table:       Table name (required)
-    :param payload:     JSON (dictionary) payload to insert
-                        a document into the database
+    :param payload:     Document or list of documents
 
     :param conflict:    This will return an error if a document has
                         a conflicting 'id'.
@@ -75,9 +75,10 @@ def insert(table, payload, conflict="error"):
                             'unchanged': 0,
                             'skipped': 0,
                             'deleted': 0,
+                            'generated_keys': [<uuid1>, <uuid2>...<n>]
                             'errors': 0,
                             'replaced': 0,
-                            'inserted': 1
+                            'inserted': <amount>
                         }
     """
 
@@ -85,7 +86,7 @@ def insert(table, payload, conflict="error"):
     log.debug(payload)
 
     with connect() as connection:
-        query = r.table(table).insert(payload, conflict="error")
+        query = r.table(table).insert(payload, conflict=conflict)
         run = query.run(connection)
 
         # Info
@@ -107,7 +108,7 @@ def insert(table, payload, conflict="error"):
         return run
 
 
-def update(table, payload):
+def update(table, document):
     """
     Parent function to update objects
     May be redundant as the upsert (conflict=update) functionality
@@ -117,16 +118,19 @@ def update(table, payload):
     if they do not exist
 
     :param table:       Table name (required)
-    :param payload:     JSON (dictionary) payload/document to be updated
+    :param document:     JSON (dictionary) payload/document to be updated
     :return:            Returns status object
     """
 
     # Debug
-    log.debug(payload)
+    log.debug(document)
+
+    identifier = document["id"]
 
     with connect() as connection:
-        query = r.table(table).insert(payload, conflict="update")
-        run = query.run(connection)
+        query = r.table(table).get(identifier)
+        update = query.update(document)
+        run = update.run(connection)
 
         # Info
         log.info(
@@ -138,11 +142,12 @@ def update(table, payload):
 
         if run["errors"]:
             log.error(
-                "Error inserting into {table}: {stack}".format(
+                "Error updating {table}: {identifier}".format(
                     table=table,
-                    stack=run
+                    identifier=identifier
                 )
             )
+            log.error(run["first_error"])
 
         return run
 
@@ -222,9 +227,8 @@ def all(table):
 
         # Info
         log.info(
-            "{table}: {query}".format(
-                table=table,
-                query=run
+            "Retrieving all documents from {table}".format(
+                table=table
             )
         )
 
@@ -253,24 +257,6 @@ def find_address(uuid):
     )
 
 
-def store_address(payload):
-    """
-    Wrapper function to insert an address document into the database
-
-    :param payload:     Payload (dictionary) to insert
-    :return:            Returns status object (See 'insert' function)
-    """
-
-    # Checking that payload is not empty
-    if not payload:
-        return False
-
-    return insert(
-        table=mapping.get("dawa"),
-        payload=payload
-    )
-
-
 def find_indsats(uuid):
     """
     Wrapper function to retrieve an 'indsats' document by 'id'.
@@ -283,26 +269,34 @@ def find_indsats(uuid):
     :return:        Returns either empty list or list of documents
     """
 
-    return filter(
+    documents = []
+
+    for document in filter(
         table=mapping.get("indsats"),
         interessefaellesskab_ref=uuid
-    )
+    ):
+        documents.append(document)
+
+    return documents[0]
 
 
 def store(resource, payload):
     """
-    Wrapper function to insert documents by resource name.
+    Helper function to insert documents by resource name.
     This is a temporary solution to translate the entity names using the map.
+
     (See mapping dictionary above)
 
-    :param resource:
-    :param payload:
-    :return:
+    :param resource:    LORA entity name
+    :param payload:     Document or list of documents
+
+    :return:            Returns generic insert function.
+                        Conflict is set to update, which means that
+                        existing documents are updated rather than duplicated.
     """
 
-    table = mapping.get(resource)
-
-    if not table:
-        return False
-
-    return insert(table, payload)
+    return insert(
+        table=mapping.get(resource),
+        payload=payload,
+        conflict="update"
+    )
