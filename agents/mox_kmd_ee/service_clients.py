@@ -115,5 +115,5 @@ def report_error(error_message, error_stack=None, error_object=None):
 
 
 if __name__ == '__main__':
-
+    report_error("Hej med dig!")
     print(fuzzy_address_uuid('Parkvej 56, 8920 Randers NV'))
