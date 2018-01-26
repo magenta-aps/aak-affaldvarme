@@ -12,7 +12,13 @@ import pytz
 
 from collections import defaultdict
 
-from serviceplatformen_cpr import get_cpr_data
+try:
+    from serviceplatformen_cpr import get_cpr_data
+except TypeError:
+    """The SP CPR API wasn't configured - this can happen when testing etc."""
+    def get_cpr_data(id):
+        """Dummy implementation for dry runs."""
+        pass
 
 from ee_oio import lookup_bruger, lookup_organisation, lookup_klasse
 from ee_oio import lookup_interessefaellesskab, lookup_organisationfunktioner
