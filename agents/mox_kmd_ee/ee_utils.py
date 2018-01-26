@@ -14,7 +14,12 @@ def int_str(s):
 
 
 def cpr_cvr(val):
-    """Normalize a customer number as either a CPR or CVR number."""
+    """Normalize a customer ID (PersonnrSEnr) as either a CPR or CVR number.
+
+    :param val: The customer ID to normalize as CPR or CVR.
+    :type val: str
+    :returns: str -- the normalized ID number.
+    """
     assert(type(val) == str)
     val = str(int(val))
     if not (8 <= len(val) <= 10) and (len(val) > 1):
