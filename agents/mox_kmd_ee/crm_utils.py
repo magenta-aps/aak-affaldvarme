@@ -473,7 +473,7 @@ def update_agreement(fields, new_values):
         return
 
     properties = {}
-    relations = {}
+    relations = defaultdict(list)
 
     if set(new_values) & set(address_fields):
         # Handle possible new invoicing address
@@ -489,8 +489,9 @@ def update_agreement(fields, new_values):
                 )
             )
         if invoice_address_uuid:
-            relations['indsatsdokument'] = Relation("uuid",
-                                                    invoice_address_uuid)
+            relations['indsatsdokument'].append(
+                Relation("uuid", invoice_address_uuid)
+            )
 
     # Now handle the date change(s).
     tz = pytz.timezone('Europe/Copenhagen')
