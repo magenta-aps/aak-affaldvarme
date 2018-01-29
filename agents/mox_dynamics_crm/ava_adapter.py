@@ -144,6 +144,7 @@ def ava_bruger(entity):
 
             # Arosia fields (Not supported by CRM)
             # "telephone1": None,
+            # "emailaddress1": None
             # "arosia_telephone": None,
             # "ava_arosiaid": None
         }
@@ -233,6 +234,7 @@ def ava_organisation(entity):
 
             # Arosia
             # "telephone1": None,
+            # "emailaddress1": None
             # "arosia_telephone": None,
             # "ava_arosiaid": None,
         }

@@ -76,6 +76,12 @@ def process(kunderolle):
         log.error(kunderolle)
         return False
 
+    # Set KMDEE email address as primary if primary is null
+    secondary_email = contact["data"]["ava_emailkmdee"]
+
+    # Set primary email
+    contact["data"]["emailaddress1"] = secondary_email
+
     # Address
     address_ref = contact["dawa_ref"]
 
