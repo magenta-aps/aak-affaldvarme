@@ -5,54 +5,17 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
 
-import requests
 import oio_interface as oio
 import dawa_interface as dawa
 import cache_interface as cache
 
-from helper import get_config
-from logger import start_logging
-
-# Settings (For compatibility)
-config = get_config()
-
-# Parent organisation
-# Reference to which organisation an object belongs to
-# NOTE: Only some entities support this reference
-ORGANISATION_UUID = config["parent_organisation"] or None
-
-# Optionally the signature of the SSL certificate can be verified
-# This should be disabled when no commercial certificate is installed
-# (E.g. should be disabled or set to 'no' when using a self signed signature)
-# By default this is set to 'Yes'
-DO_VERIFY_SSL_SIGNATURE = config.getboolean("do_verify_ssl_signature", "yes")
-
-# General
-DO_DISABLE_SSL_WARNINGS = True
-DO_RUN_IN_TEST_MODE = True
-
-# Logging
-LOG_FILE = "/var/log/mox/mox_dynamics_crm.log"
-
-# DAR/DAWA settings
-AREA_CODE = "0751"
-
-# If the SSL signature is not valid requests will print errors
-# To circumvent this, warnings can be disabled for testing purposes
-if DO_DISABLE_SSL_WARNINGS:
-    from requests.packages.urllib3.exceptions import InsecureRequestWarning
-    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+from logging import getLogger
 
 
-# In test mode log is written to a local logfile
-# This is to prevent the test log from being collected for analysis
-if DO_RUN_IN_TEST_MODE:
-    LOG_FILE = "debug.log"
-
-
-# Set logging
-log = start_logging(20, LOG_FILE)
+# Init logging
+log = getLogger(__name__)
 
 
 def import_all_addresses():
@@ -62,6 +25,9 @@ def import_all_addresses():
 
     :return:    All operations are written to logs
     """
+
+    # DAR/DAWA settings
+    AREA_CODE = "0751"
 
     # Begin
     log.info("Begin address import")
@@ -102,10 +68,15 @@ def import_all_addresses():
 
 def import_to_cache(resource):
     """
-    Import all database objects (by entity)
+    Retrieve all database objects (by entity)
+    and store converted (ava_adapter) document into the cache layer.
+
+    Data objects are just stored,
+    no relations between documents at this point.
 
     :param resource:    Name of the entity to import
-    :return:            Prints cache status object to terminal
+
+    :return:
     """
 
     # Get all uuids
@@ -132,8 +103,6 @@ def import_to_cache(resource):
         log.info(store)
 
 
-
-
 def import_sanity_check():
     """
     Simple sanity check for addresses.
@@ -141,6 +110,8 @@ def import_sanity_check():
     and confirms that the address exists in the DAR database.
 
     TODO: Create check
+
+    :return:
     """
 
     # Retrieve all address from cache
@@ -156,26 +127,24 @@ def import_sanity_check():
 
 def run_import():
     """
-    Run all import tasks
+    Wrapper to run full import.
+
+    :return:
     """
 
+    # Begin
+    log.info("Begin import (all) procedure")
+
     # Import addresses
-    # import_all_addresses()
+    import_all_addresses()
 
     # Import Lora objects
-    # import_to_cache("bruger")
+    import_to_cache("bruger")
     import_to_cache("organisation")
     import_to_cache("organisationfunktion")
     import_to_cache("indsats")
     import_to_cache("interessefaellesskab")
     import_to_cache("klasse")
 
-    # Run sanity check
-    import_sanity_check()
-
     # Done
-    print("Import procedure completed - Exiting")
-
-
-if __name__ == "__main__":
-    run_import()
+    log.info("Import procedure completed - Exiting")
