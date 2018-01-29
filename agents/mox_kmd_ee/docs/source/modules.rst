@@ -1,5 +1,5 @@
-mox_kmd_ee
-==========
+Modules
+=======
 
 .. toctree::
    :maxdepth: 4
