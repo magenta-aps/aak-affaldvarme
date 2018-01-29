@@ -1,41 +1,33 @@
 # -*- coding: utf-8 -*-
 
-import logging
-import requests
-
 import crm_interface as crm
 import cache_interface as cache
 import dawa_interface as dawa
 
-# Log handler
-from logger import start_logging
-
-# Local settings
-from settings import LOG_FILE
-from settings import DO_RUN_IN_TEST_MODE
-from settings import DO_DISABLE_SSL_WARNINGS
+from helper import get_config
+from logging import getLogger
 
 
-# If the SSL signature is not valid requests will print errors
-# To circumvent this, warnings can be disabled for testing purposes
-if DO_DISABLE_SSL_WARNINGS:
-    from requests.packages.urllib3.exceptions import InsecureRequestWarning
-    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+# Init logging
+log = getLogger(__name__)
 
-# In test mode log is written to a local logfile
-# This is to prevent the test log from being collected for analysis
-if DO_RUN_IN_TEST_MODE:
-    LOG_FILE = "debug.log"
-
-
-# Init logger
-log = logging.getLogger(__name__)
+# Get config
+config = get_config()
 
 
 def export_everything():
+    """
+    Export everything (in sequence) from the cache layer to CRM.
+    During this process all the relations between the entities are created.
+    Relations are stored in the cache layer as references.
+
+    TODO:   This function should be rewritten to base relations
+            on 'contacts' rather than 'kunderolles'.
+    """
+
     all_kunderolle = []
 
-    for kunderolle in cache.find_all("organisationfunktion"):
+    for kunderolle in cache.all("ava_kunderolles"):
         all_kunderolle.append(kunderolle)
 
     for kunderolle in all_kunderolle:
@@ -43,6 +35,16 @@ def export_everything():
 
 
 def process(kunderolle):
+    """
+    Process sequence of related documents (by 'ava_kunderolles')
+    TODO: Process should be merged with all of the updates modules.
+
+    (For further information, see update functions below)
+
+    :param kunderolle:  Kunderolle document retrieved from the cache layer.
+
+    :return:
+    """
 
     # Prepare lookup reference fallback
     lookup_contact = None
@@ -50,8 +52,10 @@ def process(kunderolle):
     lookup_aftale = None
     lookup_address = None
     lookup_billing_address = None
-    lookup_utility_address = None
-    lookup_kunderolle = None
+
+    # May not be needed:
+    # lookup_utility_address = None
+    # lookup_kunderolle = None
 
     # Hotfix:
     # To create a link between contact and aftale,
@@ -64,7 +68,13 @@ def process(kunderolle):
     interessefaellesskab_ref = kunderolle["interessefaellesskab_ref"]
 
     # Customer/Contact
-    contact = cache.find("contact", contact_ref)
+    contact = cache.get(table="contacts", uuid=contact_ref)
+
+    if not contact:
+        print(contact)
+        log.error("Contact not found: {}".format(contact_ref))
+        log.error(kunderolle)
+        return False
 
     # Address
     address_ref = contact["dawa_ref"]
@@ -75,12 +85,16 @@ def process(kunderolle):
         log.debug("Contact: {0}".format(contact["_id"]))
         return False
 
-    address = cache.find("dawa", address_ref)
+    address = cache.get(table="ava_adresses", uuid=address_ref)
 
     if not address:
         dawa_address = dawa.get_address(address_ref)
-        store = cache.store_address(dawa_address)
-        address = cache.find("dawa", address_ref)
+
+        # Store address in the cache layer
+        cache.store(resource="dawa", payload=dawa_address)
+
+        # Get from cache once more
+        address = cache.get(table="ava_adresses", uuid=address_ref)
 
     if not address:
         return False
@@ -91,9 +105,9 @@ def process(kunderolle):
         address_data = address["data"]
         address["external_ref"] = crm.store_address(address_data)
 
-        update_cache = cache.update_or_insert(
-            resource="dawa",
-            payload=address
+        update_cache = cache.update(
+            table="ava_adresses",
+            document=address
         )
 
         log.info("Updating cache for klasse")
@@ -112,9 +126,9 @@ def process(kunderolle):
         contact_data["ava_adresse@odata.bind"] = lookup_address
         contact["external_ref"] = crm.store_contact(contact_data)
 
-        update_cache = cache.update_or_insert(
-            resource="contact",
-            payload=contact
+        update_cache = cache.update(
+            table="contacts",
+            document=contact
         )
 
         log.info("Updating cache for contact")
@@ -131,26 +145,35 @@ def process(kunderolle):
         )
 
     # Kundeforhold
-    kundeforhold = cache.find(
-        "interessefaellesskab",
-        interessefaellesskab_ref
+    kundeforhold = cache.get(
+        table="accounts",
+        uuid=interessefaellesskab_ref
     )
 
     # Billing address
-    billing_address_ref = kundeforhold["dawa_ref"]
+    billing_address_ref = kundeforhold.get("dawa_ref")
 
     # Fallback
     billing_address = None
 
     if billing_address_ref:
-        try:
-            billing_address = cache.find("dawa", billing_address_ref)
-        except:
+        billing_address = cache.get(
+            table="ava_adresses",
+            uuid=billing_address_ref
+        )
+
+        if not billing_address:
             log.info("Address does not exist in the cache layer, importing")
             dawa_address = dawa.get_address(billing_address_ref)
             if dawa_address:
-                store = cache.store_address(dawa_address)
-                billing_address = cache.find("dawa", billing_address_ref)
+                # Store address in cache layer
+                cache.store(resource="dawa", payload=dawa_address)
+
+                # Get newly stored address
+                billing_address = cache.get(
+                    table="ava_adresses",
+                    uuid=billing_address_ref
+                )
 
     if billing_address:
 
@@ -159,9 +182,9 @@ def process(kunderolle):
                 billing_address["data"]
             )
 
-            update_cache = cache.update_or_insert(
-                resource="dawa",
-                payload=billing_address
+            update_cache = cache.update(
+                table="ava_adresses",
+                document=billing_address
             )
 
             log.info("Updating cache for billing_address")
@@ -178,13 +201,14 @@ def process(kunderolle):
 
         if lookup_billing_address:
             kundeforhold_data[
-                "ava_adresse@odata.bind"] = lookup_billing_address
+                "ava_adresse@odata.bind"
+            ] = lookup_billing_address
 
         kundeforhold["external_ref"] = crm.store_account(kundeforhold_data)
 
-        update_cache = cache.update_or_insert(
-            resource="interessefaellesskab",
-            payload=kundeforhold
+        update_cache = cache.update(
+            table="accounts",
+            document=kundeforhold
         )
 
         log.info("Updating cache for kundeforhold")
@@ -214,9 +238,9 @@ def process(kunderolle):
             kunderolle_data
         )
 
-        update_cache = cache.update_or_insert(
-            resource="organisationfunktion",
-            payload=kunderolle
+        update_cache = cache.update(
+            table="ava_kunderolles",
+            document=kunderolle
         )
 
         log.info("Updating cache for organisationfunktion")
@@ -229,7 +253,7 @@ def process(kunderolle):
         log.warning("Aftale does not exist")
         return
 
-    if not aftale["external_ref"]:
+    if not aftale.get("external_ref"):
         aftale_data = aftale["data"]
 
         if lookup_account:
@@ -245,9 +269,9 @@ def process(kunderolle):
 
         aftale["external_ref"] = crm.store_aftale(aftale_data)
 
-        update_cache = cache.update_or_insert(
-            resource="indsats",
-            payload=aftale
+        update_cache = cache.update(
+            table="ava_aftales",
+            document=aftale
         )
 
         log.info("Updating cache for indsats")
@@ -263,54 +287,92 @@ def process(kunderolle):
         )
 
         # Create link between aftale and contact
-        create_link = crm.contact_and_aftale_link(
+        crm.contact_and_aftale_link(
             contact_guid=contact_external_ref,
             aftale_guid=aftale_external_ref
         )
 
     # Installation
     klasse_ref = aftale["klasse_ref"]
-    produkt = cache.find("klasse", klasse_ref)
+
+    if not klasse_ref:
+        print("Causing an error: {}".format(klasse_ref))
+        print(aftale)
+        return
+
+    produkt = cache.get(table="ava_installations", uuid=klasse_ref)
 
     if not produkt:
         log.warning("Produkt does not exist")
         return
+
+    # TODO: utility address must be added here
+    # Utility address fallback
+
+    utility_address = None
+
+    if produkt["dawa_ref"]:
+
+        utility_ref = produkt["dawa_ref"]
+        print(utility_ref)
+
+        # Get address external ref
+        utility_address = cache.get(
+            table="access",
+            uuid=utility_ref
+        )
+
+        # If address does not exist in the cache layer
+        # Get from DAR and store in cache
+
+        if not utility_address:
+            utility_address = dawa.get_access_address(utility_ref)
+            print("GET ADR FROM DAR")
+            print(utility_address)
+
+    if utility_address:
+        if not utility_address["external_ref"]:
+
+            utility_address["external_ref"] = crm.store_address(
+                utility_address["data"]
+            )
+
+            # Store in cache
+            cache.store(
+                resource="dawa_access",
+                payload=utility_address
+            )
+
+        if utility_address["external_ref"]:
+            lookup_utility_address = "/ava_adresses({reference})".format(
+                reference=utility_address["external_ref"]
+            )
+
+            produkt["data"]["ava_adresse@odata.bind"] = lookup_utility_address
 
     # Workaround
     if aftale_external_ref:
         produkt["indsats_ref"] = aftale_external_ref
 
     if not produkt["external_ref"]:
-        produkt_data = produkt["data"]
 
-        # TODO: utility address must be added here
         # Workaround: Just inserting billing address
         ava_kundenummer = kundeforhold["data"]["ava_kundenummer"]
-        produkt_data["ava_kundenummer"] = ava_kundenummer
+        produkt["data"]["ava_kundenummer"] = ava_kundenummer
 
         if lookup_aftale:
-            produkt_data["ava_aftale@odata.bind"] = lookup_aftale
+            produkt["data"]["ava_aftale@odata.bind"] = lookup_aftale
 
-        if lookup_billing_address:
-            produkt_data["ava_adresse@odata.bind"] = lookup_billing_address
+        # Utility address
+        # if lookup_billing_address:
+        #     produkt_data["ava_adresse@odata.bind"] = lookup_billing_address
 
-        produkt["external_ref"] = crm.store_produkt(produkt_data)
-
-    if produkt["external_ref"]:
-        produkt_update = {
-            "ava_aftale@odata.bind": lookup_aftale
-        }
-
-        # Update CRM
-        crm.update_produkt(
-            identifier=produkt["external_ref"],
-            payload=produkt_update
-        )
+        produkt["external_ref"] = crm.store_produkt(produkt["data"])
 
     # Update cache
-    update_cache = cache.update_or_insert(
-        resource="klasse",
-        payload=produkt
+    update_cache = cache.update(
+        table="ava_installations",
+        document=produkt
     )
 
     log.info("Updating cache for produkt")
@@ -325,7 +387,7 @@ def update_all_installations():
 
     all_installations = []
 
-    for installation in cache.find_all("klasse"):
+    for installation in cache.all("ava_installations"):
 
         if not installation["dawa_ref"]:
             continue
@@ -348,7 +410,7 @@ def update_alternative_address(installation):
     )
     log.debug(installation)
 
-    resource = "dawa_access"
+    resource = "access"
 
     if not installation["external_ref"]:
         log.info("No external reference found")
@@ -356,7 +418,7 @@ def update_alternative_address(installation):
 
     address_ref = installation["dawa_ref"]
 
-    access_address = cache.find(resource, address_ref)
+    access_address = cache.get(resource, address_ref)
 
     if not access_address:
         log.info("Access address does not yet exist, creating")
@@ -375,7 +437,7 @@ def update_alternative_address(installation):
 
             # Update cache
             log.info("Attempting to update cache for access address")
-            cache.update_or_insert("dawa_access", access_address)
+            cache.store("access", access_address)
 
         except Exception as error:
             log.error("Failed to create access address:")
@@ -391,7 +453,7 @@ def update_alternative_address(installation):
 
     # Hotfix:
     # Create fallback
-    if not "lookup_access_address" in installation:
+    if "lookup_access_address" not in installation:
         log.debug("Creating access address lookup key")
         installation["lookup_access_address"] = None
 
@@ -421,7 +483,10 @@ def update_alternative_address(installation):
 
             # Update cache
             log.info("Attempting to update cache for installation")
-            update_cache = cache.update_or_insert("klasse", installation)
+            update_cache = cache.update(
+                table="ava_installations",
+                document=installation
+            )
 
             if not update_cache:
                 log.debug(update_cache)
@@ -435,19 +500,3 @@ def update_alternative_address(installation):
             log.error(error)
 
     return True
-
-
-if __name__ == "__main__":
-
-    # Begin
-    print("Begin export from cache to CRM")
-
-    # Log to file
-    start_logging(20, LOG_FILE)
-
-    # Run
-    # export_everything()
-    update_all_installations()
-
-    # Done
-    print("All done")
