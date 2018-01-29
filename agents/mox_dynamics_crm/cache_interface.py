@@ -56,6 +56,19 @@ def update_or_insert(resource, payload):
     return query
 
 
+def unset(resource, identifier, instructions):
+
+    # do stuff
+    collection = db[resource]
+
+    query = collection.update(
+        spec={"_id": identifier},
+        document=instructions,
+    )
+
+    return query
+
+
 def find(resource, uuid):
 
     # do stuff

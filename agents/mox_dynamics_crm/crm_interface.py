@@ -237,12 +237,52 @@ def patch_request(resource, payload):
     return response
 
 
-def delete_request(service_url):
+def delete_request(resource, identifier):
+    """
+    Generic DELETE request function
+    """
 
-    return requests.delete(
+    headers = {
+        "Authorization": get_token(),
+        "OData-MaxVersion": "4.0",
+        "OData-Version": "4.0",
+        "Accept": "application/json",
+        "Content-Type": "application/json; charset=utf-8",
+        "Prefer": "return=representation"
+    }
+
+    service_url = "{base}/{resource}({identifier})".format(
+        base=base_endpoint,
+        resource=resource,
+        identifier=identifier
+    )
+
+    response = requests.delete(
         url=service_url,
         headers=headers
     )
+
+    if response.status_code == 401:
+        log.debug('Requesting token and retrying DELETE request')
+
+        # Generate a new token
+        request_token()
+
+        # Sleep 10 seconds
+        time.sleep(10)
+
+        # Set new token into the auth header
+        headers["Authorization"] = get_token()
+
+        # Perform the request again
+        response = requests.delete(
+            url=service_url,
+            headers=headers
+        )
+
+    log.debug("Delete Request: ")
+    log.debug(response.text)
+    return response
 
 
 def store_address(payload):
