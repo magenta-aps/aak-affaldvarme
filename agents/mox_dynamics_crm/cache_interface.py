@@ -300,3 +300,41 @@ def store(resource, payload):
         payload=payload,
         conflict="update"
     )
+
+
+def find_contact(cpr_id):
+    """
+    CLI find --cpr:
+
+    Use filter function to find a contact object by CPR ID.
+
+    This is a utility function for development purposes.
+    (Retrieve and display the object in the terminal)
+
+    :param cpr_id:  CPR ID value from:
+
+                    "data":
+                        {
+                            "ava_cpr_nummer": <cpr id>
+                        }
+
+    :return:        Returns list object containing
+                    the filtered 'JSON' object
+    """
+
+    if not cpr_id:
+        raise Exception("No CPR ID provided")
+
+    contact = filter(
+        table="contacts",
+        data={
+            "ava_cpr_nummer": cpr_id
+        }
+    )
+
+    if not contact:
+        return {
+            "error": "contact not found"
+        }
+
+    return list(contact)
