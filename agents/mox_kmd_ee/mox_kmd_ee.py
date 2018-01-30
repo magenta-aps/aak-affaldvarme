@@ -8,13 +8,11 @@
 #
 
 import sys
-import pickle
 
 from multiprocessing.dummy import Pool
 
 from mssql_config import username, password, server, database
 from ee_utils import connect, int_str, cpr_cvr
-from ee_sql import CUSTOMER_SQL, RELEVANT_TREF_INSTALLATIONS_SQL
 from ee_oio import KUNDE, LIGESTILLINGSKUNDE
 from crm_utils import lookup_customer_relation, lookup_customer_roles, VARME
 from crm_utils import lookup_customer, lookup_agreements, lookup_product
@@ -30,12 +28,13 @@ from crm_utils import update_customer_relation, write_agreement_dict
 from ee_utils import get_forbrugssted_address_uuid
 from ee_utils import get_products_for_location
 from ee_utils import get_alternativsted_address_uuid
+
+from ee_data import read_customer_records, store_customer_records
+from ee_data import retrieve_customer_records, read_installation_records
+from ee_data import store_installation_records, retrieve_installation_records
+
 from service_clients import report_error, fuzzy_address_uuid
 
-
-CUSTOMER_RELATIONS_FILE = 'var/customer_relations'
-INSTALLATIONS_FILE = 'var/installations'
-PRODUCTIDS_FILE = 'var/productids'
 
 VERBOSE = False
 
@@ -48,80 +47,8 @@ def say(*args):
 
 """CUSTOMER RELATED FUNCTIONS.
 
-Read customer related data from database, write to file, retrieve from
-file, import, update.
-
+Import customer, import customer relation, update, delete.
 """
-
-
-def read_customer_records(cursor):
-    """Read customer relations from database.
-
-    Read all data regarding customers, customer roles and customer
-    relationships and map them for easy lookup in case something
-    changes. Basically, by creating a dictionary with customer
-    number as key.
-    """
-    cursor.execute(CUSTOMER_SQL)
-    rows = cursor.fetchall()
-    customer_dict = {int_str(row['Kundenr']): row for row in rows}
-
-    return customer_dict
-
-
-def store_customer_records(customer_relations):
-    """Store customer records on disk.
-
-    This is a simple, no-frills cache using the pickle module.
-    """
-    with open(CUSTOMER_RELATIONS_FILE, 'wb') as f:
-        pickle.dump(customer_relations, f, protocol=4)
-
-
-def retrieve_customer_records():
-    """Retrieve customer records from disk."""
-    try:
-        with open(CUSTOMER_RELATIONS_FILE, 'rb') as f:
-            return pickle.load(f)
-    except FileNotFoundError:
-        return {}
-
-
-def delete_customer_record(customer_number):
-        """Purge relation and customer roles, agreements and products."""
-        cr_uuid = lookup_customer_relation(customer_number)
-        # This should exist provided everything is up to date!
-        if not cr_uuid:
-            print("Customer number {} not found.".format(customer_number))
-            report_error(
-                "Customer number {} not found.".format(customer_number)
-            )
-            return
-
-        # Look up the customer roles and customers for this customer relation.
-
-        roles = lookup_customer_roles(customer_relation=cr_uuid)
-
-        # Delete the customer roles.
-
-        for role in roles:
-            delete_customer_role(role)
-
-        # Delete all agreements and products corresponding to this customer
-        # relation.
-        # There can be only one agreement per customer as is, but in the future
-        # this might change.
-        agreements = lookup_agreements(customer_relation=cr_uuid)
-
-        for agreement_uuid in agreements:
-            products = lookup_products(agreement_uuid=agreement_uuid)
-
-            for p in products:
-                delete_product(p)
-
-            delete_agreement(agreement_uuid)
-        # Now go ahead and delete the customer relation
-        delete_customer_relation(cr_uuid)
 
 
 def import_customer(id_and_fields):
@@ -299,61 +226,47 @@ def update_customer_record(fields, changed_fields):
             handler(fields, changed_fields)
 
 
+def delete_customer_record(customer_number):
+        """Purge relation and customer roles, agreements and products."""
+        cr_uuid = lookup_customer_relation(customer_number)
+        # This should exist provided everything is up to date!
+        if not cr_uuid:
+            print("Customer number {} not found.".format(customer_number))
+            report_error(
+                "Customer number {} not found.".format(customer_number)
+            )
+            return
+
+        # Look up the customer roles and customers for this customer relation.
+
+        roles = lookup_customer_roles(customer_relation=cr_uuid)
+
+        # Delete the customer roles.
+
+        for role in roles:
+            delete_customer_role(role)
+
+        # Delete all agreements and products corresponding to this customer
+        # relation.
+        # There can be only one agreement per customer as is, but in the future
+        # this might change.
+        agreements = lookup_agreements(customer_relation=cr_uuid)
+
+        for agreement_uuid in agreements:
+            products = lookup_products(agreement_uuid=agreement_uuid)
+
+            for p in products:
+                delete_product(p)
+
+            delete_agreement(agreement_uuid)
+        # Now go ahead and delete the customer relation
+        delete_customer_relation(cr_uuid)
+
+
 """Installation related functions.
 
-Read installation data from database, write to file, retrieve from
-file, import, update.
-
+Import, update, delete.
 """
-
-
-def read_installation_records(cursor):
-    """Read relevant Tref installation records from database.
-
-    Reads all relevant data about installations and meters.
-    """
-    cursor.execute(RELEVANT_TREF_INSTALLATIONS_SQL)
-    rows = cursor.fetchall()
-    data_dict = {int_str(row['InstalNummer']): row for row in rows}
-
-    return data_dict
-
-
-def store_installation_records(installations):
-    """Store installation information in file for later use."""
-    with open(INSTALLATIONS_FILE, 'wb') as f:
-        pickle.dump(installations, f, protocol=4)
-
-
-def retrieve_installation_records():
-    """Read installation information from disk."""
-    try:
-        with open(INSTALLATIONS_FILE, 'rb') as f:
-            return pickle.load(f)
-    except FileNotFoundError:
-        return {}
-
-
-def delete_installation_record(product_id):
-    """Delete product from LoRa when no longer relevant."""
-    # get product UUID
-    product_uuid = lookup_product(product_id)
-    # delete product & find agreement for this product UUID, if any
-    if product_uuid:
-        delete_product(product_uuid)
-        agreement_uuid = lookup_agreement_from_product(product_uuid)
-    else:
-        return
-    if agreement_uuid:
-        # remove product from agreement
-        agreement_json = read_agreement(agreement_uuid)
-        products = agreement_json['relationer']['indsatskvalitet']
-        for p in products:
-            if p["uuid"] == product_uuid:
-                p["uuid"] = ''
-        agreement_json['relationer']['indsatskvalitet'] = products
-
-        write_agreement_dict(agreement_uuid, agreement_json)
 
 
 def import_installation_record(fields):
@@ -401,7 +314,31 @@ def update_installation_record(old_fields, changed_fields):
     print("UPDATED INSTALLATION INFO")
 
     for field in changed_fields:
-        print(field + ":", changed_fields[field], "-- was:", old_fields[field])
+        if field not in ['Kundenr', 'DatoFra']:
+            print(field + ":", changed_fields[field],
+                  "-- was:", old_fields[field])
+
+
+def delete_installation_record(product_id):
+    """Delete product from LoRa when no longer relevant."""
+    # get product UUID
+    product_uuid = lookup_product(product_id)
+    # delete product & find agreement for this product UUID, if any
+    if product_uuid:
+        delete_product(product_uuid)
+        agreement_uuid = lookup_agreement_from_product(product_uuid)
+    else:
+        return
+    if agreement_uuid:
+        # remove product from agreement
+        agreement_json = read_agreement(agreement_uuid)
+        products = agreement_json['relationer']['indsatskvalitet']
+        for p in products:
+            if p["uuid"] == product_uuid:
+                p["uuid"] = ''
+        agreement_json['relationer']['indsatskvalitet'] = products
+
+        write_agreement_dict(agreement_uuid, agreement_json)
 
 
 if __name__ == '__main__':
