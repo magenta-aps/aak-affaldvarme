@@ -6,7 +6,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys
 import json
 import click
 import import_client
@@ -34,6 +33,7 @@ if config.getboolean("do_run_in_test_mode", "yes"):
 
 # Set logging
 log = start_logging(20, LOG_FILE)
+
 
 @click.group()
 def cli():
@@ -91,7 +91,11 @@ def find(cpr):
 
 
 @cli.command()
-@click.option('--generate/--do-not-generate', default=False, help='Print token')
+@click.option(
+    '--generate/--do-not-generate',
+    default=False,
+    help='Print token'
+)
 def token(generate):
     """
     Display current OAUTH token, use --generate to create new token.
@@ -100,12 +104,12 @@ def token(generate):
     if generate:
         crm.request_token()
 
-
     token = crm.get_token()
     click.echo("MS Dynamics OAUTH token:\n")
     click.echo("--- begin token ---")
     click.echo(token)
     click.echo("--- end token ---")
+
 
 if __name__ == "__main__":
     cli()
