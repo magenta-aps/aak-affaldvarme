@@ -6,9 +6,16 @@
 Welcome to Mox KMD EE's documentation!
 ======================================
 
+.. include:: intro.rst
+
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   :titlesonly:
+
+   modules.rst
+   mapning_fra_kmd_ee_til_crm.rst
 
 
 
@@ -18,3 +25,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+

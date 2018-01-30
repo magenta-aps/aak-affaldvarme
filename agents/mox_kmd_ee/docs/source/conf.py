@@ -50,7 +50,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Mox KMD EE'
-copyright = '2018, Carsten Agger'
+copyright = '2018, Magenta ApS'
 author = 'Carsten Agger'
 
 # The version info for the project you're documenting, acts as replacement for
