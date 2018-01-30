@@ -1,7 +1,7 @@
-settings module
+ee\_data module
 ===============
 
-.. automodule:: settings
+.. automodule:: ee_data
     :members:
     :undoc-members:
     :show-inheritance:

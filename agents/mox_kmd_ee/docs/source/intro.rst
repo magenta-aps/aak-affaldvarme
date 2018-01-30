@@ -28,12 +28,44 @@ modules involved in the integration:
   LoRa - i.e., to Bruger, Organisation, Interessefaellesskab, and
   Indsats.
 
-* The :doc:`ee_oio` contain functions that create OIO objects as well as
+* The :doc:`ee_oio` contains functions that create OIO objects as well as
   auxiliary functions that allow the system to talk directly with LoRa.
   The object creation methods do not constitute a generalized LoRa API,
   on the contrary the signature of functions such as
   ``create_indsats`` etc. are completely bound to the needs and inherent
   interpretations of the EE-to-CRM integration.
 
-* The :doc:`ee_utils` contains
+* The :doc:`ee_data` handles all reading and writing of data between
+  database and disk. It contains functions to *read* customer and
+  installation data from the database, *store* them on disk, and
+  *retrieve* them from disk as needed.
 
+* The :doc:`ee_utils` contains a number of utility functions needed by
+  the KMD EE integration - for connecting to the database, for
+  formatting different type of customer numbers (which are stored as
+  floats in the KMD EE database and must be converted to strings), and
+  for looking up addresses.
+
+* The :doc:`ee_sql` contains all of the SQL used for communicating with
+  the database.
+
+* The :doc:`service_clients` contains clients of third party services.
+  These include DAR, Serviceplatformen (CVR) and error reporting/AMQP.
+
+As has already been said, the MOX KMD EE program is intended to run once
+daily, or at the frequency desired by the customer.
+
+It should be used as described when invoking it with the ``-h`` flag: ::
+
+    usage: mox_kmd_ee.py [-h] [--verbose] [--initial-import]
+
+    Mox KMD EE main program.
+
+    optional arguments:
+      -h, --help        show this help message and exit
+        --verbose         print helpful comments during execution
+        --initial-import  only perform inital import
+
+As may be guessed, the first time it is run, it *must* be run with the
+``--initial-import`` flag. When using for notifications about changes,
+this should *not* be specified.

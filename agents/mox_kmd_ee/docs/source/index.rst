@@ -14,6 +14,7 @@ Welcome to Mox KMD EE's documentation!
    :caption: Contents:
    :titlesonly:
 
+   installation.rst
    modules.rst
    mapning_fra_kmd_ee_til_crm.rst
 
