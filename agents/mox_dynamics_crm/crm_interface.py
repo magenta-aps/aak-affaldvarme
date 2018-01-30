@@ -1,50 +1,88 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
 import time
 import json
 import adal
-import logging
 import requests
-from datetime import datetime
 
-# Cache layer
-import cache_interface as cache
+from logging import getLogger
+from helper import get_config
+
+
+# Configuration section
+# A configuration block must be added to config.ini
+# Example:
+#
+# [ms_dynamics_crm]
+# crm_resource = https://myapplication.crm.dynamics.com
+# crm_tenant = 551DCF91-FB70-4E88-A5AD-701A75B31BF3
+# crm_oauth_endpoint = https://login.windows.net
+# crm_client_id = 551DCF91-FB70-4E88-A5AD-701A75B31BF3
+# crm_client_secret = <HASH>
+# crm_rest_api_path = "api/data/v8.2"
+# crm_owner_id = 551DCF91-FB70-4E88-A5AD-701A75B31BF3
+#
+
+# Configuration section
+section = "ms_dynamics_crm"
+
+# Get config
+config = get_config(section)
 
 # Local settings
-from settings import CRM_RESOURCE
-from settings import CRM_TENANT
-from settings import CRM_ENDPOINT
-from settings import CRM_CLIENT_ID
-from settings import CRM_CLIENT_SECRET
-from settings import CRM_REST_API_PATH
+CRM_RESOURCE = config["crm_resource"]
+CRM_TENANT = config["crm_tenant"]
+CRM_ENDPOINT = config["crm_oauth_endpoint"]
+CRM_CLIENT_ID = config["crm_client_id"]
+CRM_CLIENT_SECRET = config["crm_client_secret"]
+CRM_REST_API_PATH = config["crm_rest_api_path"]
 
 # Init logger
-log = logging.getLogger(__name__)
+log = getLogger(__name__)
 
 # Request timeout workaround
+# Setting retry attempts to 15
 session = requests.Session()
 adapter = requests.adapters.HTTPAdapter(max_retries=15)
 session.mount('http://', adapter)
 session.mount('https://', adapter)
 requests = session
 
-# Set vars
+# REST API endpoint (base)
 base_endpoint = "{resource}/{path}".format(
     resource=CRM_RESOURCE,
     path=CRM_REST_API_PATH
 )
 
 # Temporary file containing token
+# It may be better to store the token in a global variable
 filename = "access_token.tmp"
+
+
+# Request header information
+# These are the default values
+# An authorization header must be added on each request
+headers = {
+    "OData-MaxVersion": "4.0",
+    "OData-Version": "4.0",
+    "Accept": "application/json",
+    "Content-Type": "application/json; charset=utf-8",
+    "Prefer": "return=representation"
+}
 
 
 def get_token():
     """
-    Return token (from file)
-    There is no promise that the token is valid!
-    (This is to avoid requesting a new token for every request)
+    Get generated token from file.
+
+    The token is stored in a temporary file
+    which can be accessed globally.
+
+    This is a temporary solution
+    to reduce the amount of requests for tokens.
+
+    :return:    Returns access token
     """
 
     # If the file does not exist, generate it
@@ -52,12 +90,24 @@ def get_token():
         request_token()
 
     # Read the file and return the token
-    access_token = open(filename, "r")
-    return access_token.read()
+    with open(filename, "r") as token:
+        return token.read()
 
 
 def request_token():
-    """Request a new access token from the MS OAUTH2 service"""
+    """
+    If no valid token exists,
+    A new token can be requested from the OAUTH REST Service.
+
+    The service provider must add the correct privileges
+    in order to to grant read/write access.
+
+    E.g.
+    In previous scenarios a token was granted, however with no privileges,
+    we were unable to retrieve any information from the REST API.
+
+    :return:    Returns newly generated token or False
+    """
 
     # Combine OUATH endpoint and tenant id for full endpoint URL
     authority_url = "{url}/{tenant}".format(
@@ -88,18 +138,24 @@ def request_token():
     return token
 
 
-def get_request(resource, params):
+def get_request(resource, **params):
     """
-    Generic GET Request function
+    Generic GET request.
+
+    (Primiarily used by child/wrapper functions)
+
+    If the token header is invalid or the token is expired,
+    a new token is requested and the original request is performed once more.
+
+    :param resource:    Resource (resource path),
+                        e.g. 'contacts', 'ava_adresses' etc.
+
+    :param params:      Query parameters
+
+    :return:            Returns full response object
     """
 
-    headers = {
-        "Authorization": get_token(),
-        "OData-MaxVersion": "4.0",
-        "OData-Version": "4.0",
-        "Accept": "application/json",
-        "Content-Type": "application/json; charset=utf-8",
-    }
+    headers["Authorization"] = get_token()
 
     service_url = "{base}/{resource}".format(
         base=base_endpoint,
@@ -113,16 +169,16 @@ def get_request(resource, params):
     )
 
     if response.status_code == 401:
-        print("Response: {0}".format(response.status_code))
+        log.warning("HTTP Response: {0}".format(response.status_code))
 
         # Generate a new token
-        print("Generate a new token")
+        log.info("Generating a new token")
         request_token()
 
         # Sleep 10 seconds
         time.sleep(10)
 
-        # Set new token into the auth header
+        # Set generated token into the auth header
         headers["Authorization"] = get_token()
 
         # Perform the request again
@@ -141,17 +197,22 @@ def get_request(resource, params):
 
 def post_request(resource, payload):
     """
-    Generic POST request function
+    Generic POST request
+
+    (Primiarily used by child/wrapper functions)
+
+    If the token header is invalid or the token is expired,
+    a new token is requested and the original request is performed once more.
+
+    :param resource:    Resource (resource path),
+                        e.g. 'contacts', 'ava_adresses' etc
+
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns full response object
     """
 
-    headers = {
-        "Authorization": get_token(),
-        "OData-MaxVersion": "4.0",
-        "OData-Version": "4.0",
-        "Accept": "application/json",
-        "Content-Type": "application/json; charset=utf-8",
-        "Prefer": "return=representation"
-    }
+    headers["Authorization"] = get_token()
 
     service_url = "{base}/{resource}".format(
         base=base_endpoint,
@@ -165,10 +226,10 @@ def post_request(resource, payload):
     )
 
     if response.status_code == 401:
-        log.debug('Requesting token and retrying POST request')
+        log.warning("HTTP Response: {0}".format(response.status_code))
 
         # Generate a new token
-        request_token()
+        log.info("Generating a new token")
 
         # Sleep 10 seconds
         time.sleep(10)
@@ -190,17 +251,28 @@ def post_request(resource, payload):
 
 def patch_request(resource, payload):
     """
-    Generic PATCH request function
+    Generic PATCH request.
+
+    A patch request can be used to update existing objects,
+    or alternatively import new objects (with a predefined identifier).
+
+    (Primiarily used by child/wrapper functions)
+
+    Please note that the identifier
+     should be passed in as part of the resource.
+
+    E.g. {base_url}/contacts(<uuid>)
+
+    :param resource:    Resource (resource path) containing the identifier,
+                        (See example above)
+
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns full response object
     """
 
-    headers = {
-        "Authorization": get_token(),
-        "OData-MaxVersion": "4.0",
-        "OData-Version": "4.0",
-        "Accept": "application/json",
-        "Content-Type": "application/json; charset=utf-8",
-        "Prefer": "return=representation"
-    }
+    # Set token into authorization header
+    headers["Authorization"] = get_token()
 
     service_url = "{base}/{resource}".format(
         base=base_endpoint,
@@ -214,10 +286,10 @@ def patch_request(resource, payload):
     )
 
     if response.status_code == 401:
-        log.debug('Requesting token and retrying POST request')
+        log.warning("HTTP Response: {0}".format(response.status_code))
 
         # Generate a new token
-        request_token()
+        log.info("Generating a new token")
 
         # Sleep 10 seconds
         time.sleep(10)
@@ -239,17 +311,31 @@ def patch_request(resource, payload):
 
 def delete_request(resource, identifier):
     """
-    Generic DELETE request function
+    Generic DELETE request
+
+    !! This should never be used in production. !!
+
+    In order to 'remove' an object,
+    the object is set to inactive,
+    rather than actually being deleted.
+
+    The reason for this is how relations between objects work in CRM.
+
+    Delete is development purposes only (e.g. to 'reset' the database)
+
+    (Primiarily used by child/wrapper functions)
+
+    :param resource:    Resource (resource path)
+
+    :param identifier:  MS Dynamics CRM object GUID
+                        e.g. 551DCF91-FB70-4E88-A5AD-701A75B31BF3
+
+    :return:            Returns full response object
+                        (Status code 204 on deletion)
     """
 
-    headers = {
-        "Authorization": get_token(),
-        "OData-MaxVersion": "4.0",
-        "OData-Version": "4.0",
-        "Accept": "application/json",
-        "Content-Type": "application/json; charset=utf-8",
-        "Prefer": "return=representation"
-    }
+    # Set token into authorization header
+    headers["Authorization"] = get_token()
 
     service_url = "{base}/{resource}({identifier})".format(
         base=base_endpoint,
@@ -286,7 +372,15 @@ def delete_request(resource, identifier):
 
 
 def store_address(payload):
-    """Address retrieved from DAWA"""
+    """
+    Wrapper function
+    to insert new address objects into CRM via a POST request.
+
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns CRM guid if inserted
+                        or False if the request has failed
+    """
 
     # Check if payload exists
     if not payload:
@@ -312,8 +406,18 @@ def store_address(payload):
 
 def store_contact(payload):
     """
-    Store CRM contact and returns creation GUID
-    Missing: Logging on events
+    Wrapper function
+    to insert new contact objects into CRM via a POST request.
+
+    OIO:    Bruger/Organisation
+    CRM:    Contact (contacts)
+
+    Missing: additional logging
+
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns CRM guid if inserted
+                        or False if the request has failed
     """
 
     # REST resource
@@ -344,7 +448,18 @@ def store_contact(payload):
 
 
 def update_contact(identifier, payload):
-    """Bruger/Organisation"""
+    """
+    Wrapper function
+    to update existing contact objects via a PATCH request.
+
+    OIO:    Bruger/Organisation
+    CRM:    Contact (contacts)
+
+    :param identifier:  Object identifier (guid)
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns the updated object
+    """
 
     # REST resource
     resource = "contacts({identifier})".format(
@@ -352,7 +467,6 @@ def update_contact(identifier, payload):
     )
 
     log.info("UPDATING contact in CRM")
-    log.debug(payload)
     response = patch_request(resource, payload)
 
     # Return False if not created
@@ -366,7 +480,18 @@ def update_contact(identifier, payload):
 
 
 def store_kunderolle(payload):
-    """Organisationsfunktion"""
+    """
+    Wrapper function
+    to insert new kunderolle objects into CRM via a POST request.
+
+    OIO:    Interessefaellesskab
+    CRM:    Kunderolle (ava_kunderolles)
+
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns CRM guid if inserted
+                        or False if the request has failed
+    """
 
     # REST resource
     resource = "ava_kunderolles"
@@ -401,9 +526,16 @@ def store_kunderolle(payload):
 
 def store_account(payload):
     """
-    Store account (Kundeforhold)
-    Returns GUID
-    Missing: Logging on events
+    Wrapper function
+    to insert new account objects into CRM via a POST request.
+
+    OIO:    Organisationfunktion
+    CRM:    Account (accounts)
+
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns CRM guid if inserted
+                        or False if the request has failed
     """
 
     # REST resource
@@ -415,7 +547,6 @@ def store_account(payload):
         return None
 
     log.info("Creating account in CRM")
-    log.debug(payload)
     response = post_request(resource, payload)
 
     # Return False if not created
@@ -435,7 +566,18 @@ def store_account(payload):
 
 
 def store_aftale(payload):
-    """Indsats"""
+    """
+    Wrapper function
+    to insert new aftale objects into CRM via a POST request.
+
+    OIO:    Indsats
+    CRM:    Aftale (ava_aftales)
+
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns CRM guid if inserted
+                        or False if the request has failed
+    """
 
     # REST resource
     resource = "ava_aftales"
@@ -445,7 +587,6 @@ def store_aftale(payload):
         return None
 
     log.info("Creating aftale in CRM")
-    log.debug(payload)
     response = post_request(resource, payload)
 
     # Return False if not created
@@ -462,10 +603,85 @@ def store_aftale(payload):
     return crm_guid
 
 
+def store_produkt(payload):
+    """
+    Wrapper function
+    to insert new produkt objects into CRM via a POST request.
+
+    OIO:    Klasse
+    CRM:    Produkt (ava_installations)
+
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns CRM guid if inserted
+                        or False if the request has failed
+    """
+
+    # REST resource
+    resource = "ava_installations"
+
+    # Check if payload exists
+    if not payload:
+        return None
+
+    log.info("Creating produkt in CRM")
+    response = post_request(resource, payload)
+
+    # Return False if not created
+    if response.status_code != 201:
+        log.error("Error creating produkt in CRM")
+        log.error(response.text)
+        return False
+
+    crm_guid = response.json()["ava_installationid"]
+    if not crm_guid:
+        log.error("No produkt GUID returned from CRM")
+        return False
+
+    return crm_guid
+
+
+def update_produkt(identifier, payload):
+    """
+    Wrapper function to update produkt via a PATCH request.
+
+    OIO:    Klasse
+    CRM:    Produkt (ava_installations)
+
+    :param identifier:  Object GUID (ava_installationid)
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns CRM GUID or False
+    """
+
+    # REST resource
+    resource = "ava_installations({identifier})".format(
+        identifier=identifier
+    )
+
+    log.info("UPDATING produkt in CRM")
+    response = patch_request(resource, payload)
+
+    # Return False if not created
+    if response.status_code != 200:
+        log.error("Error updating produkt in CRM")
+        log.error(response.text)
+        return False
+
+    log.info("Produkt updated")
+    return response
+
+
 def contact_and_aftale_link(aftale_guid, contact_guid):
     """
     Temporary solution to create a link between contact and aftale
     NOTES: This should be replaced by the cache functionality
+
+    :param aftale_guid:     CRM identifier (GUID) for entity: ava_aftale
+    :param contact_guid:    CRM identifier (GUID) for entity: contact
+
+    :return:                Nothing is returned from CRM,
+                            returning True when request is successfull
     """
 
     resource = "ava_aftales({guid})/ava_aktoerens_aftaler/$ref".format(
@@ -490,59 +706,3 @@ def contact_and_aftale_link(aftale_guid, contact_guid):
         return False
 
     return True
-
-
-def store_produkt(payload):
-    """Klasse"""
-
-    # REST resource
-    resource = "ava_installations"
-
-    # Check if payload exists
-    if not payload:
-        return None
-
-    log.info("Creating produkt in CRM")
-    log.debug(payload)
-    response = post_request(resource, payload)
-
-    # Return False if not created
-    if response.status_code != 201:
-        log.error("Error creating produkt in CRM")
-        log.error(response.text)
-        return False
-
-    crm_guid = response.json()["ava_installationid"]
-    if not crm_guid:
-        log.error("No produkt GUID returned from CRM")
-        return False
-
-    return crm_guid
-
-
-def update_produkt(identifier, payload):
-    """Klasse"""
-
-    # REST resource
-    resource = "ava_installations({identifier})".format(
-        identifier=identifier
-    )
-
-    log.info("UPDATING produkt in CRM")
-    log.debug(payload)
-    response = patch_request(resource, payload)
-
-    # Return False if not created
-    if response.status_code != 200:
-        log.error("Error updating produkt in CRM")
-        log.error(response.text)
-        return False
-
-    log.info("Produkt updated")
-    return response
-
-
-if __name__ == "__main__":
-    request_token()
-    token = get_token()
-    print(token)

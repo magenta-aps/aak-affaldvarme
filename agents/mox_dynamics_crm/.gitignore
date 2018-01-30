@@ -8,3 +8,7 @@ logs
 python-env
 todo.txt
 tools
+
+# Development
+mockcrm.py
+*.ini

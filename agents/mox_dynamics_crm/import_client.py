@@ -7,50 +7,27 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-import json
-import logging
-import requests
-
-# Local modules
-import cache_interface as cache
-import crm_interface as crm
 import oio_interface as oio
-import ava_adapter as adapter
 import dawa_interface as dawa
+import cache_interface as cache
 
-# Logging module
-from logger import start_logging
-
-# Local settings
-from settings import ORGANISATION_UUID
-from settings import LOG_FILE
-from settings import DO_RUN_IN_TEST_MODE
-from settings import DO_DISABLE_SSL_WARNINGS
-from settings import AREA_CODE
+from logging import getLogger
 
 
-# If the SSL signature is not valid requests will print errors
-# To circumvent this, warnings can be disabled for testing purposes
-if DO_DISABLE_SSL_WARNINGS:
-    from requests.packages.urllib3.exceptions import InsecureRequestWarning
-    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+# Init logging
+log = getLogger(__name__)
 
 
-# In test mode log is written to a local logfile
-# This is to prevent the test log from being collected for analysis
-if DO_RUN_IN_TEST_MODE:
-    LOG_FILE = "debug.log"
-
-
-# Set logging
-log = logging.getLogger(__name__)
-
-
-### CACHE ###
 def import_all_addresses():
-    """ 
-    Missing docstring
     """
+    Import all addresses from DAR (DAWA service)
+    and store them as documents in the cache layer
+
+    :return:    All operations are written to logs
+    """
+
+    # DAR/DAWA settings
+    AREA_CODE = "0751"
 
     # Begin
     log.info("Begin address import")
@@ -64,68 +41,104 @@ def import_all_addresses():
 
     if not addresses:
         log.warning(
-            "No addresses found in area code:  {0}".format(AREA_CODE)
+            "No addresses found in area code: {0}".format(AREA_CODE)
         )
         return False
 
-    # Store addresses
-    try:
-        cache.store_address(addresses)
-    except Exception as error:
-        log.error(error)
+    # Batch operation
+    size = 200
+
+    while len(addresses) > 0:
+        batch_of_addresses = addresses[:size]
+        addresses = addresses[size:]
+
+        try:
+            cache.store(
+                resource="dawa",
+                payload=batch_of_addresses
+            )
+
+        except Exception as error:
+            log.error(batch_of_addresses)
+            log.error(error)
 
     # Finished procedure
     log.info("Finished processing all addresses")
 
 
 def import_to_cache(resource):
+    """
+    Retrieve all database objects (by entity)
+    and store converted (ava_adapter) document into the cache layer.
+
+    Data objects are just stored,
+    no relations between documents at this point.
+
+    :param resource:    Name of the entity to import
+
+    :return:
+    """
 
     # Get all uuids
     list_of_uuids = oio.get_all(resource)
 
-    # Prepare cache payload
-    cache_payload = []
-
-    # Workaround for consolidating bruger/organisation
-    cache_resource = resource
-
-    if resource == "bruger" or resource == "organisation":
-        cache_resource = "contact"
-
     # Batch generate fetches n amount of entities
     # Returns iterator
-    for entity in oio.batch_generator(resource, list_of_uuids):
-        # # Append to the payload
-        # cache_payload.append(entity)
-        store = cache.update_or_insert(cache_resource, entity)
-        print(store)
+    for batch in oio.batch_generator(resource, list_of_uuids):
+
+        # Info
+        log.info(
+            "Attempting to import batch of {resource}".format(
+                resource=resource
+            )
+        )
+
+        # Store in the cache layer
+        store = cache.store(
+            resource=resource,
+            payload=batch
+        )
+
+        # Log database status object
+        log.info(store)
 
 
 def import_sanity_check():
+    """
+    Simple sanity check for addresses.
+    It iterates over all addresses stored in the cache layer,
+    and confirms that the address exists in the DAR database.
 
-    # Loop and do stuff
-    for address in cache.find_all("addresses"):
-        identifier = address.get("_id")
-        external = address.get("_external")
+    TODO: Create check
 
-        payload = {
-            "ava_dawa_uuid": identifier
-        }
+    :return:
+    """
 
-        print("ava_adresses({0})".format(external))
-        print(json.dumps(payload))
+    # Retrieve all address from cache
+    addresses = cache.all("ava_adresses")
+
+    for address in addresses:
+        identifier = address.get("id")
+
+        # Missing DAR check to confirm whether the address exists
+        # check_if_address_exists(identifier)
+        print(identifier)
 
 
-# RUN THE CLIENT
-if __name__ == "__main__":
+def run_import():
+    """
+    Wrapper to run full import.
 
-    # Log to file
-    start_logging(20, LOG_FILE)
+    :return:
+    """
 
-    # Import all addresses
-    # import_all_addresses()
+    # Begin
+    log.info("Begin import (all) procedure")
 
-    # Import to cache
+    # Import addresses
+    import_all_addresses()
+
+    # Import Lora objects
     import_to_cache("bruger")
     import_to_cache("organisation")
     import_to_cache("organisationfunktion")
@@ -133,8 +146,5 @@ if __name__ == "__main__":
     import_to_cache("interessefaellesskab")
     import_to_cache("klasse")
 
-    # Run sanity check
-    # import_sanity_check()
-
     # Done
-    print("Import procedure completed - Exiting")
+    log.info("Import procedure completed - Exiting")
