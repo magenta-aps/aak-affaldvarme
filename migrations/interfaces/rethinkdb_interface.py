@@ -5,11 +5,9 @@ import rethinkdb as r
 from helper import get_config
 
 # Get config
-import_config = get_config()
-
+config = get_config("rethinkdb") 
 
 def connect():
-    config = import_config["rethinkdb"]
     return r.connect(
         host=config["db_host"],
         port=config["db_port"],
@@ -51,7 +49,6 @@ def insert(resource, payload):
 
 
 def set_admin_password(password):
-    config = import_config["rethinkdb"]
 
     if not config:
         return False
@@ -80,8 +77,6 @@ def create_database(database_name):
     The database name is "cache_layer" by default
     """
 
-    config = import_config["rethinkdb"]
-
     if not config:
         return False
 
@@ -109,8 +104,6 @@ def create_user(username, password):
     Create application user with limited access
     Access to cache database only
     """
-
-    config = import_config["rethinkdb"]
 
     if not config:
         return False
