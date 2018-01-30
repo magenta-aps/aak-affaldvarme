@@ -306,6 +306,30 @@ def create_product(name, identification, installation_type, meter_number,
         return result.json()['uuid']
 
 
+def update_product(uuid, fields, new_values):
+    """Update product with new information."""
+    name_fields = {'Målernr', 'Målertypefabrikat', 'MaalerTypeBetegnel'}
+    alt_place = 'AlternativStedID'
+
+    properties = {}
+    relations = defaultdict(list)
+    all_fields = {**fields, **new_values}
+
+    if name_fields & new_values.keys:
+        properties['eksempel'] = all_fields['Målernr']
+        properties['beskrivelse'] = all_fields['MaalerTypeBetegnel']
+        properties['name'] = '{0}, {1} {2}'.format(
+            all_fields['Målernr'], all_fields['Målertypefabrikat'],
+            all_fields['MaalerTypeBetegnel']
+        )
+
+    if alt_place in new_values:
+        new_id = new_values[alt_place] if new_values[alt_place] != '0' else ''
+        relations['ava_opstillingsadresse'].append(Relation('uuid', new_id))
+
+    write_object(uuid, properties, relations, "klassifikation", "klasse")
+
+
 def update_customer(fields, new_values):
     """Update customer with new information."""
     properties = {}

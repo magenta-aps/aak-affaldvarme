@@ -21,7 +21,7 @@ from crm_utils import create_customer_relation, create_customer_role
 from crm_utils import create_agreement, create_product, lookup_products
 from crm_utils import delete_customer_role, delete_customer_relation
 from crm_utils import delete_agreement, delete_product
-from crm_utils import add_product_to_agreement
+from crm_utils import add_product_to_agreement, update_product
 from crm_utils import update_customer, update_agreement, read_agreement
 from crm_utils import update_customer_relation, write_agreement_dict
 
@@ -275,13 +275,11 @@ def import_installation_record(fields):
     customer_number = int_str(fields['Kundenr'])
     cr_uuid = lookup_customer_relation(customer_number)
     agreement_uuid = lookup_agreements(cr_uuid)[0] if cr_uuid else None
-    if not agreement_uuid:
-        import pdb
-        pdb.set_trace()
     if agreement_uuid:
-        # Only do this if the products doesn't already exist
+        # Agreement found.
         product_uuid = lookup_product(fields['InstalNummer'])
         if product_uuid:
+            # If product exists, don't import it.
             return
         # create the product
         meter_number = fields['Målernr']
@@ -310,13 +308,17 @@ def import_installation_record(fields):
 
 def update_installation_record(old_fields, changed_fields):
     """Update relevant LoRa objects with the specific changes."""
-    # TODO: Investigate if this is ever relevant.
-    print("UPDATED INSTALLATION INFO")
 
-    for field in changed_fields:
-        if field not in ['Kundenr', 'DatoFra']:
-            print(field + ":", changed_fields[field],
-                  "-- was:", old_fields[field])
+    relevant_fields = {'Målernr', 'Målertypefabrikat', 'MaalerTypeBetegnel',
+                       'AlternativStedID'}
+    if relevant_fields & changed_fields.keys():
+        product_uuid = lookup_product(old_fields['InstalNummer'])
+        if not product_uuid:
+            say("Error: Product {} not found".format(
+                old_fields['InstalNummer']))
+            return
+        say("Updating product: {}".format(changed_fields))
+        update_product(product_uuid, old_fields, changed_fields)
 
 
 def delete_installation_record(product_id):
