@@ -40,7 +40,7 @@ VERBOSE = False
 
 
 def say(*args):
-    """Give output in verbose mode."""
+    """Local utility to give output in verbose mode."""
     if __name__ == '__main__' and VERBOSE:
         print(*args)
 
@@ -307,8 +307,7 @@ def import_installation_record(fields):
 
 
 def update_installation_record(old_fields, changed_fields):
-    """Update relevant LoRa objects with the specific changes."""
-
+    """Update relevant LoRa objects with the changes for each installation."""
     relevant_fields = {'Målernr', 'Målertypefabrikat', 'MaalerTypeBetegnel',
                        'AlternativStedID'}
     if relevant_fields & changed_fields.keys():
@@ -343,10 +342,22 @@ def delete_installation_record(product_id):
         write_agreement_dict(agreement_uuid, agreement_json)
 
 
-if __name__ == '__main__':
+def main():
+    """Main program. Calculate changes since last run and sync with LoRa.
 
+    * Argument parsing.
+    * Read all customer records from KMD EE and calculate changes.
+    * From these changes, delete expired records; import new ones; update
+      existing ones.
+    * Repeat for installations/products.
+
+    Note that products are *not* created separately during the inital import,
+    since they're imported as part of creating each agreement.
+
+    """
     # argument parsing
     import argparse
+    global VERBOSE
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--verbose', action='store_true',
@@ -500,3 +511,7 @@ if __name__ == '__main__':
     # All's well that ends well
     store_customer_records(new_values)
     store_installation_records(new_installation_values)
+
+
+if __name__ == '__main__':
+    main()

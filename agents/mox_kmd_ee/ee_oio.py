@@ -31,6 +31,7 @@ ROLE_MAP = {KUNDE: '915240004', LIGESTILLINGSKUNDE: '915240006'}
 
 def request(func):
     """Decorator to wrap OIO API requests (excluding lookups)."""
+    @functools.wraps(func)
     def call_and_raise(*args, **kwargs):
         result = func(*args, **kwargs)
         if not result:

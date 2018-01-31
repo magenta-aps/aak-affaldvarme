@@ -6,11 +6,49 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-"""This module contains all SQL used in the KMD EE Mox Agent."""
+"""This module contains all SQL used in the KMD EE Mox Agent.
 
-# This is the SQL to fetch all customers from the KMD EE database.
-# Only relevant fields (please).
+Each SQL expression used to acces the database is specified here and called
+from the other modules. For instance, the variable ``CUSTOMER_SQL`` is given
+below and will extract all information for relevant customer records. ::
 
+    CUSTOMER_SQL = '''
+    SELECT [PersonnrSEnr]
+          ,[LigestPersonnr]
+          ,[Kundenr]
+          ,[KundeSagsnr]
+          ,[KundeNavn]
+          ,[Telefonnr]
+          ,[EmailKunde]
+          ,[MobilTlf]
+          ,[a].[ForbrugsstedID]
+          ,[VejNavn]
+          ,[a].[Postdistrikt]
+          ,[Tilflytningsdato]
+          ,[Fraflytningsdato]
+          ,[Status]
+          ,[FasadministratorID]
+          ,[BoligadminID]
+          ,[Husnr]
+          ,[ForbrStVejnavn]
+          ,[Vejkode]
+          ,[b].[Postdistrikt] as [ForbrStPostdistrikt]
+          ,[Postnr]
+          ,[Bogstav]
+          ,[Etage]
+          ,[Sidedørnr]
+    FROM Kunde a, Forbrugssted b
+    WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
+    and Afregningsgrpnr <> 999
+    and a.ForbrugsstedID = b.ForbrugsstedID
+    '''
+
+Every time a need for an SQL query is discovered, a new string (maybe
+parametrized using string formatting) is created in this module.
+"""
+
+#: This is the SQL to fetch all customers from the KMD EE database.
+#: Only relevant fields (please).
 CUSTOMER_SQL = """
 SELECT [PersonnrSEnr]
       ,[LigestPersonnr]
@@ -43,19 +81,7 @@ SELECT [PersonnrSEnr]
 """
 
 
-TREFINSTALLATION_SQL = """SELECT [InstalNummer],
-                                 [AlternativStedID],
-                                 [Målernr],
-                                 [MaalerTypeBetegnel],
-                                 [Målertypefabrikat],
-                                 [DatoFra],
-                                 [DatoTil]
-    FROM TrefInstallation a, TrefMaaler b
-    WHERE ForbrugsstedID = {0}
-    AND a.InstallationID = b.InstallationID
-    AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
-    """
-
+#: Extract all relevant installations.
 RELEVANT_TREF_INSTALLATIONS_SQL = """SELECT [InstalNummer],
                                  [AlternativStedID],
                                  [Målernr],
@@ -77,27 +103,21 @@ RELEVANT_TREF_INSTALLATIONS_SQL = """SELECT [InstalNummer],
   and a.ForbrugsstedID = b.ForbrugsstedID)
     """
 
-RELEVANT_ALT_ADRESSE_SQL = """SELECT [HusnrAltern],
-                                     [ForbrStVejnavn],
-                                     [VejkodeAltern],
-                                     [Postdistrikt],
-                                     [Postnr],
-                                     [Bogstav],
-                                     [EtageAltAdr],
-                                     [SidedørnrAltern],
-                                     [ForbrugsstedID]
-                            FROM AlternativSted
-                            WHERE AlternativStedID IN (
-                SELECT AlternativStedID FROM TrefInstallation
-                WHERE AlternativStedID <> 0
-    AND ForbrugsstedID IN (
-        SELECT a.ForbrugsstedID from Kunde a, Forbrugssted b
-       WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
-       and Afregningsgrpnr <> 999
-       and a.ForbrugsstedID = b.ForbrugsstedID
-  )
-  )
-  """
+#: Installation data for a given Forbrugssted.
+TREFINSTALLATION_SQL = """SELECT [InstalNummer],
+                                 [AlternativStedID],
+                                 [Målernr],
+                                 [MaalerTypeBetegnel],
+                                 [Målertypefabrikat],
+                                 [DatoFra],
+                                 [DatoTil]
+    FROM TrefInstallation a, TrefMaaler b
+    WHERE ForbrugsstedID = {0}
+    AND a.InstallationID = b.InstallationID
+    AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
+    """
+
+#: Alternative address for a given Alt Place ID.
 ALTERNATIVSTED_ADRESSE_SQL = """SELECT [HusnrAltern],
                                      [ForbrStVejnavn],
                                      [VejkodeAltern],
@@ -109,24 +129,3 @@ ALTERNATIVSTED_ADRESSE_SQL = """SELECT [HusnrAltern],
                             FROM AlternativSted
                             WHERE AlternativStedID = {0}
                           """
-
-if __name__ == '__main__':
-
-    from mssql_config import username, password, server, database
-    from ee_utils import connect
-
-    connection = connect(server, database, username, password)
-    cursor = connection.cursor(as_dict=True)
-    cursor.execute(RELEVANT_ALT_ADRESSE_SQL)
-    rows = cursor.fetchall()
-    n1 = cursor.rowcount
-    cursor.execute(CUSTOMER_SQL)
-    rows = cursor.fetchall()
-    n2 = cursor.rowcount
-    cursor.execute(RELEVANT_TREF_INSTALLATIONS_SQL)
-    rows = cursor.fetchall()
-    n3 = cursor.rowcount
-
-    print(n1, "AltSted rows to consider")
-    print(n2, "Customer rows to consider")
-    print(n3, "Installation rows to consider")

@@ -47,4 +47,9 @@ SP_UUIDS = {
     "user": "",
     "service": ""
 }
-        '''.lstrip())
+
+# Hostname of the AMQP server
+ERROR_MQ_HOST = "localhost"
+
+# Name of the queue
+ERROR_MQ_QUEUE = "ava_mox_errors"'''.lstrip())

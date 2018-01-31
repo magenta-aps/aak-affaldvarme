@@ -3,15 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Mox KMD EE's documentation!
-======================================
+Welcome to the Mox KMD EE documentation
+=======================================
 
 .. include:: intro.rst
 
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Further Contents:
    :titlesonly:
 
    installation.rst
