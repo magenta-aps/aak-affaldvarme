@@ -1,0 +1,142 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Installation &#8212; Mox KMD EE 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Modules" href="modules.html" />
+    <link rel="prev" title="Welcome to the Mox KMD EE documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">All paths are given relative to the <a class="reference external" href="https://github.com/magenta-aps/aak-affaldvarme">AAK Affald/Varme</a> Github repository which you need to check out first.</p>
+</div>
+<div class="section" id="run-the-installer">
+<h2>Run the installer<a class="headerlink" href="#run-the-installer" title="Permalink to this headline">¶</a></h2>
+<p>Navigate to the folder where the program is located
+(<code class="docutils literal"><span class="pre">agents/mox_kmd_ee</span></code>) and enter the
+following command:</p>
+<blockquote>
+<div>python3 install.py</div></blockquote>
+<p>When prompted, enter the credentials (server, database, username and
+password) for the database you’re going to talk to.</p>
+</div>
+<div class="section" id="edit-the-configuration">
+<h2>Edit the configuration<a class="headerlink" href="#edit-the-configuration" title="Permalink to this headline">¶</a></h2>
+<p>Edit the <code class="docutils literal"><span class="pre">settings.py</span></code> file and enter the correct valus for
+<code class="docutils literal"><span class="pre">SYSTEM_USER</span></code> and <code class="docutils literal"><span class="pre">AVA_ORGANISATION</span></code>. Note, <code class="docutils literal"><span class="pre">SYSTEM_USER</span></code> is only
+given here as long as the integration runs without authentication.
+Authentication is currently not supported in the KMD EE integration.</p>
+<p>Also enter the <code class="docutils literal"><span class="pre">BASE_URL</span></code> for the OIO REST interface as well as the
+variables <code class="docutils literal"><span class="pre">CERTIFICATE_FILE</span></code> and <code class="docutils literal"><span class="pre">SP_UUIDS</span></code> which contain our
+credentials for accessing ServicePlatformen’s CVR service.</p>
+</div>
+<div class="section" id="configure-the-cpr-integration">
+<h2>Configure the CPR integration<a class="headerlink" href="#configure-the-cpr-integration" title="Permalink to this headline">¶</a></h2>
+<p>If this is the initial install of the <code class="docutils literal"><span class="pre">aak-affaldvarme</span></code> repository,
+you need to configure the CPR client for ServicePlatformen (which gives
+you access to data from the official Danish civil registry).</p>
+<p>To configure:</p>
+<ul class="simple">
+<li>Navigate to the directory <code class="docutils literal"><span class="pre">aak_integration/serviceplatformen_cpr</span></code></li>
+<li>Copy the file <code class="docutils literal"><span class="pre">.env.example</span></code> to <code class="docutils literal"><span class="pre">.env</span></code></li>
+<li>Edit <code class="docutils literal"><span class="pre">.env</span></code> and provide the path to your ServicePlatformen
+certificate as well as the endpoints and UUIDs according to your
+service agreement with ServicePlatformen.</li>
+</ul>
+</div>
+<div class="section" id="run">
+<h2>Run<a class="headerlink" href="#run" title="Permalink to this headline">¶</a></h2>
+<p>Once everything is configured correctly, you may start the initial
+import by navigating to the program directory as given above and enter
+the command</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span><span class="o">-</span><span class="n">env</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">python3</span> <span class="o">--</span><span class="n">verbose</span> <span class="o">--</span><span class="n">initial</span><span class="o">-</span><span class="kn">import</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This will call up to a number of external services and is likely to take a long time.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to the Mox KMD EE documentation</a></li>
+      <li>Next: <a href="modules.html" title="next chapter">Modules</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Magenta ApS.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/installation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,146 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>ee_data module &#8212; Mox KMD EE 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ee_oio module" href="ee_oio.html" />
+    <link rel="prev" title="crm_utils module" href="crm_utils.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-ee_data">
+<span id="ee-data-module"></span><h1>ee_data module<a class="headerlink" href="#module-ee_data" title="Permalink to this headline">¶</a></h1>
+<p>This contains the functions that read KMD EE data from disk or database.</p>
+<p>This module follows a simple naming convention:</p>
+<p>The functions starting with “read” read data from the MS SQL database.</p>
+<p>Functions starting with “store” write to files on disk, and files starting with
+“retrieve” retrieves them from disk.</p>
+<dl class="data">
+<dt id="ee_data.INSTALLATIONS_FILE">
+<code class="descclassname">ee_data.</code><code class="descname">INSTALLATIONS_FILE</code><em class="property"> = 'var/installations'</em><a class="headerlink" href="#ee_data.INSTALLATIONS_FILE" title="Permalink to this definition">¶</a></dt>
+<dd><p>CUSTOMER RECORDS</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_data.read_customer_records">
+<code class="descclassname">ee_data.</code><code class="descname">read_customer_records</code><span class="sig-paren">(</span><em>cursor</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_data.html#read_customer_records"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_data.read_customer_records" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read customer relations from database.</p>
+<p>Read all data regarding customers, customer roles and customer
+relationships and map them for easy lookup in case something
+changes. Basically, by creating a dictionary with customer
+number as key.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_data.read_installation_records">
+<code class="descclassname">ee_data.</code><code class="descname">read_installation_records</code><span class="sig-paren">(</span><em>cursor</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_data.html#read_installation_records"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_data.read_installation_records" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read relevant Tref installation records from database.</p>
+<p>Reads all relevant data about installations and meters.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_data.retrieve_customer_records">
+<code class="descclassname">ee_data.</code><code class="descname">retrieve_customer_records</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_data.html#retrieve_customer_records"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_data.retrieve_customer_records" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve customer records from disk.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_data.retrieve_installation_records">
+<code class="descclassname">ee_data.</code><code class="descname">retrieve_installation_records</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_data.html#retrieve_installation_records"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_data.retrieve_installation_records" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read installation information from disk.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_data.store_customer_records">
+<code class="descclassname">ee_data.</code><code class="descname">store_customer_records</code><span class="sig-paren">(</span><em>customer_relations</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_data.html#store_customer_records"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_data.store_customer_records" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store customer records on disk.</p>
+<p>This is a simple, no-frills cache using the pickle module.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_data.store_installation_records">
+<code class="descclassname">ee_data.</code><code class="descname">store_installation_records</code><span class="sig-paren">(</span><em>installations</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_data.html#store_installation_records"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_data.store_installation_records" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store installation information in file for later use.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">Modules</a><ul>
+      <li>Previous: <a href="crm_utils.html" title="previous chapter">crm_utils module</a></li>
+      <li>Next: <a href="ee_oio.html" title="next chapter">ee_oio module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Magenta ApS.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/ee_data.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,601 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>mox_kmd_ee &#8212; Mox KMD EE 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mox_kmd_ee</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Mox KMD EE main program.&quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2017, Magenta ApS</span>
+<span class="c1">#</span>
+<span class="c1"># This Source Code Form is subject to the terms of the Mozilla Public</span>
+<span class="c1"># License, v. 2.0. If a copy of the MPL was not distributed with this</span>
+<span class="c1"># file, You can obtain one at http://mozilla.org/MPL/2.0/.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">from</span> <span class="nn">multiprocessing.dummy</span> <span class="k">import</span> <span class="n">Pool</span>
+
+<span class="kn">from</span> <span class="nn">mssql_config</span> <span class="k">import</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">server</span><span class="p">,</span> <span class="n">database</span>
+<span class="kn">from</span> <span class="nn">ee_utils</span> <span class="k">import</span> <span class="n">connect</span><span class="p">,</span> <span class="n">int_str</span><span class="p">,</span> <span class="n">cpr_cvr</span>
+<span class="kn">from</span> <span class="nn">ee_oio</span> <span class="k">import</span> <span class="n">KUNDE</span><span class="p">,</span> <span class="n">LIGESTILLINGSKUNDE</span>
+<span class="kn">from</span> <span class="nn">crm_utils</span> <span class="k">import</span> <span class="n">lookup_customer_relation</span><span class="p">,</span> <span class="n">lookup_customer_roles</span><span class="p">,</span> <span class="n">VARME</span>
+<span class="kn">from</span> <span class="nn">crm_utils</span> <span class="k">import</span> <span class="n">lookup_customer</span><span class="p">,</span> <span class="n">lookup_agreements</span><span class="p">,</span> <span class="n">lookup_product</span>
+<span class="kn">from</span> <span class="nn">crm_utils</span> <span class="k">import</span> <span class="n">lookup_agreement_from_product</span><span class="p">,</span> <span class="n">create_customer</span>
+<span class="kn">from</span> <span class="nn">crm_utils</span> <span class="k">import</span> <span class="n">create_customer_relation</span><span class="p">,</span> <span class="n">create_customer_role</span>
+<span class="kn">from</span> <span class="nn">crm_utils</span> <span class="k">import</span> <span class="n">create_agreement</span><span class="p">,</span> <span class="n">create_product</span><span class="p">,</span> <span class="n">lookup_products</span>
+<span class="kn">from</span> <span class="nn">crm_utils</span> <span class="k">import</span> <span class="n">delete_customer_role</span><span class="p">,</span> <span class="n">delete_customer_relation</span>
+<span class="kn">from</span> <span class="nn">crm_utils</span> <span class="k">import</span> <span class="n">delete_agreement</span><span class="p">,</span> <span class="n">delete_product</span>
+<span class="kn">from</span> <span class="nn">crm_utils</span> <span class="k">import</span> <span class="n">add_product_to_agreement</span><span class="p">,</span> <span class="n">update_product</span>
+<span class="kn">from</span> <span class="nn">crm_utils</span> <span class="k">import</span> <span class="n">update_customer</span><span class="p">,</span> <span class="n">update_agreement</span><span class="p">,</span> <span class="n">read_agreement</span>
+<span class="kn">from</span> <span class="nn">crm_utils</span> <span class="k">import</span> <span class="n">update_customer_relation</span><span class="p">,</span> <span class="n">write_agreement_dict</span>
+
+<span class="kn">from</span> <span class="nn">ee_utils</span> <span class="k">import</span> <span class="n">get_forbrugssted_address_uuid</span>
+<span class="kn">from</span> <span class="nn">ee_utils</span> <span class="k">import</span> <span class="n">get_products_for_location</span>
+<span class="kn">from</span> <span class="nn">ee_utils</span> <span class="k">import</span> <span class="n">get_alternativsted_address_uuid</span>
+
+<span class="kn">from</span> <span class="nn">ee_data</span> <span class="k">import</span> <span class="n">read_customer_records</span><span class="p">,</span> <span class="n">store_customer_records</span>
+<span class="kn">from</span> <span class="nn">ee_data</span> <span class="k">import</span> <span class="n">retrieve_customer_records</span><span class="p">,</span> <span class="n">read_installation_records</span>
+<span class="kn">from</span> <span class="nn">ee_data</span> <span class="k">import</span> <span class="n">store_installation_records</span><span class="p">,</span> <span class="n">retrieve_installation_records</span>
+
+<span class="kn">from</span> <span class="nn">service_clients</span> <span class="k">import</span> <span class="n">report_error</span><span class="p">,</span> <span class="n">fuzzy_address_uuid</span>
+
+
+<span class="n">VERBOSE</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="say"><a class="viewcode-back" href="../mox_kmd_ee.html#mox_kmd_ee.say">[docs]</a><span class="k">def</span> <span class="nf">say</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Local utility to give output in verbose mode.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span> <span class="ow">and</span> <span class="n">VERBOSE</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+
+
+<span class="sd">&quot;&quot;&quot;CUSTOMER RELATED FUNCTIONS.</span>
+
+<span class="sd">Import customer, import customer relation, update, delete.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="import_customer"><a class="viewcode-back" href="../mox_kmd_ee.html#mox_kmd_ee.import_customer">[docs]</a><span class="k">def</span> <span class="nf">import_customer</span><span class="p">(</span><span class="n">id_and_fields</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Import a new customer, log if it fails.&quot;&quot;&quot;</span>
+    <span class="n">id_number</span><span class="p">,</span> <span class="n">fields</span> <span class="o">=</span> <span class="n">id_and_fields</span>
+    <span class="n">id_number</span> <span class="o">=</span> <span class="n">cpr_cvr</span><span class="p">(</span><span class="n">int_str</span><span class="p">(</span><span class="n">id_number</span><span class="p">))</span>
+
+    <span class="n">customer_uuid</span> <span class="o">=</span> <span class="n">lookup_customer</span><span class="p">(</span><span class="n">id_number</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">customer_uuid</span><span class="p">:</span>
+        <span class="n">master_id</span> <span class="o">=</span> <span class="n">int_str</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;KundeSagsnr&#39;</span><span class="p">])</span>
+        <span class="n">customer_number</span> <span class="o">=</span> <span class="n">int_str</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;Kundenr&#39;</span><span class="p">])</span>
+
+        <span class="n">new_customer_uuid</span> <span class="o">=</span> <span class="n">create_customer</span><span class="p">(</span>
+            <span class="n">id_number</span><span class="o">=</span><span class="n">id_number</span><span class="p">,</span>
+            <span class="n">key</span><span class="o">=</span><span class="n">id_number</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;KundeNavn&#39;</span><span class="p">],</span>
+            <span class="n">master_id</span><span class="o">=</span><span class="n">master_id</span><span class="p">,</span>
+            <span class="n">phone</span><span class="o">=</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;Telefonnr&#39;</span><span class="p">],</span>
+            <span class="n">email</span><span class="o">=</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;EmailKunde&#39;</span><span class="p">],</span>
+            <span class="n">mobile</span><span class="o">=</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;MobilTlf&#39;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">new_customer_uuid</span><span class="p">:</span>
+            <span class="c1"># New customer created</span>
+            <span class="n">customer_uuid</span> <span class="o">=</span> <span class="n">new_customer_uuid</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># No customer created or found.</span>
+            <span class="n">main_customer</span> <span class="o">=</span> <span class="n">cpr_cvr</span><span class="p">(</span><span class="n">int_str</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;PersonnrSEnr&#39;</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="n">id_number</span> <span class="o">==</span> <span class="n">main_customer</span><span class="p">:</span>
+                <span class="n">role</span> <span class="o">=</span> <span class="s1">&#39;hovedkunde&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">role</span> <span class="o">=</span> <span class="s1">&#39;ligestilling&#39;</span>
+            <span class="n">report_error</span><span class="p">(</span>
+                <span class="s2">&quot;No customer created: </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;KundeNavn&#39;</span><span class="p">],</span> <span class="n">id_number</span><span class="p">,</span> <span class="n">customer_number</span><span class="p">,</span> <span class="n">role</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="import_customer_record"><a class="viewcode-back" href="../mox_kmd_ee.html#mox_kmd_ee.import_customer_record">[docs]</a><span class="k">def</span> <span class="nf">import_customer_record</span><span class="p">(</span><span class="n">fields</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Import a new customer record including relation, agreement, products.</span>
+
+<span class="sd">    Assume customers themselves have already been imported.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Lookup customer in LoRa - insert if it doesn&#39;t exist already.</span>
+    <span class="n">id_number</span> <span class="o">=</span> <span class="n">cpr_cvr</span><span class="p">(</span><span class="n">int_str</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;PersonnrSEnr&#39;</span><span class="p">]))</span>
+    <span class="n">ligest_personnr</span> <span class="o">=</span> <span class="n">cpr_cvr</span><span class="p">(</span><span class="n">int_str</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;LigestPersonnr&#39;</span><span class="p">]))</span>
+    <span class="n">customer_number</span> <span class="o">=</span> <span class="n">int_str</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;Kundenr&#39;</span><span class="p">])</span>
+
+    <span class="c1"># If customer relation already exists, please skip.</span>
+    <span class="k">if</span> <span class="n">lookup_customer_relation</span><span class="p">(</span><span class="n">customer_number</span><span class="p">):</span>
+        <span class="c1"># print(&quot;This customer relation already exists:&quot;, customer_number)</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Now start handling customers etc.</span>
+    <span class="n">customer_uuid</span> <span class="o">=</span> <span class="n">lookup_customer</span><span class="p">(</span><span class="n">id_number</span><span class="p">)</span>
+    <span class="c1"># Customer *must* have been created during previous import step</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">customer_uuid</span><span class="p">:</span>
+        <span class="c1"># This must have failed</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Customer not found:&quot;</span><span class="p">,</span> <span class="n">id_number</span><span class="p">,</span> <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;KundeNavn&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Create customer relation</span>
+    <span class="c1"># NOTE: In KMD EE, there&#39;s always one customer relation for each row in</span>
+    <span class="c1"># the Kunde table.</span>
+
+    <span class="c1"># Get Forbrugsstedadresse</span>
+    <span class="p">(</span><span class="n">forbrugssted_address</span><span class="p">,</span>
+     <span class="n">forbrugssted_address_uuid</span><span class="p">)</span> <span class="o">=</span> <span class="n">get_forbrugssted_address_uuid</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">forbrugssted_address_uuid</span><span class="p">:</span>
+        <span class="n">report_error</span><span class="p">(</span><span class="n">forbrugssted_address</span><span class="p">)</span>
+    <span class="n">cr_name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">VARME</span><span class="p">,</span> <span class="n">forbrugssted_address</span><span class="p">)</span>
+    <span class="n">cr_type</span> <span class="o">=</span> <span class="n">VARME</span>  <span class="c1"># Always for KMD EE</span>
+    <span class="n">cr_address_uuid</span> <span class="o">=</span> <span class="n">forbrugssted_address_uuid</span>
+    <span class="n">cr_uuid</span> <span class="o">=</span> <span class="n">create_customer_relation</span><span class="p">(</span>
+        <span class="n">customer_number</span><span class="p">,</span> <span class="n">cr_name</span><span class="p">,</span> <span class="n">cr_type</span><span class="p">,</span> <span class="n">cr_address_uuid</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cr_uuid</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Unable to create customer relation for customer </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">customer_number</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="c1"># This done, create customer roles &amp; link customer and relation</span>
+    <span class="n">role_uuid</span> <span class="o">=</span> <span class="n">create_customer_role</span><span class="p">(</span><span class="n">customer_uuid</span><span class="p">,</span> <span class="n">cr_uuid</span><span class="p">,</span> <span class="n">KUNDE</span><span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">role_uuid</span><span class="p">)</span>
+
+    <span class="c1"># Now handle partner/roommate, ignore empty CPR numbers</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ligest_personnr</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+
+        <span class="n">ligest_uuid</span> <span class="o">=</span> <span class="n">lookup_customer</span><span class="p">(</span><span class="n">ligest_personnr</span><span class="p">)</span>
+        <span class="c1"># Customer was already created before this step</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">customer_uuid</span><span class="p">:</span>
+            <span class="c1"># This must have failed</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ligest Customer not found:&quot;</span><span class="p">,</span> <span class="n">id_number</span><span class="p">,</span> <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;KundeNavn&#39;</span><span class="p">])</span>
+
+        <span class="n">create_customer_role</span><span class="p">(</span>
+            <span class="n">ligest_uuid</span><span class="p">,</span> <span class="n">cr_uuid</span><span class="p">,</span> <span class="n">LIGESTILLINGSKUNDE</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Create agreement</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Fjernvarmeaftale&#39;</span>
+    <span class="n">agreement_type</span> <span class="o">=</span> <span class="n">VARME</span>
+    <span class="n">invoice_address</span> <span class="o">=</span> <span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;VejNavn&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;,-&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span> <span class="o">+</span>
+                       <span class="s1">&#39;, &#39;</span> <span class="o">+</span> <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;Postdistrikt&#39;</span><span class="p">])</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">invoice_address_uuid</span> <span class="o">=</span> <span class="n">fuzzy_address_uuid</span><span class="p">(</span><span class="n">invoice_address</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">invoice_address_uuid</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">report_error</span><span class="p">(</span>
+            <span class="s2">&quot;Customer </span><span class="si">{1}</span><span class="s2">: Unable to lookup invoicing address: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">id_number</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">agreement_start_date</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;Tilflytningsdato&#39;</span><span class="p">]</span>
+    <span class="n">agreement_end_date</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;Fraflytningsdato&#39;</span><span class="p">]</span>
+
+    <span class="c1"># There is always one agreement for each location (Forbrugssted)</span>
+    <span class="c1"># AND only one location for each customer record.</span>
+
+    <span class="n">forbrugssted</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;ForbrugsstedID&#39;</span><span class="p">]</span>
+
+    <span class="n">products</span> <span class="o">=</span> <span class="n">get_products_for_location</span><span class="p">(</span><span class="n">forbrugssted</span><span class="p">)</span>
+
+    <span class="n">no_of_products</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">products</span><span class="p">)</span>
+
+    <span class="n">product_uuids</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">:</span>
+        <span class="n">meter_number</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;Målernr&#39;</span><span class="p">]</span>
+        <span class="n">meter_type</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;MaalerTypeBetegnel&#39;</span><span class="p">]</span>
+        <span class="n">product_uuid</span> <span class="o">=</span> <span class="n">create_product</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2"> </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">meter_number</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="s1">&#39;Målertypefabrikat&#39;</span><span class="p">],</span> <span class="n">meter_type</span>
+            <span class="p">),</span>
+            <span class="n">identification</span><span class="o">=</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;InstalNummer&#39;</span><span class="p">],</span>
+            <span class="n">installation_type</span><span class="o">=</span><span class="n">VARME</span><span class="p">,</span>
+            <span class="n">meter_number</span><span class="o">=</span><span class="n">meter_number</span><span class="p">,</span>
+            <span class="n">meter_type</span><span class="o">=</span><span class="n">meter_type</span><span class="p">,</span>
+            <span class="n">start_date</span><span class="o">=</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;DatoFra&#39;</span><span class="p">],</span>
+            <span class="n">end_date</span><span class="o">=</span><span class="n">p</span><span class="p">[</span><span class="s1">&#39;DatoTil&#39;</span><span class="p">],</span>
+            <span class="n">product_address</span><span class="o">=</span><span class="n">get_alternativsted_address_uuid</span><span class="p">(</span>
+                <span class="n">p</span><span class="p">[</span><span class="s1">&#39;AlternativStedID&#39;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">product_uuid</span><span class="p">:</span>
+            <span class="n">product_uuids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">product_uuid</span><span class="p">)</span>
+
+    <span class="n">agreement_name</span> <span class="o">=</span> <span class="s2">&quot;Varme, &quot;</span> <span class="o">+</span> <span class="n">name</span>
+    <span class="n">agreement_uuid</span> <span class="o">=</span> <span class="n">create_agreement</span><span class="p">(</span>
+        <span class="n">agreement_name</span><span class="p">,</span> <span class="n">agreement_type</span><span class="p">,</span> <span class="n">no_of_products</span><span class="p">,</span> <span class="n">invoice_address_uuid</span><span class="p">,</span>
+        <span class="n">agreement_start_date</span><span class="p">,</span> <span class="n">agreement_end_date</span><span class="p">,</span> <span class="n">forbrugssted</span><span class="p">,</span> <span class="n">cr_uuid</span><span class="p">,</span>
+        <span class="n">product_uuids</span>
+    <span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">agreement_uuid</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="update_customer_record"><a class="viewcode-back" href="../mox_kmd_ee.html#mox_kmd_ee.update_customer_record">[docs]</a><span class="k">def</span> <span class="nf">update_customer_record</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">changed_fields</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Update relevant LoRa objects with the specific changes.&quot;&quot;&quot;</span>
+    <span class="n">customer_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Telefon&#39;</span><span class="p">,</span> <span class="s1">&#39;MobilTlf&#39;</span><span class="p">,</span> <span class="s1">&#39;Fax&#39;</span><span class="p">,</span> <span class="s1">&#39;Kundesagsnr&#39;</span><span class="p">]</span>
+    <span class="n">customer_relation_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ForbrStVejnavn&#39;</span><span class="p">,</span> <span class="s1">&#39;Vejkode&#39;</span><span class="p">,</span> <span class="s1">&#39;Postnr&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;ForbrStPostdistrikt&#39;</span><span class="p">,</span> <span class="s1">&#39;Husnr&#39;</span><span class="p">,</span> <span class="s1">&#39;Bogstav&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;Etage&#39;</span><span class="p">,</span> <span class="s1">&#39;Sidedørnr&#39;</span><span class="p">,</span> <span class="s1">&#39;PersonnrSEnr&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;LigestPersonnr&#39;</span><span class="p">]</span>
+    <span class="n">agreement_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Vejnavn&#39;</span><span class="p">,</span> <span class="s1">&#39;Postdistrikt&#39;</span><span class="p">,</span> <span class="s1">&#39;Tilflytningsdato&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Fraflytningsdato&#39;</span><span class="p">]</span>
+    <span class="n">update_handlers</span> <span class="o">=</span> <span class="p">[(</span><span class="n">customer_fields</span><span class="p">,</span> <span class="n">update_customer</span><span class="p">),</span>
+                       <span class="p">(</span><span class="n">customer_relation_fields</span><span class="p">,</span> <span class="n">update_customer_relation</span><span class="p">),</span>
+                       <span class="p">(</span><span class="n">agreement_fields</span><span class="p">,</span> <span class="n">update_agreement</span><span class="p">)]</span>
+    <span class="n">changed_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">changed_fields</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">field_list</span><span class="p">,</span> <span class="n">handler</span> <span class="ow">in</span> <span class="n">update_handlers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">changed_keys</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">field_list</span><span class="p">):</span>
+            <span class="n">handler</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">changed_fields</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="delete_customer_record"><a class="viewcode-back" href="../mox_kmd_ee.html#mox_kmd_ee.delete_customer_record">[docs]</a><span class="k">def</span> <span class="nf">delete_customer_record</span><span class="p">(</span><span class="n">customer_number</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Purge relation and customer roles, agreements and products.&quot;&quot;&quot;</span>
+        <span class="n">cr_uuid</span> <span class="o">=</span> <span class="n">lookup_customer_relation</span><span class="p">(</span><span class="n">customer_number</span><span class="p">)</span>
+        <span class="c1"># This should exist provided everything is up to date!</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">cr_uuid</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Customer number </span><span class="si">{}</span><span class="s2"> not found.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">customer_number</span><span class="p">))</span>
+            <span class="n">report_error</span><span class="p">(</span>
+                <span class="s2">&quot;Customer number </span><span class="si">{}</span><span class="s2"> not found.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">customer_number</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Look up the customer roles and customers for this customer relation.</span>
+
+        <span class="n">roles</span> <span class="o">=</span> <span class="n">lookup_customer_roles</span><span class="p">(</span><span class="n">customer_relation</span><span class="o">=</span><span class="n">cr_uuid</span><span class="p">)</span>
+
+        <span class="c1"># Delete the customer roles.</span>
+
+        <span class="k">for</span> <span class="n">role</span> <span class="ow">in</span> <span class="n">roles</span><span class="p">:</span>
+            <span class="n">delete_customer_role</span><span class="p">(</span><span class="n">role</span><span class="p">)</span>
+
+        <span class="c1"># Delete all agreements and products corresponding to this customer</span>
+        <span class="c1"># relation.</span>
+        <span class="c1"># There can be only one agreement per customer as is, but in the future</span>
+        <span class="c1"># this might change.</span>
+        <span class="n">agreements</span> <span class="o">=</span> <span class="n">lookup_agreements</span><span class="p">(</span><span class="n">customer_relation</span><span class="o">=</span><span class="n">cr_uuid</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">agreement_uuid</span> <span class="ow">in</span> <span class="n">agreements</span><span class="p">:</span>
+            <span class="n">products</span> <span class="o">=</span> <span class="n">lookup_products</span><span class="p">(</span><span class="n">agreement_uuid</span><span class="o">=</span><span class="n">agreement_uuid</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">:</span>
+                <span class="n">delete_product</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+            <span class="n">delete_agreement</span><span class="p">(</span><span class="n">agreement_uuid</span><span class="p">)</span>
+        <span class="c1"># Now go ahead and delete the customer relation</span>
+        <span class="n">delete_customer_relation</span><span class="p">(</span><span class="n">cr_uuid</span><span class="p">)</span></div>
+
+
+<span class="sd">&quot;&quot;&quot;Installation related functions.</span>
+
+<span class="sd">Import, update, delete.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="import_installation_record"><a class="viewcode-back" href="../mox_kmd_ee.html#mox_kmd_ee.import_installation_record">[docs]</a><span class="k">def</span> <span class="nf">import_installation_record</span><span class="p">(</span><span class="n">fields</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Import product from KMD EE installation record.&quot;&quot;&quot;</span>
+    <span class="c1"># check there&#39;s an agreement corresponding to this Forbrugssted</span>
+    <span class="n">customer_number</span> <span class="o">=</span> <span class="n">int_str</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;Kundenr&#39;</span><span class="p">])</span>
+    <span class="n">cr_uuid</span> <span class="o">=</span> <span class="n">lookup_customer_relation</span><span class="p">(</span><span class="n">customer_number</span><span class="p">)</span>
+    <span class="n">agreement_uuid</span> <span class="o">=</span> <span class="n">lookup_agreements</span><span class="p">(</span><span class="n">cr_uuid</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">cr_uuid</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">agreement_uuid</span><span class="p">:</span>
+        <span class="c1"># Agreement found.</span>
+        <span class="n">product_uuid</span> <span class="o">=</span> <span class="n">lookup_product</span><span class="p">(</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;InstalNummer&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">product_uuid</span><span class="p">:</span>
+            <span class="c1"># If product exists, don&#39;t import it.</span>
+            <span class="k">return</span>
+        <span class="c1"># create the product</span>
+        <span class="n">meter_number</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;Målernr&#39;</span><span class="p">]</span>
+        <span class="n">meter_type</span> <span class="o">=</span> <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;MaalerTypeBetegnel&#39;</span><span class="p">]</span>
+        <span class="n">product_uuid</span> <span class="o">=</span> <span class="n">create_product</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">, </span><span class="si">{1}</span><span class="s2"> </span><span class="si">{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">meter_number</span><span class="p">,</span> <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;Målertypefabrikat&#39;</span><span class="p">],</span> <span class="n">meter_type</span>
+            <span class="p">),</span>
+            <span class="n">identification</span><span class="o">=</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;InstalNummer&#39;</span><span class="p">],</span>
+            <span class="n">installation_type</span><span class="o">=</span><span class="n">VARME</span><span class="p">,</span>
+            <span class="n">meter_number</span><span class="o">=</span><span class="n">meter_number</span><span class="p">,</span>
+            <span class="n">meter_type</span><span class="o">=</span><span class="n">meter_type</span><span class="p">,</span>
+            <span class="n">start_date</span><span class="o">=</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;DatoFra&#39;</span><span class="p">],</span>
+            <span class="n">end_date</span><span class="o">=</span><span class="n">fields</span><span class="p">[</span><span class="s1">&#39;DatoTil&#39;</span><span class="p">],</span>
+            <span class="n">product_address</span><span class="o">=</span><span class="n">get_alternativsted_address_uuid</span><span class="p">(</span>
+                <span class="n">fields</span><span class="p">[</span><span class="s1">&#39;AlternativStedID&#39;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">product_uuid</span><span class="p">:</span>
+            <span class="c1"># add it to the agreement</span>
+            <span class="n">add_product_to_agreement</span><span class="p">(</span><span class="n">product_uuid</span><span class="p">,</span> <span class="n">agreement_uuid</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No agreement found for customer number </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">customer_number</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="update_installation_record"><a class="viewcode-back" href="../mox_kmd_ee.html#mox_kmd_ee.update_installation_record">[docs]</a><span class="k">def</span> <span class="nf">update_installation_record</span><span class="p">(</span><span class="n">old_fields</span><span class="p">,</span> <span class="n">changed_fields</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Update relevant LoRa objects with the changes for each installation.&quot;&quot;&quot;</span>
+    <span class="n">relevant_fields</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Målernr&#39;</span><span class="p">,</span> <span class="s1">&#39;Målertypefabrikat&#39;</span><span class="p">,</span> <span class="s1">&#39;MaalerTypeBetegnel&#39;</span><span class="p">,</span>
+                       <span class="s1">&#39;AlternativStedID&#39;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">relevant_fields</span> <span class="o">&amp;</span> <span class="n">changed_fields</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">product_uuid</span> <span class="o">=</span> <span class="n">lookup_product</span><span class="p">(</span><span class="n">old_fields</span><span class="p">[</span><span class="s1">&#39;InstalNummer&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">product_uuid</span><span class="p">:</span>
+            <span class="n">say</span><span class="p">(</span><span class="s2">&quot;Error: Product </span><span class="si">{}</span><span class="s2"> not found&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">old_fields</span><span class="p">[</span><span class="s1">&#39;InstalNummer&#39;</span><span class="p">]))</span>
+            <span class="k">return</span>
+        <span class="n">say</span><span class="p">(</span><span class="s2">&quot;Updating product: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">changed_fields</span><span class="p">))</span>
+        <span class="n">update_product</span><span class="p">(</span><span class="n">product_uuid</span><span class="p">,</span> <span class="n">old_fields</span><span class="p">,</span> <span class="n">changed_fields</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="delete_installation_record"><a class="viewcode-back" href="../mox_kmd_ee.html#mox_kmd_ee.delete_installation_record">[docs]</a><span class="k">def</span> <span class="nf">delete_installation_record</span><span class="p">(</span><span class="n">product_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Delete product from LoRa when no longer relevant.&quot;&quot;&quot;</span>
+    <span class="c1"># get product UUID</span>
+    <span class="n">product_uuid</span> <span class="o">=</span> <span class="n">lookup_product</span><span class="p">(</span><span class="n">product_id</span><span class="p">)</span>
+    <span class="c1"># delete product &amp; find agreement for this product UUID, if any</span>
+    <span class="k">if</span> <span class="n">product_uuid</span><span class="p">:</span>
+        <span class="n">delete_product</span><span class="p">(</span><span class="n">product_uuid</span><span class="p">)</span>
+        <span class="n">agreement_uuid</span> <span class="o">=</span> <span class="n">lookup_agreement_from_product</span><span class="p">(</span><span class="n">product_uuid</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">agreement_uuid</span><span class="p">:</span>
+        <span class="c1"># remove product from agreement</span>
+        <span class="n">agreement_json</span> <span class="o">=</span> <span class="n">read_agreement</span><span class="p">(</span><span class="n">agreement_uuid</span><span class="p">)</span>
+        <span class="n">products</span> <span class="o">=</span> <span class="n">agreement_json</span><span class="p">[</span><span class="s1">&#39;relationer&#39;</span><span class="p">][</span><span class="s1">&#39;indsatskvalitet&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">products</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="s2">&quot;uuid&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">product_uuid</span><span class="p">:</span>
+                <span class="n">p</span><span class="p">[</span><span class="s2">&quot;uuid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">agreement_json</span><span class="p">[</span><span class="s1">&#39;relationer&#39;</span><span class="p">][</span><span class="s1">&#39;indsatskvalitet&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">products</span>
+
+        <span class="n">write_agreement_dict</span><span class="p">(</span><span class="n">agreement_uuid</span><span class="p">,</span> <span class="n">agreement_json</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../mox_kmd_ee.html#mox_kmd_ee.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Main program. Calculate changes since last run and sync with LoRa.</span>
+
+<span class="sd">    * Argument parsing.</span>
+<span class="sd">    * Read all customer records from KMD EE and calculate changes.</span>
+<span class="sd">    * From these changes, delete expired records; import new ones; update</span>
+<span class="sd">      existing ones.</span>
+<span class="sd">    * Repeat for installations/products.</span>
+
+<span class="sd">    Note that products are *not* created separately during the inital import,</span>
+<span class="sd">    since they&#39;re imported as part of creating each agreement.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># argument parsing</span>
+    <span class="kn">import</span> <span class="nn">argparse</span>
+    <span class="k">global</span> <span class="n">VERBOSE</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--verbose&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;print helpful comments during execution&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--initial-import&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;only perform inital import&#39;</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="n">VERBOSE</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">verbose</span>
+    <span class="n">initial_import</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">initial_import</span>
+
+    <span class="sd">&quot;&quot;&quot;CUSTOMERS AND CUSTOMER RELATIONS&quot;&quot;&quot;</span>
+    <span class="n">connection</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="n">database</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+    <span class="n">cursor</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">cursor</span><span class="p">(</span><span class="n">as_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">new_values</span> <span class="o">=</span> <span class="n">read_customer_records</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span>
+    <span class="n">new_installation_values</span> <span class="o">=</span> <span class="n">read_installation_records</span><span class="p">(</span><span class="n">cursor</span><span class="p">)</span>
+    <span class="n">old_installation_values</span> <span class="o">=</span> <span class="n">retrieve_installation_records</span><span class="p">()</span>
+    <span class="n">connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">old_values</span> <span class="o">=</span> <span class="n">retrieve_customer_records</span><span class="p">()</span>
+
+    <span class="n">say</span><span class="p">(</span><span class="s1">&#39;Comparison, new_values == old_values:&#39;</span><span class="p">,</span> <span class="n">new_values</span> <span class="o">==</span> <span class="n">old_values</span><span class="p">)</span>
+
+    <span class="n">new_keys</span> <span class="o">=</span> <span class="n">new_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">old_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">lost_keys</span> <span class="o">=</span> <span class="n">old_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span> <span class="n">new_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">common_keys</span> <span class="o">=</span> <span class="n">new_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">old_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+    <span class="n">say</span><span class="p">(</span><span class="s2">&quot;new customers:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_keys</span><span class="p">))</span>
+    <span class="n">say</span><span class="p">(</span><span class="s2">&quot;lost customers:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lost_keys</span><span class="p">))</span>
+    <span class="n">say</span><span class="p">(</span><span class="s2">&quot;existing customers:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">common_keys</span><span class="p">))</span>
+
+    <span class="c1"># Now calculate diff between new values and old values.</span>
+    <span class="c1"># Build a mapping between customer numbers and</span>
+    <span class="c1"># dictionaries containing only the changed values.</span>
+
+    <span class="n">changed_records</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">k</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">f</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span>
+            <span class="n">new_values</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">f</span><span class="p">]</span> <span class="o">!=</span> <span class="n">old_values</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">f</span><span class="p">]</span>
+          <span class="p">}</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">common_keys</span> <span class="k">if</span> <span class="n">new_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">!=</span> <span class="n">old_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+    <span class="p">}</span>
+
+    <span class="n">say</span><span class="p">(</span><span class="s2">&quot;Number of changed customer records:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">changed_records</span><span class="p">))</span>
+    <span class="c1"># Handle notifications for customer part, do the installations afterwards.</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lost_keys</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">say</span><span class="p">(</span><span class="s2">&quot;... deleting </span><span class="si">{}</span><span class="s2"> customers...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lost_keys</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">lost_keys</span><span class="p">:</span>
+            <span class="c1"># These records are no longer active and should be deleted in LoRa</span>
+            <span class="n">delete_customer_record</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="n">say</span><span class="p">(</span><span class="s2">&quot;... done&quot;</span><span class="p">)</span>
+    <span class="c1"># New customer relations - import along with agreements &amp; products</span>
+    <span class="c1"># First explicitly create the new customers</span>
+
+    <span class="n">new_customer_fields</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="p">{</span>
+        <span class="n">new_values</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;PersonnrSEnr&#39;</span><span class="p">]:</span> <span class="n">new_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">new_keys</span><span class="p">},</span> <span class="o">**</span><span class="p">{</span>
+            <span class="n">new_values</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;LigestPersonnr&#39;</span><span class="p">]:</span> <span class="n">new_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">new_keys</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span>
+                <span class="n">int_str</span><span class="p">(</span><span class="n">new_values</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;LigestPersonnr&#39;</span><span class="p">])</span>
+            <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+        <span class="p">}}</span>
+    <span class="c1"># Now import all the new customers using threads</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_customer_fields</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">say</span><span class="p">(</span><span class="s2">&quot;... importing </span><span class="si">{}</span><span class="s2"> new customers ...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">new_customer_fields</span><span class="p">)</span>
+        <span class="p">))</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">import_customer</span><span class="p">,</span> <span class="n">new_customer_fields</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="n">say</span><span class="p">(</span><span class="s2">&quot;... done&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_keys</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">say</span><span class="p">(</span><span class="s1">&#39;... importing </span><span class="si">{}</span><span class="s1"> new customer relations ...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">new_keys</span><span class="p">)</span>
+        <span class="p">))</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">import_customer_record</span><span class="p">,</span> <span class="p">[</span><span class="n">new_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">new_keys</span><span class="p">])</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="n">say</span><span class="p">(</span><span class="s2">&quot;... done&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Now (and finally) handle update of the specific changed fields.</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">changed_records</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">say</span><span class="p">(</span><span class="s1">&#39;... updating </span><span class="si">{}</span><span class="s1"> customer records ...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">changed_records</span><span class="p">)</span>
+        <span class="p">))</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">changed_fields</span> <span class="ow">in</span> <span class="n">changed_records</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">update_customer_record</span><span class="p">(</span><span class="n">old_values</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">changed_fields</span><span class="p">)</span>
+        <span class="n">say</span><span class="p">(</span><span class="s2">&quot;... done&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">initial_import</span><span class="p">:</span>
+        <span class="c1"># In this case, we shouldn&#39;t handle changed installations, only</span>
+        <span class="c1"># record the ones we&#39;ve seen.</span>
+        <span class="n">store_customer_records</span><span class="p">(</span><span class="n">new_values</span><span class="p">)</span>
+        <span class="n">store_installation_records</span><span class="p">(</span><span class="n">new_installation_values</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+
+    <span class="sd">&quot;&quot;&quot;INSTALLATIONS AND PRODUCTS&quot;&quot;&quot;</span>
+
+    <span class="n">new_installation_keys</span> <span class="o">=</span> <span class="p">(</span><span class="n">new_installation_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span>
+                             <span class="n">old_installation_values</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">lost_installation_keys</span> <span class="o">=</span> <span class="p">(</span><span class="n">old_installation_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">-</span>
+                              <span class="n">new_installation_values</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">common_installation_keys</span> <span class="o">=</span> <span class="p">(</span><span class="n">new_installation_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">&amp;</span>
+                                <span class="n">old_installation_values</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="n">say</span><span class="p">(</span><span class="s2">&quot;new installations:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_installation_keys</span><span class="p">))</span>
+    <span class="n">say</span><span class="p">(</span><span class="s2">&quot;lost installations:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">lost_installation_keys</span><span class="p">))</span>
+    <span class="n">say</span><span class="p">(</span><span class="s2">&quot;existing installations:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">common_installation_keys</span><span class="p">))</span>
+
+    <span class="n">changed_installation_records</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">k</span><span class="p">:</span> <span class="p">{</span>
+            <span class="n">f</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_installation_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span>
+            <span class="n">new_installation_values</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">f</span><span class="p">]</span> <span class="o">!=</span> <span class="n">old_installation_values</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">f</span><span class="p">]</span>
+          <span class="p">}</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">common_installation_keys</span> <span class="k">if</span>
+        <span class="n">new_installation_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">!=</span> <span class="n">old_installation_values</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+    <span class="p">}</span>
+
+    <span class="n">say</span><span class="p">(</span><span class="s2">&quot;Number of changed installation records:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">changed_records</span><span class="p">))</span>
+    <span class="c1">#  Those that disappear are expired, either by the customer disappearing or</span>
+    <span class="c1">#  by crossing the expiry date. If the customer disappeared, it should</span>
+    <span class="c1">#  already be gone.</span>
+    <span class="n">say</span><span class="p">(</span><span class="s2">&quot;... deleting </span><span class="si">{}</span><span class="s2"> expired installations ...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">lost_installation_keys</span><span class="p">)</span>
+    <span class="p">))</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">lost_installation_keys</span><span class="p">:</span>
+        <span class="n">delete_installation_record</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+    <span class="n">say</span><span class="p">(</span><span class="s2">&quot;... done&quot;</span><span class="p">)</span>
+
+    <span class="c1"># New records may come into being by entering the valid period.</span>
+    <span class="c1"># if so, they should be attached to the Aftale corresponding to this</span>
+    <span class="c1"># Forbrugssted. If none such exists, they should not be created.</span>
+
+    <span class="n">say</span><span class="p">(</span>
+        <span class="s2">&quot;... importing </span><span class="si">{}</span><span class="s2"> new installations ...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">new_installation_keys</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">new_installation_keys</span><span class="p">:</span>
+        <span class="n">import_installation_record</span><span class="p">(</span><span class="n">new_installation_values</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+    <span class="n">say</span><span class="p">(</span><span class="s2">&quot;... done&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Now handle updates</span>
+    <span class="n">say</span><span class="p">(</span><span class="s2">&quot;... updating </span><span class="si">{}</span><span class="s2"> changed installations ...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">changed_installation_records</span><span class="p">)</span>
+    <span class="p">))</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">changed_fields</span> <span class="ow">in</span> <span class="n">changed_installation_records</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">update_installation_record</span><span class="p">(</span><span class="n">old_installation_values</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">changed_fields</span><span class="p">)</span>
+    <span class="n">say</span><span class="p">(</span><span class="s2">&quot;... done&quot;</span><span class="p">)</span>
+
+    <span class="c1"># All&#39;s well that ends well</span>
+    <span class="n">store_customer_records</span><span class="p">(</span><span class="n">new_values</span><span class="p">)</span>
+    <span class="n">store_installation_records</span><span class="p">(</span><span class="n">new_installation_values</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Magenta ApS.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

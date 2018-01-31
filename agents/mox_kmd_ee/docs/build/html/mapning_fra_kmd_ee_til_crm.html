@@ -1,0 +1,494 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Mapning fra kmd ee til CRM &#8212; Mox KMD EE 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="service_clients module" href="service_clients.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="mapning-fra-kmd-ee-til-crm">
+<h1>Mapning fra kmd ee til CRM<a class="headerlink" href="#mapning-fra-kmd-ee-til-crm" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="aktor-bruger-kunde">
+<h2>Aktør/Bruger/Kunde<a class="headerlink" href="#aktor-bruger-kunde" title="Permalink to this headline">¶</a></h2>
+<p>Navn og folkeregisteradresse hentes af KMD-agenten ved opslag ud fra
+CPR-nummer eller CVR-nummer fra feltet KundeCPRNr for privatkunder.</p>
+<p>Disse oplysninger lægges ved oprettelse af nye kunder i LoRa sammen med
+oplysningerne fra KMD EE. Opdatering af oplysningerne i
+Serviceplatformen vil derimod blive håndteret af Mox SP-agenten.</p>
+<p>CPR- og CVR-numrene ligger begge i feltet KundeCprNr eller PersonnrSEnr
+(de to felter har samme indhold) og kan kendes fra hinanden ved at
+CPR-numre er ni- eller ti-cifrede, hvor CVR-numre er otte-cifrede.</p>
+<p>Telefon og email gemmes som adresser jfr objektrepræsentationsdokumentet
+og hentes fra felterne EmailKunde, Telefon og  MobilTlf i KMD EE.</p>
+<p>Mapningen af CRM-systemets <em>aktør</em> bliver dermed som angivet i tabellen
+herunder.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="37%" />
+<col width="37%" />
+<col width="27%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">CRM</th>
+<th class="head">KMD EE</th>
+<th class="head">LoRa</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>CPR-nummer</td>
+<td>PersonnrSEnr</td>
+<td>tilknyttede-
+personer</td>
+</tr>
+<tr class="row-odd"><td>&lt;CPR-oplysninger&gt;</td>
+<td>(Mox SP)</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>CVR-nummer</td>
+<td>PersonnrSEnr</td>
+<td>virksomhed</td>
+</tr>
+<tr class="row-odd"><td>&lt;CVR-oplysninger&gt;</td>
+<td>(Mox CVR)</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>Telefon KMD EE</td>
+<td>Telefon</td>
+<td>adresser</td>
+</tr>
+<tr class="row-odd"><td>E-mail KMD EE</td>
+<td>&#160;</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>MobilTlf⁺</td>
+<td>MobilTlf</td>
+<td>adresser</td>
+</tr>
+<tr class="row-odd"><td>Fax⁺</td>
+<td>Fax</td>
+<td>overføres ikke</td>
+</tr>
+<tr class="row-even"><td>MasterID</td>
+<td>KundeSagsnr</td>
+<td>ava_masterid</td>
+</tr>
+</tbody>
+</table>
+<p>⁺ Felterne MobilTlf og Fax eksisterer p.t. ikke i CRM-systemet, men kan
+godt blive relevante - om ikke andet kan MobilTlf sandsynligvis. Det er
+aftalt med AVA, at de overføres til LoRa for det tilfældes skyld, at de
+senere skal føjes til CRM-systemet.</p>
+<p>Det vil sige, at det kun er kontaktoplysningerne, som faktisk kopieres
+fra Kunde-tabellen i KMD EE til Aktøren i CRM-systemet.</p>
+<p>Personoplysningerne fra Serviceplatformen repræsenteres ved lokale
+udvidelser til objektet Bruger.</p>
+<p>Disse oplysninger er som følger:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="45%" />
+<col width="55%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Person (CPR)</th>
+<th class="head">LoRa</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Fornavn</td>
+<td>ava_fornavn</td>
+</tr>
+<tr class="row-odd"><td>Mellemnavn</td>
+<td>ava_mellemnavn</td>
+</tr>
+<tr class="row-even"><td>Efternavn</td>
+<td>ava_efternavn</td>
+</tr>
+<tr class="row-odd"><td>Civilstand</td>
+<td>ava_civilstand</td>
+</tr>
+<tr class="row-even"><td>Køn</td>
+<td>ava_koen</td>
+</tr>
+<tr class="row-odd"><td>Adresse-</td>
+<td>ava_adresse-</td>
+</tr>
+<tr class="row-even"><td>beskyttelse</td>
+<td>beskyttelse</td>
+</tr>
+</tbody>
+</table>
+<p>Derudover hentes borgerens <em>adresse</em> fra Serviceplatformen og slås op i
+DAWA, hvorefter addresse-UUID’en gemmes i brugerens relation “adresser”
+ligesom email og telefonnummer.</p>
+<p>For virksomheder hentes, som det fremgår af tabellen herunder,
+virksomhedens navn, adresse-UUID (CVR-registret på Serviceplatformen
+indeholder DAWA-UUID, så det er ikke nødvendigt at slå op),
+virksomhedsform og branchekode.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="48%" />
+<col width="52%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Virksomhed (CVR)</th>
+<th class="head">LoRa</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Navn</td>
+<td>organisationsnavn</td>
+</tr>
+<tr class="row-odd"><td>Adresse-UUID</td>
+<td>adresse</td>
+</tr>
+<tr class="row-even"><td>Virksomhedsform</td>
+<td>virksomhedstype</td>
+</tr>
+<tr class="row-odd"><td>Branchekode</td>
+<td>branche</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="kunderolle">
+<h2>Kunderolle<a class="headerlink" href="#kunderolle" title="Permalink to this headline">¶</a></h2>
+<p>Kunderollens navn er blot rolleværdien - dette for at det kan blive så
+informativt som muligt i brugerinterfacet.</p>
+<p>Kunderollen har to relationer, nemlig til Aktør og Kundeforhold, der
+derfor skal oprettes samtidig med rollen. En anden måde at sige dette på
+er, at kunderollen ikke har nogen mening som selvstændigt objekt, den er
+alene et bindeled mellem kunden og kundeforholdet.</p>
+<ul class="simple">
+<li>De kunder, der er opført i Kunde-tabellen i KMD EE, og hvis person-
+eller CVR-nummer er angivet i feltet <code class="docutils literal"><span class="pre">PersonnrSEnr</span></code>, tildeles rollen
+“Kunde”.</li>
+<li>De personer, hvis personnummer er angivet i
+Kunde-tabellens <code class="docutils literal"><span class="pre">LigestPersonnr</span></code>, oprettes og tildeles rollen
+“Ligestillingskunde”.</li>
+<li>De personer, der er angivet som FasAdministrator i feltet
+<code class="docutils literal"><span class="pre">Kunde.FasadministratorID</span></code> oprettes og tildeles rollen
+“Administrator”. Bemærk, at disse ikke har <code class="docutils literal"><span class="pre">PersonnrSEnr</span></code> udfyldt,
+men de har ofte et CPR- eller CVR-nummer i feltet <code class="docutils literal"><span class="pre">BemærkAdmin</span></code>.</li>
+<li>De personer, der er angivet med <code class="docutils literal"><span class="pre">Forbrugssted.ViceværtID</span></code>, oprettes
+og tildeles rollen “Vicevært”.</li>
+</ul>
+<p>Bemærk, at vicevært-tabellen er <em>tom</em> i de databasedumps for KMD EE, som
+vi har adgang til, så den er formentlig ikke relevant.</p>
+<p>Med denned definition bliver kunderollens</p>
+<ul class="simple">
+<li><em>Navn</em> lig med tekstrepræsentationen af rollen, f.eks. “Kunde”</li>
+<li><em>Kundeforhold</em> et opslag til det relevante Kundeforhold</li>
+<li><em>Rolle</em> en relation til klassifikation angivet som URN, altså f.eks.
+<code class="docutils literal"><span class="pre">915.240.000</span></code>.</li>
+<li>Den numeriske nøgle bruges også som brugervendt nøgle for objektet.</li>
+</ul>
+<p>Mapningen bliver hermed:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="56%" />
+<col width="44%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">CRM</th>
+<th class="head">LoRa</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Navn</td>
+<td>funktionsnavn</td>
+</tr>
+<tr class="row-odd"><td>Aktør</td>
+<td>tilknyttedebrugere</td>
+</tr>
+<tr class="row-even"><td>Kundeforhold</td>
+<td>tilknyttedeinte-
+ressefællesskaber</td>
+</tr>
+<tr class="row-odd"><td>Rolle</td>
+<td>brugervendtnoegle</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="kundeforhold">
+<h2>Kundeforhold<a class="headerlink" href="#kundeforhold" title="Permalink to this headline">¶</a></h2>
+<p>Mapppes som angivet i tabellen herunder.</p>
+<p>Repræsenteres i LoRa af klassen Interessefællesskab. I tabellen herunder
+repræsenterer forkortelsen “ifnavn” det rigtige, som er
+“interessefaellesskabsnavn”.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="37%" />
+<col width="37%" />
+<col width="27%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">CRM</th>
+<th class="head">KMD EE</th>
+<th class="head">LoRa</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Kundeforhold</td>
+<td>&lt;Varme + forbrugsadres-
+se som i LoRa/CRM&gt;</td>
+<td>ifnavn</td>
+</tr>
+<tr class="row-odd"><td>Kundenummer</td>
+<td>Kundenr</td>
+<td>brugervendtnoegle</td>
+</tr>
+<tr class="row-even"><td>Kundetype</td>
+<td>Varme</td>
+<td>iftype</td>
+</tr>
+<tr class="row-odd"><td>Kundeforholdstype</td>
+<td>&lt;Udfyldes ikke&gt;</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>Adresse</td>
+<td>Forbrugssted.Adresse</td>
+<td>adresser</td>
+</tr>
+</tbody>
+</table>
+<p>Feltet “Kundeforhold” er det felt, der på de fleste andre elementer
+hedder Navn. Adressen i dette navnefelt forstås som kundens
+forbrugsstedets adresse, altså Forbrugssted.Adresse.</p>
+</div>
+<div class="section" id="aftale">
+<h2>Aftale<a class="headerlink" href="#aftale" title="Permalink to this headline">¶</a></h2>
+<p>Mappes som angivet i tabellen herunder.</p>
+<p>I LoRa repræsenteres en aftale som en Indsats.</p>
+<p>NB: For at kunne repræsentere antal produkter samt adressen burde
+der - som vi allerede har set for aktørernes vedkommende - indføres en
+relation og et egenskabsfelt til adressen og feltet “antal
+produkter”.</p>
+<p>Dette er imidlertid ikke muligt p.t., da klassen Indsats i LoRa er
+patchet på en måde, der gør det vanskeligt at tilføje nye felter. Dette
+kan der først rettes op på, når Magenta får tid til at ændre
+implementationen af LoRas databaselag.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="37%" />
+<col width="37%" />
+<col width="27%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">CRM</th>
+<th class="head">KMD EE</th>
+<th class="head">LoRa</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Navn</td>
+<td>Navn</td>
+<td>brugervendtnoegle</td>
+</tr>
+<tr class="row-odd"><td>Kundeforhold</td>
+<td><dl class="first last docutils">
+<dt>&lt;Relation til</dt>
+<dd>Kundeforhold&gt;</dd>
+</dl>
+</td>
+<td>indsatsmodtager</td>
+</tr>
+<tr class="row-even"><td>Aftaletype</td>
+<td>Varme</td>
+<td>indsatstype</td>
+</tr>
+<tr class="row-odd"><td>Beskrivelse</td>
+<td>&lt;Udfyldes ikke&gt;</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>Antal produkter</td>
+<td>&lt;Redundant&gt;</td>
+<td>beskrivelse⁺⁺</td>
+</tr>
+<tr class="row-odd"><td>Produkter</td>
+<td>&lt;Målere fra TrefMaaler&gt;</td>
+<td>indsatskvalitet</td>
+</tr>
+<tr class="row-even"><td>Faktureringsadresse</td>
+<td>&lt;DAR-adresse fundet fra
+Kunde.vejnavn +
+Kunde.postdistrikt&gt;</td>
+<td>indsatsdokument⁺⁺</td>
+</tr>
+<tr class="row-odd"><td>Ejendom</td>
+<td>Forbrugsted.Ejendomsnr⁺</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>Startdato</td>
+<td>Kunde.Tilflytningsdato</td>
+<td>starttidspunkt</td>
+</tr>
+<tr class="row-odd"><td>Slutdato</td>
+<td>Kunde.fraflytningsdato</td>
+<td>sluttidspunkt</td>
+</tr>
+</tbody>
+</table>
+<p>⁺: Ejendom er ikke omfattet af de OIO-standarder, som LoRa implementerer
+og er i første omgang ikke med i dette projekt. I en senere fase kan de
+relevante oplysninger evt. slås op i BBR og overføres til CRM af
+CRM-agenten.</p>
+<p>⁺⁺: Her er der som sagt tale om at bøje modellen, fordi det p.t. ikke er
+muligt at tilføje den relevante lokale udvidelse.</p>
+</div>
+<div class="section" id="produkt">
+<h2>Produkt<a class="headerlink" href="#produkt" title="Permalink to this headline">¶</a></h2>
+<p>Mappes som angivet i tabellen herunder.</p>
+<p>Produkt er i LoRa repræsenteret af klassen Klasse for hierarkiet
+Klassifikation.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="34%" />
+<col width="34%" />
+<col width="32%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">CRM</th>
+<th class="head">KMD EE</th>
+<th class="head">LoRa</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Navn</td>
+<td>Målernr + fabrikat +
+betegnelse (TrefInst.)</td>
+<td>titel</td>
+</tr>
+<tr class="row-odd"><td>Identifikation</td>
+<td><dl class="first last docutils">
+<dt>Trefinstallation.</dt>
+<dd>InstalNummer</dd>
+</dl>
+</td>
+<td>brugervendtnoegle</td>
+</tr>
+<tr class="row-even"><td>Aftale</td>
+<td>&lt;Relation til Aftale&gt;</td>
+<td>(findes på
+Aftale/Indsats)</td>
+</tr>
+<tr class="row-odd"><td>Adresse</td>
+<td><dl class="first last docutils">
+<dt>Altern. adresse</dt>
+<dd>eller
+Forbrugssted.Adresse&gt;</dd>
+</dl>
+</td>
+<td>ava_opstillingsadresse</td>
+</tr>
+<tr class="row-even"><td>Installationstype</td>
+<td>Varme</td>
+<td>overordnet_klasse</td>
+</tr>
+<tr class="row-odd"><td>Afhentningstype</td>
+<td>&lt;Udfyldes ikke&gt;</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td>Målernummer</td>
+<td>TrefMaaler.Målernr</td>
+<td>eksempel⁺</td>
+</tr>
+<tr class="row-odd"><td>Målertype</td>
+<td>TrefMaaler.MaalertypeBe
+tegnel</td>
+<td>beskrivelse⁺</td>
+</tr>
+<tr class="row-even"><td>Beskrivelse</td>
+<td>&lt;Udfyldes ikke&gt;</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td>Kundenummer</td>
+<td>&lt;Redundant&gt;</td>
+<td>(findes på kunde-
+forhold)</td>
+</tr>
+</tbody>
+</table>
+<p>⁺Her burde der igen have været tilføjet et nyt felt, som vi kunne have
+kaldt “ava_maalernummer”, men det afventer en afklaring af vores
+tekniske gæld vedr. databasen.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="service_clients.html" title="previous chapter">service_clients module</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Magenta ApS.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/mapning_fra_kmd_ee_til_crm.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

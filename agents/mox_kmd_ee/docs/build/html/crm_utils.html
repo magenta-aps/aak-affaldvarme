@@ -1,0 +1,226 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>crm_utils module &#8212; Mox KMD EE 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ee_data module" href="ee_data.html" />
+    <link rel="prev" title="Modules" href="modules.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-crm_utils">
+<span id="crm-utils-module"></span><h1>crm_utils module<a class="headerlink" href="#module-crm_utils" title="Permalink to this headline">¶</a></h1>
+<p>Utility functions etc. based on the CRM data model and mapped to LoRa.</p>
+<dl class="function">
+<dt id="crm_utils.add_product_to_agreement">
+<code class="descclassname">crm_utils.</code><code class="descname">add_product_to_agreement</code><span class="sig-paren">(</span><em>product_uuid</em>, <em>agreement_uuid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#add_product_to_agreement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.add_product_to_agreement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add product to agreement.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.create_agreement">
+<code class="descclassname">crm_utils.</code><code class="descname">create_agreement</code><span class="sig-paren">(</span><em>name</em>, <em>agreement_type</em>, <em>no_of_products</em>, <em>invoice_address</em>, <em>start_date</em>, <em>end_date</em>, <em>location</em>, <em>customer_relation_uuid</em>, <em>product_uuids</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#create_agreement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.create_agreement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an Indsats from this info and return UUID.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.create_customer">
+<code class="descclassname">crm_utils.</code><code class="descname">create_customer</code><span class="sig-paren">(</span><em>id_number</em>, <em>key</em>, <em>name</em>, <em>master_id</em>, <em>phone=''</em>, <em>email=''</em>, <em>mobile=''</em>, <em>fax=''</em>, <em>note=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#create_customer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.create_customer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create customer from data extracted from KMD EE.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.create_customer_relation">
+<code class="descclassname">crm_utils.</code><code class="descname">create_customer_relation</code><span class="sig-paren">(</span><em>customer_number</em>, <em>customer_relation_name</em>, <em>customer_type</em>, <em>address_uuid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#create_customer_relation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.create_customer_relation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an Interessefællesskab from this info and return UUID.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.create_customer_role">
+<code class="descclassname">crm_utils.</code><code class="descname">create_customer_role</code><span class="sig-paren">(</span><em>customer_uuid</em>, <em>customer_relation_uuid</em>, <em>role</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#create_customer_role"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.create_customer_role" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an OrgFunktion from this info and return UUID.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.create_product">
+<code class="descclassname">crm_utils.</code><code class="descname">create_product</code><span class="sig-paren">(</span><em>name</em>, <em>identification</em>, <em>installation_type</em>, <em>meter_number</em>, <em>meter_type</em>, <em>start_date</em>, <em>end_date</em>, <em>product_address</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#create_product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.create_product" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a Klasse from this info and return UUID.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.get_cpr_data">
+<code class="descclassname">crm_utils.</code><code class="descname">get_cpr_data</code><span class="sig-paren">(</span><em>id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#get_cpr_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.get_cpr_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dummy implementation for dry runs.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.lookup_address_from_sp_data">
+<code class="descclassname">crm_utils.</code><code class="descname">lookup_address_from_sp_data</code><span class="sig-paren">(</span><em>sp_dict</em>, <em>id_number</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#lookup_address_from_sp_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.lookup_address_from_sp_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lookup DAWA address from data returned by SP.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.lookup_agreement_from_product">
+<code class="descclassname">crm_utils.</code><code class="descname">lookup_agreement_from_product</code><span class="sig-paren">(</span><em>product_uuid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#lookup_agreement_from_product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.lookup_agreement_from_product" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lookup agreement from the UUID of a product.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.lookup_agreements">
+<code class="descclassname">crm_utils.</code><code class="descname">lookup_agreements</code><span class="sig-paren">(</span><em>customer_relation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#lookup_agreements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.lookup_agreements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lookup agreement(s) for customer relation, by UUID.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.lookup_customer">
+<code class="descclassname">crm_utils.</code><code class="descname">lookup_customer</code><span class="sig-paren">(</span><em>id_number</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#lookup_customer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.lookup_customer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look up customer by ID number.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.lookup_customer_from_cpr">
+<code class="descclassname">crm_utils.</code><code class="descname">lookup_customer_from_cpr</code><span class="sig-paren">(</span><em>id_number</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#lookup_customer_from_cpr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.lookup_customer_from_cpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look up customer (user) from CPR number.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.lookup_customer_from_cvr">
+<code class="descclassname">crm_utils.</code><code class="descname">lookup_customer_from_cvr</code><span class="sig-paren">(</span><em>id_number</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#lookup_customer_from_cvr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.lookup_customer_from_cvr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look up customer from the CVR number of its Virksomhed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.lookup_customer_relation">
+<code class="descclassname">crm_utils.</code><code class="descname">lookup_customer_relation</code><span class="sig-paren">(</span><em>customer_number</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#lookup_customer_relation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.lookup_customer_relation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look up customer relations belonging to customer number.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.lookup_customer_role">
+<code class="descclassname">crm_utils.</code><code class="descname">lookup_customer_role</code><span class="sig-paren">(</span><em>customer_relation</em>, <em>role</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#lookup_customer_role"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.lookup_customer_role" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look up customer role from customer and role specification.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.lookup_customer_roles">
+<code class="descclassname">crm_utils.</code><code class="descname">lookup_customer_roles</code><span class="sig-paren">(</span><em>customer_relation</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#lookup_customer_roles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.lookup_customer_roles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find all customer roles for a given customer relation.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.lookup_product">
+<code class="descclassname">crm_utils.</code><code class="descname">lookup_product</code><span class="sig-paren">(</span><em>productid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#lookup_product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.lookup_product" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look up product (installation and meter) from ID.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.lookup_products">
+<code class="descclassname">crm_utils.</code><code class="descname">lookup_products</code><span class="sig-paren">(</span><em>agreement_uuid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#lookup_products"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.lookup_products" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get products for this agreement.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.update_agreement">
+<code class="descclassname">crm_utils.</code><code class="descname">update_agreement</code><span class="sig-paren">(</span><em>fields</em>, <em>new_values</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#update_agreement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.update_agreement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update agreement based on the changed fields.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.update_customer">
+<code class="descclassname">crm_utils.</code><code class="descname">update_customer</code><span class="sig-paren">(</span><em>fields</em>, <em>new_values</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#update_customer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.update_customer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update customer with new information.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.update_customer_relation">
+<code class="descclassname">crm_utils.</code><code class="descname">update_customer_relation</code><span class="sig-paren">(</span><em>fields</em>, <em>new_values</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#update_customer_relation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.update_customer_relation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update customer relation with the changed values.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crm_utils.update_product">
+<code class="descclassname">crm_utils.</code><code class="descname">update_product</code><span class="sig-paren">(</span><em>uuid</em>, <em>fields</em>, <em>new_values</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/crm_utils.html#update_product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#crm_utils.update_product" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update product with new information.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">Modules</a><ul>
+      <li>Previous: <a href="modules.html" title="previous chapter">Modules</a></li>
+      <li>Next: <a href="ee_data.html" title="next chapter">ee_data module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Magenta ApS.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/crm_utils.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

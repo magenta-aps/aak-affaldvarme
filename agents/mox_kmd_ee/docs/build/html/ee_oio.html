@@ -1,0 +1,230 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>ee_oio module &#8212; Mox KMD EE 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ee_sql module" href="ee_sql.html" />
+    <link rel="prev" title="ee_data module" href="ee_data.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-ee_oio">
+<span id="ee-oio-module"></span><h1>ee_oio module<a class="headerlink" href="#module-ee_oio" title="Permalink to this headline">¶</a></h1>
+<p>OIO utility functions for the KMD EE Mox agent.</p>
+<p>Many of these functions are generic, but are limited to the functionality
+needed for integrating with KMD EE.</p>
+<dl class="class">
+<dt id="ee_oio.DummyResult">
+<em class="property">class </em><code class="descclassname">ee_oio.</code><code class="descname">DummyResult</code><span class="sig-paren">(</span><em>uuid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#DummyResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.DummyResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Return a request result when not actually calling LoRa.</p>
+<dl class="method">
+<dt id="ee_oio.DummyResult.json">
+<code class="descname">json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#DummyResult.json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.DummyResult.json" title="Permalink to this definition">¶</a></dt>
+<dd><p>JSON representation of DummyResult.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="ee_oio.Relation">
+<em class="property">class </em><code class="descclassname">ee_oio.</code><code class="descname">Relation</code><span class="sig-paren">(</span><em>mode</em>, <em>value</em>, <em>virkning</em><span class="sig-paren">)</span><a class="headerlink" href="#ee_oio.Relation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="ee_oio.Relation.mode">
+<code class="descname">mode</code><a class="headerlink" href="#ee_oio.Relation.mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ee_oio.Relation.value">
+<code class="descname">value</code><a class="headerlink" href="#ee_oio.Relation.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ee_oio.Relation.virkning">
+<code class="descname">virkning</code><a class="headerlink" href="#ee_oio.Relation.virkning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_oio.create_bruger">
+<code class="descclassname">ee_oio.</code><code class="descname">create_bruger</code><span class="sig-paren">(</span><em>cpr_number</em>, <em>key</em>, <em>name</em>, <em>master_id</em>, <em>phone=''</em>, <em>email=''</em>, <em>mobile=''</em>, <em>fax=''</em>, <em>first_name=''</em>, <em>middle_name=''</em>, <em>last_name=''</em>, <em>address_uuid=''</em>, <em>gender=''</em>, <em>marital_status=''</em>, <em>address_protection=''</em>, <em>note=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#create_bruger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.create_bruger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a Bruger from the given parameters.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_oio.create_indsats">
+<code class="descclassname">ee_oio.</code><code class="descname">create_indsats</code><span class="sig-paren">(</span><em>name</em>, <em>agreement_type</em>, <em>no_of_products</em>, <em>invoice_address</em>, <em>start_date</em>, <em>end_date</em>, <em>location</em>, <em>customer_relation_uuid</em>, <em>product_uuids</em>, <em>note=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#create_indsats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.create_indsats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an Indsats from the parameters.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_oio.create_interessefaellesskab">
+<code class="descclassname">ee_oio.</code><code class="descname">create_interessefaellesskab</code><span class="sig-paren">(</span><em>customer_number</em>, <em>customer_relation_name</em>, <em>customer_type</em>, <em>address_uuid</em>, <em>note=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#create_interessefaellesskab"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.create_interessefaellesskab" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an Interessefællesskab with the info from the parameters.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_oio.create_klasse">
+<code class="descclassname">ee_oio.</code><code class="descname">create_klasse</code><span class="sig-paren">(</span><em>name</em>, <em>identification</em>, <em>installation_type</em>, <em>meter_number</em>, <em>meter_type</em>, <em>start_date</em>, <em>end_date</em>, <em>product_address</em>, <em>note=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#create_klasse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.create_klasse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a Klasse, representing a Produkt in CRM.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_oio.create_object_dict">
+<code class="descclassname">ee_oio.</code><code class="descname">create_object_dict</code><span class="sig-paren">(</span><em>oio_class</em>, <em>properties</em>, <em>relations</em>, <em>note</em>, <em>states={'gyldighed': 'Aktiv'}</em>, <em>virkning=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#create_object_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.create_object_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a dictionary for updating or creating an OIO object.</p>
+<p>Note, “properties” should really be “attributes”, but we’ll not handle this
+level of nesting here.</p>
+<p>The parameter relations should be a dictionary mapping relation names to
+Relation values as specified above.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_oio.create_organisation">
+<code class="descclassname">ee_oio.</code><code class="descname">create_organisation</code><span class="sig-paren">(</span><em>cvr_number</em>, <em>key</em>, <em>name</em>, <em>master_id</em>, <em>phone=''</em>, <em>email=''</em>, <em>mobile=''</em>, <em>fax=''</em>, <em>address_uuid=''</em>, <em>company_type=''</em>, <em>industry_code=''</em>, <em>note=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#create_organisation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.create_organisation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create organisation with the given information.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_oio.create_organisationfunktion">
+<code class="descclassname">ee_oio.</code><code class="descname">create_organisationfunktion</code><span class="sig-paren">(</span><em>customer_uuid</em>, <em>customer_relation_uuid</em>, <em>role</em>, <em>note=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#create_organisationfunktion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.create_organisationfunktion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an OrganisationFunktion, representing a Kunderolle in CRM.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_oio.create_virkning">
+<code class="descclassname">ee_oio.</code><code class="descname">create_virkning</code><span class="sig-paren">(</span><em>frm=datetime.datetime(2018</em>, <em>1</em>, <em>31</em>, <em>16</em>, <em>26</em>, <em>50</em>, <em>192998)</em>, <em>to='infinity'</em>, <em>user=''</em>, <em>note=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#create_virkning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.create_virkning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a Virkning with the dates and other info as given.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_oio.delete_object">
+<code class="descclassname">ee_oio.</code><code class="descname">delete_object</code><span class="sig-paren">(</span><em>uuid</em>, <em>service</em>, <em>oio_class</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#delete_object"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.delete_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete object in sevice with the given UUID.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_oio.lookup_objects">
+<code class="descclassname">ee_oio.</code><code class="descname">lookup_objects</code><span class="sig-paren">(</span><em>service</em>, <em>oio_class</em>, <em>**conditions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#lookup_objects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.lookup_objects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lookup objects of class cls in service with the specified conditions.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_oio.lookup_one">
+<code class="descclassname">ee_oio.</code><code class="descname">lookup_one</code><span class="sig-paren">(</span><em>service</em>, <em>oio_class</em>, <em>**conditions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#lookup_one"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.lookup_one" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lookup supposedly unique object - fail if more than one is found.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_oio.read_object">
+<code class="descclassname">ee_oio.</code><code class="descname">read_object</code><span class="sig-paren">(</span><em>uuid</em>, <em>service</em>, <em>oio_class</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#read_object"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.read_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read object from LoRa, return JSON. Fail (throw 404) if not found.</p>
+<p>This function does not include more than one registration period and will
+thus return the current registration only. Within this registration period,
+all date dependent values will have the current Virkning period only.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_oio.request">
+<code class="descclassname">ee_oio.</code><code class="descname">request</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator to wrap OIO API requests (excluding lookups).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_oio.write_object">
+<code class="descclassname">ee_oio.</code><code class="descname">write_object</code><span class="sig-paren">(</span><em>uuid</em>, <em>properties</em>, <em>relations</em>, <em>service</em>, <em>oio_class</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#write_object"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.write_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update bruger with UUID uuid with the given properties and relations.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ee_oio.write_object_dict">
+<code class="descclassname">ee_oio.</code><code class="descname">write_object_dict</code><span class="sig-paren">(</span><em>uuid</em>, <em>object_dict</em>, <em>service</em>, <em>oio_class</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ee_oio.html#write_object_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ee_oio.write_object_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write object dict provided by caller.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">Modules</a><ul>
+      <li>Previous: <a href="ee_data.html" title="previous chapter">ee_data module</a></li>
+      <li>Next: <a href="ee_sql.html" title="next chapter">ee_sql module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Magenta ApS.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/ee_oio.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

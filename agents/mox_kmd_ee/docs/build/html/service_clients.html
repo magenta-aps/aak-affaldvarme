@@ -1,0 +1,120 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>service_clients module &#8212; Mox KMD EE 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Mapning fra kmd ee til CRM" href="mapning_fra_kmd_ee_til_crm.html" />
+    <link rel="prev" title="mox_kmd_ee module" href="mox_kmd_ee.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-service_clients">
+<span id="service-clients-module"></span><h1>service_clients module<a class="headerlink" href="#module-service_clients" title="Permalink to this headline">¶</a></h1>
+<p>Clients for various Internet services.</p>
+<dl class="function">
+<dt id="service_clients.fuzzy_address_uuid">
+<code class="descclassname">service_clients.</code><code class="descname">fuzzy_address_uuid</code><span class="sig-paren">(</span><em>addr_str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/service_clients.html#fuzzy_address_uuid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#service_clients.fuzzy_address_uuid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get DAWA UUID from string using the ‘datavask’ API.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="service_clients.get_address_from_service">
+<code class="descclassname">service_clients.</code><code class="descname">get_address_from_service</code><span class="sig-paren">(</span><em>dawa_service</em>, <em>address</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/service_clients.html#get_address_from_service"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#service_clients.get_address_from_service" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get DAWA UUID from dictionary with correct fields.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="service_clients.get_cvr_data">
+<code class="descclassname">service_clients.</code><code class="descname">get_cvr_data</code><span class="sig-paren">(</span><em>cvr_number</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/service_clients.html#get_cvr_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#service_clients.get_cvr_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get CVR data from Serviceplatformen.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="service_clients.report_error">
+<code class="descclassname">service_clients.</code><code class="descname">report_error</code><span class="sig-paren">(</span><em>error_message</em>, <em>error_stack=None</em>, <em>error_object=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/service_clients.html#report_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#service_clients.report_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report error, logging to file and sending to an AMQP Queue.</p>
+<p>The AMQP queue will decide what to do with the various errors depending on
+their gravity - e.g inform users by email, log to a special log or discard.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">Modules</a><ul>
+      <li>Previous: <a href="mox_kmd_ee.html" title="previous chapter">mox_kmd_ee module</a></li>
+      <li>Next: <a href="mapning_fra_kmd_ee_til_crm.html" title="next chapter">Mapning fra kmd ee til CRM</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Magenta ApS.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/service_clients.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
