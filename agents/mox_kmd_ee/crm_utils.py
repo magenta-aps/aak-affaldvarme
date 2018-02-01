@@ -14,7 +14,7 @@ from collections import defaultdict
 
 try:
     from serviceplatformen_cpr import get_cpr_data
-except TypeError:
+except (TypeError, ImportError):
     """The SP CPR API wasn't configured - this can happen when testing etc."""
     def get_cpr_data(id):
         """Dummy implementation for dry runs."""

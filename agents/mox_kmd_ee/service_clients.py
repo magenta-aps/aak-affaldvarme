@@ -14,7 +14,12 @@ import functools
 import requests
 import pika
 
-from serviceplatformen_cvr import get_cvr_data as _get_cvr_data
+try:
+    from serviceplatformen_cvr import get_cvr_data as _get_cvr_data
+except ImportError:
+    def _get_cvr_data(id):
+        pass
+
 
 from settings import SP_UUIDS, CERTIFICATE_FILE, ERROR_MQ_QUEUE, ERROR_MQ_HOST
 
