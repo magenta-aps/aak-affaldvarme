@@ -19,7 +19,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../agents/mox_kmd_ee'))
+sys.path.insert(0, os.path.abspath('../../agents/mox_kmd_ee'))
 
 
 # -- General configuration ------------------------------------------------
@@ -31,8 +31,8 @@ sys.path.insert(0, os.path.abspath('../agents/mox_kmd_ee'))
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.intersphinx',
-    'sphinx.ext.todo']
+extensions = ['sphinx.ext.intersphinx', 'sphinx.ext.todo',
+              'sphinx.ext.autodoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
