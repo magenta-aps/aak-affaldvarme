@@ -6,54 +6,118 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-"""This module contains all SQL used in the KMD EE Mox Agent."""
+"""This module contains all SQL used in the KMD EE Mox Agent.
 
-# This is the SQL to fetch all customers from the KMD EE database.
-# Only relevant fields (please).
+Each SQL expression used to acces the database is specified here and called
+from the other modules. For instance, the variable ``CUSTOMER_SQL`` is given
+below and will extract all information for relevant customer records. ::
 
+    CUSTOMER_SQL = '''
+    SELECT [PersonnrSEnr]
+          ,[LigestPersonnr]
+          ,[Kundenr]
+          ,[KundeSagsnr]
+          ,[KundeNavn]
+          ,[Telefonnr]
+          ,[EmailKunde]
+          ,[MobilTlf]
+          ,[a].[ForbrugsstedID]
+          ,[VejNavn]
+          ,[a].[Postdistrikt]
+          ,[Tilflytningsdato]
+          ,[Fraflytningsdato]
+          ,[Status]
+          ,[FasadministratorID]
+          ,[BoligadminID]
+          ,[Husnr]
+          ,[ForbrStVejnavn]
+          ,[Vejkode]
+          ,[b].[Postdistrikt] as [ForbrStPostdistrikt]
+          ,[Postnr]
+          ,[Bogstav]
+          ,[Etage]
+          ,[Sidedørnr]
+    FROM Kunde a, Forbrugssted b
+    WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
+    and Afregningsgrpnr <> 999
+    and a.ForbrugsstedID = b.ForbrugsstedID
+    '''
+
+Every time a need for an SQL query is discovered, a new string (maybe
+parametrized using string formatting) is created in this module.
+"""
+
+#: This is the SQL to fetch all customers from the KMD EE database.
+#: Only relevant fields (please).
 CUSTOMER_SQL = """
-SELECT top(100) [PersonnrSEnr]
-      ,[KundeCprnr]
+SELECT [PersonnrSEnr]
       ,[LigestPersonnr]
-      ,[Tilflytningsdato]
-      ,[Fraflytningsdato]
+      ,[Kundenr]
+      ,[KundeSagsnr]
+      ,[KundeNavn]
+      ,[Telefonnr]
       ,[EmailKunde]
       ,[MobilTlf]
-      ,[KundeID]
-      ,[Kundenr]
+      ,[a].[ForbrugsstedID]
+      ,[VejNavn]
+      ,[a].[Postdistrikt]
+      ,[Tilflytningsdato]
+      ,[Fraflytningsdato]
       ,[Status]
-      ,[Telefonnr]
       ,[FasadministratorID]
       ,[BoligadminID]
-      ,[KundeNavn]
-      ,[ForbrugsstedID]
-      ,[VejNavn]
-      ,[Postdistrikt]
-      ,[KundeSagsnr]
-  FROM [KMD_EE].[dbo].[Kunde]
+      ,[Husnr]
+      ,[ForbrStVejnavn]
+      ,[Vejkode]
+      ,[b].[Postdistrikt] as [ForbrStPostdistrikt]
+      ,[Postnr]
+      ,[Bogstav]
+      ,[Etage]
+      ,[Sidedørnr]
+  FROM Kunde a, Forbrugssted b
   WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
+  and Afregningsgrpnr <> 999
+  and a.ForbrugsstedID = b.ForbrugsstedID
 """
 
 
-TREFINSTALLATION_SQL = """SELECT *
+#: Extract all relevant installations.
+RELEVANT_TREF_INSTALLATIONS_SQL = """SELECT [InstalNummer],
+                                 [AlternativStedID],
+                                 [Målernr],
+                                 [MaalerTypeBetegnel],
+                                 [Målertypefabrikat],
+                                 [DatoFra],
+                                 [DatoTil],
+                                 [Kundenr]
+    FROM TrefInstallation a, TrefMaaler b, Kunde c
+    WHERE
+    a.InstallationID = b.InstallationID
+    AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
+    AND a.ForbrugsstedID = c.ForbrugsstedID
+    AND c.Tilflytningsdato <= GETDATE() AND c.Fraflytningsdato >= GETDATE()
+    AND a.ForbrugsstedID IN (SELECT a.ForbrugsstedID from Kunde a,
+    Forbrugssted b
+  WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
+  and Afregningsgrpnr <> 999
+  and a.ForbrugsstedID = b.ForbrugsstedID)
+    """
+
+#: Installation data for a given Forbrugssted.
+TREFINSTALLATION_SQL = """SELECT [InstalNummer],
+                                 [AlternativStedID],
+                                 [Målernr],
+                                 [MaalerTypeBetegnel],
+                                 [Målertypefabrikat],
+                                 [DatoFra],
+                                 [DatoTil]
     FROM TrefInstallation a, TrefMaaler b
     WHERE ForbrugsstedID = {0}
     AND a.InstallationID = b.InstallationID
     AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
     """
 
-FORBRUGSSTED_ADRESSE_SQL = """SELECT [Husnr],
-                                     [ForbrStVejnavn],
-                                     [Vejkode],
-                                     [Postdistrikt],
-                                     [Postnr],
-                                     [Bogstav],
-                                     [Etage],
-                                     [Sidedørnr]
-                            FROM Forbrugssted
-                            WHERE ForbrugsstedID = {0}
-                          """
-
+#: Alternative address for a given Alt Place ID.
 ALTERNATIVSTED_ADRESSE_SQL = """SELECT [HusnrAltern],
                                      [ForbrStVejnavn],
                                      [VejkodeAltern],
@@ -65,41 +129,3 @@ ALTERNATIVSTED_ADRESSE_SQL = """SELECT [HusnrAltern],
                             FROM AlternativSted
                             WHERE AlternativStedID = {0}
                           """
-
-
-CUSTOMER_AND_FORBRUGSSTED_SQL = """
-SELECT   [PersonnrSEnr]
-      ,[KundeCprnr]
-      ,[LigestPersonnr]
-      ,[Tilflytningsdato]
-      ,[Fraflytningsdato]
-      ,[EmailKunde]
-      ,[MobilTlf]
-      ,[KundeID]
-      ,[Kundenr]
-      ,[Status]
-      ,[Telefonnr]
-      ,[FasadministratorID]
-      ,[BoligadminID]
-      ,[KundeNavn]
-      ,[VejNavn]
-      ,[Kunde].[Postdistrikt]
-      ,[Kunde].[ForbrugsstedID]
-      ,[Forbrugssted].[Husnr]
-      ,[Forbrugssted].[ForbrStVejnavn]
-      ,[Forbrugssted].[Postdistrikt]
-      ,[Forbrugssted].[Postnr]
-      ,[Forbrugssted].[Bogstav]
-      ,[Forbrugssted].[Etage]
-      ,[Forbrugssted].[Sidedørnr]
-  FROM Kunde, Forbrugssted
-  WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE() AND
-  [Kunde].[ForbrugsstedID] = [Forbrugssted].[ForbrugsstedID]
-"""
-
-TREFINSTALLATION_ALL_SQL = """SELECT Målertypefabrikat, MaalertypeBetegnel,
-Instalnummer, Målernr, DatoFra, DatoTil
-    FROM TrefInstallation a, TrefMaaler b
-    WHERE  a.InstallationID = b.InstallationID
-    AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
-    """

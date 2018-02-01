@@ -7,8 +7,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-import json
-import logging
 import requests
 
 from .sp_adapter import CVRAdapter
@@ -32,15 +30,25 @@ def get_cvr_data(cvr_id, service_uuids, service_certificate):
     )
 
     zeep_data = cvr_adapter.getLegalUnit(cvr_id)
+
+    if not zeep_data:
+        # No CVR data found
+        raise RuntimeError("CVR number {} not found".format(cvr_id))
+
     extracted = _extract_zeep_data(zeep_data)
 
     address = {}
     # address["vejnavn"] = extracted["vejnavn"]
-    address["vejkode"] = extracted["vejkode"]
-    address["husnr"] = extracted["husnummer"]
-    address["etage"] = extracted["etage"]
-    address["dør"] = extracted["doer"]
-    address['postnr'] = extracted["postnummer"]
+    if "vejkode" in extracted:
+        address["vejkode"] = extracted["vejkode"]
+    if "husnummer" in extracted:
+        address["husnr"] = extracted["husnummer"]
+    if "etage" in address:
+        address["etage"] = extracted["etage"]
+    if "doer" in address:
+        address["dør"] = extracted["doer"]
+    if "postnummer" in address:
+        address['postnr'] = extracted["postnummer"]
 
     extracted["dawa_uuid"] = _get_address_uuid(address)
 
@@ -51,32 +59,16 @@ def _extract_zeep_data(data):
     """Extract values from zeep object and returns formatted dictionary"""
 
     # Categories
-    organisation = data["LegalUnitName"]
-    lifecycle = data["Lifecycle"]
+    organisation_name = (
+        data["LegalUnitName"]["name"] if "LegalUnitName" in data else ''
+    )
     address = data["AddressOfficial"]
     activity = data["ActivityInformation"]["MainActivity"]
     businessformat = data["BusinessFormat"]
-
     # Country code not included
     # There may be a need for an identifier for countries outside Denmark
     formatted = {
-        "organisationsnavn": organisation["name"],
-        "vejnavn":
-            address["AddressPostalExtended"]["StreetName"],
-        "vejkode":
-            address["AddressAccess"]["StreetCode"],
-        "husnummer":
-            address["AddressPostalExtended"]["StreetBuildingIdentifier"],
-        "etage":
-            address["AddressPostalExtended"]["FloorIdentifier"],
-        "doer":
-            address["AddressPostalExtended"]["SuiteIdentifier"],
-        "postnummer":
-            address["AddressPostalExtended"]["PostCodeIdentifier"],
-        "kommunekode":
-            address["AddressAccess"]["MunicipalityCode"],
-        "postboks":
-            address["AddressPostalExtended"]["PostOfficeBoxIdentifier"],
+        "organisationsnavn": organisation_name,
         "branchekode":
             activity["ActivityCode"],
         "branchebeskrivelse":
@@ -85,6 +77,29 @@ def _extract_zeep_data(data):
             businessformat["BusinessFormatCode"]
     }
 
+    extended = {
+        "vejnavn":
+            address["AddressPostalExtended"]["StreetName"],
+        "husnummer":
+            address["AddressPostalExtended"]["StreetBuildingIdentifier"],
+        "etage":
+            address["AddressPostalExtended"]["FloorIdentifier"],
+        "doer":
+            address["AddressPostalExtended"]["SuiteIdentifier"],
+        "postnummer":
+            address["AddressPostalExtended"]["PostCodeIdentifier"],
+        "postboks":
+            address["AddressPostalExtended"]["PostOfficeBoxIdentifier"]
+    } if address["AddressPostalExtended"] else {}
+
+    access = {
+        "vejkode":
+            address["AddressAccess"]["StreetCode"],
+        "kommunekode":
+            address["AddressAccess"]["MunicipalityCode"]
+    } if address["AddressAccess"] else {}
+
+    formatted = {**formatted, **extended, **access}
     # Some parameter values are None and must be replaced with an empty string
     for key, value in formatted.items():
         if value is None:
@@ -98,11 +113,15 @@ def _get_address_uuid(address):
 
     params = address
     params['struktur'] = "mini"
-
     response = requests.get(
         url=DAWA_SERVICE_URL,
         params=params
     )
+    address_uuid = None
+    if response:
+        try:
+            address_uuid = response.json()[0]['id']
+        except (IndexError, KeyError):
+            pass
 
-    address_uuid = response.json()[0]['id']
     return address_uuid

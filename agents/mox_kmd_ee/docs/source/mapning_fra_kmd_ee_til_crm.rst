@@ -1,5 +1,5 @@
-
-MAPNING FRA KMD EE TIL CRM
+==========================
+Mapning fra kmd ee til CRM
 ==========================
 
 Aktør/Bruger/Kunde
@@ -218,9 +218,8 @@ Klassifikation.
 =======================     =======================    =================
 CRM                         KMD EE                     LoRa
 =======================     =======================    =================
-Navn                        TrefMaaler.Målertypefab    titel
-                            rikat + TrefMaaler.Maal
-                            erTypeBetegnel 
+Navn                        Målernr + fabrikat +       titel
+                            betegnelse (TrefInst.)
 Identifikation              Trefinstallation.          brugervendtnoegle
                               InstalNummer
 Aftale                      <Relation til Aftale>      (findes på
