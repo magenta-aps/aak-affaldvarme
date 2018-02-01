@@ -17,6 +17,7 @@ Welcome to the Mox KMD EE documentation
    installation.rst
    modules.rst
    mapning_fra_kmd_ee_til_crm.rst
+   kmdee_notifications.rst
 
 
 
