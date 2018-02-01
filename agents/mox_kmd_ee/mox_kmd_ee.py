@@ -1,4 +1,4 @@
-# encoding: utf-8
+"""Mox KMD EE main program."""
 #
 # Copyright (c) 2017, Magenta ApS
 #
@@ -7,530 +7,511 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-import time
+import sys
 
-import pymssql
+from multiprocessing.dummy import Pool
 
-from serviceplatformen_cpr import get_cpr_data
-
-from ee_sql import CUSTOMER_SQL, TREFINSTALLATION_SQL, FORBRUGSSTED_ADRESSE_SQL
-from ee_sql import ALTERNATIVSTED_ADRESSE_SQL
-from ee_oio import create_organisation, create_bruger, create_indsats
-from ee_oio import create_interessefaellesskab, create_organisationfunktion
-from ee_oio import create_klasse, lookup_bruger, lookup_organisation
-from ee_oio import lookup_interessefaellesskab
+from mssql_config import username, password, server, database
+from ee_utils import connect, int_str, cpr_cvr
 from ee_oio import KUNDE, LIGESTILLINGSKUNDE
+from crm_utils import lookup_customer_relation, lookup_customer_roles, VARME
+from crm_utils import lookup_customer, lookup_agreements, lookup_product
+from crm_utils import lookup_agreement_from_product, create_customer
+from crm_utils import create_customer_relation, create_customer_role
+from crm_utils import create_agreement, create_product, lookup_products
+from crm_utils import delete_customer_role, delete_customer_relation
+from crm_utils import delete_agreement, delete_product
+from crm_utils import add_product_to_agreement, update_product
+from crm_utils import update_customer, update_agreement, read_agreement
+from crm_utils import update_customer_relation, write_agreement_dict
 
-from ee_utils import cpr_cvr, is_cpr, is_cvr, connect
+from ee_utils import get_forbrugssted_address_uuid
+from ee_utils import get_products_for_location
+from ee_utils import get_alternativsted_address_uuid
 
-from service_clients import get_address_uuid, fuzzy_address_uuid, get_cvr_data
-from service_clients import report_error, access_address_uuid
+from ee_data import read_customer_records, store_customer_records
+from ee_data import retrieve_customer_records, read_installation_records
+from ee_data import store_installation_records, retrieve_installation_records
 
-# Definition of strings used for Klassifikation URNs
-
-VARME = "Varme"
-
-# This is used to cache customer's addresses from SP for use when creating
-# names for customer roles.
+from service_clients import report_error, fuzzy_address_uuid
 
 
-def create_customer(id_number, key, name, master_id, phone="", email="",
-                    mobile="", fax="", note=""):
+VERBOSE = False
 
-    if is_cvr(id_number):
 
-        # Collect info from SP and include in call creating user.
-        # Avoid getting throttled by SP
-        try:
-            company_dir = get_cvr_data(id_number)
-        except Exception as e:
-            # Retry *once* after sleeping
-            time.sleep(1)
-            try:
-                company_dir = get_cvr_data(id_number)
-            except Exception as e:
-                report_error(
-                    "CVR number not found: {0}".format(id_number)
-                )
-                return None
+def say(*args):
+    """Local utility to give output in verbose mode."""
+    if __name__ == '__main__' and VERBOSE:
+        print(*args)
 
-        name = company_dir['organisationsnavn']
-        address_uuid = company_dir['dawa_uuid']
-        company_type = company_dir['virksomhedsform']
-        industry_code = company_dir['branchekode']
-        address_string = "{0} {1}, {2}".format(
-            company_dir['vejnavn'], company_dir['husnummer'],
-            company_dir['postnummer']
+
+"""CUSTOMER RELATED FUNCTIONS.
+
+Import customer, import customer relation, update, delete.
+"""
+
+
+def import_customer(id_and_fields):
+    """Import a new customer, log if it fails."""
+    id_number, fields = id_and_fields
+    id_number = cpr_cvr(int_str(id_number))
+
+    customer_uuid = lookup_customer(id_number)
+    if not customer_uuid:
+        master_id = int_str(fields['KundeSagsnr'])
+        customer_number = int_str(fields['Kundenr'])
+
+        new_customer_uuid = create_customer(
+            id_number=id_number,
+            key=id_number,
+            name=fields['KundeNavn'],
+            master_id=master_id,
+            phone=fields['Telefonnr'],
+            email=fields['EmailKunde'],
+            mobile=fields['MobilTlf'],
         )
 
-        result = create_organisation(
-            id_number, key, name, master_id, phone, email, mobile, fax,
-            address_uuid, company_type, industry_code, note
-        )
-    elif is_cpr(id_number):
-        # This is a CPR number
-
-        # Collect info from SP and include in call creating user.
-        # Avoid getting throttled by SP
-        try:
-            person_dir = get_cpr_data(id_number)
-        except Exception as e:
-            # Deprecate:
-            # report_error(traceback.format_exc())
-
-            # Print to screen instead
-            error_message = "SP CPR Lookup failed for ID: {0}".format(
-                id_number
-            )
-
-            print(error_message)
-            print("Retrying in 1 second")
-
-            # Retry *once* after sleeping
-            time.sleep(1)
-
-            try:
-                person_dir = get_cpr_data(id_number)
-            except Exception as e:
-                # Hotfix:
-                print("CPR lookukup failed after retrying, logging error")
-                # Certain CPR ID's are actually P-Numbers
-                # These must be manually processed
-                report_error(
-                    error_message=error_message,
-                    error_stack=e,
-                    error_object=id_number
-                )
-                return None
-
-        first_name = person_dir['fornavn']
-        middle_name = person_dir.get('mellemnavn', '')
-        last_name = person_dir['efternavn']
-
-        # Hotfix:
-        # Some entities have no zip code
-        # Address related stuff
-        address = {
-            "vejnavn": person_dir["vejnavn"]
-        }
-
-        # Hotfix:
-        if "postnummer" in person_dir:
-            address["postnr"] = person_dir["postnummer"]
-
-        if "etage" in person_dir:
-            address["etage"] = person_dir["etage"].lstrip('0')
-        if "sidedoer" in person_dir:
-            address["dør"] = person_dir["sidedoer"].lstrip('0')
-        if "husnummer" in person_dir:
-            address["husnr"] = person_dir["husnummer"]
-
-        try:
-            address_uuid = get_address_uuid(address)
-        except Exception as e:
-            report_error(
-                "Unable to lookup address for customer: {0}".format(
-                    id_number
-                ), error_stack=None, error_object=address
-            )
-            address_uuid = None
-
-        # Cache address for customer relation
-        address_string = "{0}".format(
-            person_dir['standardadresse']
-        )
-
-        # Hotfix:
-        if 'postnummer' in person_dir:
-            address_string += ", {0}".format(person_dir['postnummer'])
-
-        gender = person_dir['koen']
-        marital_status = person_dir['civilstand']
-        address_protection = person_dir['adressebeskyttelse']
-
-        result = create_bruger(
-            id_number, key, name, master_id, phone, email, mobile, fax,
-            first_name, middle_name, last_name, address_uuid, gender,
-            marital_status, address_protection, note
-        )
-    else:
-        report_error("Forkert CPR/SE-nr for {0}: {1}".format(
-            name, id_number)
-        )
-        # Invalid customer
-        return None
-
-    if result:
-
-        return result.json()['uuid']
-
-
-def lookup_customer(id_number):
-    if is_cpr(id_number):
-        return lookup_bruger(id_number)
-    elif is_cvr(id_number):
-        return lookup_organisation(id_number)
-
-
-def create_customer_role(customer_uuid, customer_relation_uuid, role):
-    "Create an OrgFunktion from this info and return UUID"
-    result = create_organisationfunktion(
-        customer_uuid,
-        customer_relation_uuid,
-        role
-    )
-
-    if result:
-        return result.json()['uuid']
-
-
-def create_customer_relation(customer_number, customer_relation_name,
-                             customer_type, address_uuid):
-    "Create an Interessefællesskab from this info and return UUID"
-    result = create_interessefaellesskab(
-        customer_number,
-        customer_relation_name,
-        customer_type,
-        address_uuid
-    )
-    if result:
-        return result.json()['uuid']
-
-
-def create_agreement(name, agreement_type, no_of_products, invoice_address,
-                     start_date, end_date, location,
-                     customer_role_uuid, product_uuids):
-    "Create an Indsats from this info and return UUID"
-    result = create_indsats(name, agreement_type, no_of_products,
-                            invoice_address, start_date, end_date,
-                            location, customer_role_uuid, product_uuids)
-    if result:
-        return result.json()['uuid']
-
-
-def get_products_for_location(connection, forbrugssted):
-    "Get locations for this customer ID from the Forbrugssted table"
-    cursor = connection.cursor(as_dict=True)
-    cursor.execute(TREFINSTALLATION_SQL.format(forbrugssted))
-    rows = cursor.fetchall()
-    return rows
-
-
-def get_forbrugssted_address_uuid(connection, forbrugssted, id_number):
-    "Get UUID of the address for this Forbrugssted"
-    cursor = connection.cursor(as_dict=True)
-    cursor.execute(FORBRUGSSTED_ADRESSE_SQL.format(forbrugssted))
-    rows = cursor.fetchall()
-
-    # Hotfix:
-    # Some lookups will return 0
-    # Removing the assert as it breaks the import flow
-    # TODO:
-    # We must investigate the circumstances which cause this issue
-    # In theory forbrugssted should not be returned as 0
-
-    # assert(len(rows) == 1)
-
-    # Hotfix:
-    # Log if
-    if len(rows) != 1:
-        # Send error to log:
-        report_error(
-            "Forbrugssted for {0} returnerer: {1}".format(
-                id_number, forbrugssted
-            )
-        )
-
-        return ('', None)
-
-    frbrst_addr = rows[0]
-    # Lookup addres
-    vejnavn = frbrst_addr['ForbrStVejnavn']
-    vejkode = frbrst_addr['Vejkode']
-    postnr = frbrst_addr['Postnr']
-    postdistrikt = frbrst_addr['Postdistrikt']
-    husnummer = str(frbrst_addr['Husnr'])
-    if frbrst_addr['Bogstav']:
-        husnummer += frbrst_addr['Bogstav']
-    etage = frbrst_addr['Etage']
-    doer = frbrst_addr['Sidedørnr']
-
-    address_string1 = "{0} {1} {2}{3}".format(
-        vejnavn, husnummer, etage, doer
-    )
-    address_string2 = "{0} {1}".format(postnr, postdistrikt)
-
-    address_string = "{0}, {1}".format(address_string1.strip(),
-                                       address_string2)
-
-    address = {
-        "vejkode": vejkode,
-        "postnr": postnr
-    }
-    if etage:
-        address["etage"] = etage
-    if doer:
-        address["dør"] = doer.strip('-')
-    if husnummer:
-        address["husnr"] = husnummer
-
-    try:
-        address_uuid = get_address_uuid(address)
-    except Exception:
-        try:
-            address_uuid = fuzzy_address_uuid(address_string)
-        except Exception as e:
-            report_error(
-                "Forbrugsadresse fejler for kunde {0}: {1}".format(
-                    id_number, address_string
-                ), error_stack=None, error_object=address
-            )
-            address_uuid = None
-
-    return (address_string, address_uuid)
-
-
-def get_alternativsted_address_uuid(connection, alternativsted_id):
-    "Get UUID of the address for this AlternativSted"
-    # TODO: This is cut and paste programming. Please refactor.
-    cursor = connection.cursor(as_dict=True)
-    cursor.execute(ALTERNATIVSTED_ADRESSE_SQL.format(alternativsted_id))
-    rows = cursor.fetchall()
-
-    # Hotfix:
-    # Some lookups will return 0
-    # Removing the assert as it breaks the import flow
-    # TODO:
-    # We must investigate the circumstances which cause this issue
-    # In theory forbrugssted should not be returned as 0
-
-    # assert(len(rows) == 1)
-
-    # Hotfix:
-    # Log if
-    if len(rows) != 1:
-        # Send error to log:
-        report_error(
-            "Forbrugssted for {0} returnerer: {1}".format(
-                id_number, forbrugssted
-            )
-        )
-
-        return None
-
-    altsted_addr = rows[0]
-    # Lookup addres
-    vejnavn = altsted_addr['ForbrStVejnavn']
-    vejkode = altsted_addr['VejkodeAltern']
-    postnr = altsted_addr['Postnr']
-    husnummer = str(altsted_addr['HusnrAltern'])
-    bogstav = altsted_addr.get('Bogstav', None)
-    etage = altsted_addr['EtageAltAdr']
-    doer = altsted_addr['SidedørnrAltern']
-
-    address = {
-        "vejkode": vejkode,
-        "postnr": postnr,
-        "vejnavn": vejnavn
-    }
-    if etage:
-        address["etage"] = etage
-    if doer:
-        address["dør"] = doer
-    if husnummer:
-        address["husnr"] = husnummer
-    if bogstav:
-        address["bogstav"] = bogstav
-
-    try:
-        address_uuid = access_address_uuid(address)
-    except Exception as e:
-        report_error(
-            "Alternativ adresse fejler for alt. sted {0}: {1}".format(
-                alternativsted_id, str(address)
-            ), error_stack=None, error_object=address
-        )
-        address_uuid = None
-
-    return address_uuid
-
-
-def create_product(name, identification, installation_type, meter_number,
-                   meter_type, start_date, end_date, product_address):
-    "Create a Klasse from this info and return UUID"
-    result = create_klasse(name, identification, installation_type,
-                           meter_number, meter_type, start_date, end_date,
-                           product_address)
-    if result:
-        return result.json()['uuid']
-
-
-def import_all(connection):
-    cursor = connection.cursor(as_dict=True)
-    cursor.execute(CUSTOMER_SQL)
-    rows = cursor.fetchall()
-    # import csv
-    # reader = csv.DictReader(open('Kunde.csv', 'r'))
-    # rows = [r for r in reader]
-    n = 0
-    ligest_persons = 0
-    print("Importing {} rows...".format(len(rows)))
-    for row in rows:
-        # Lookup customer in LoRa - insert if it doesn't exist already.
-
-        id_number = cpr_cvr(float(row['PersonnrSEnr']))
-        ligest_personnr = cpr_cvr(float(row['LigestPersonnr']))
-        customer_number = str(int(float(row['Kundenr'])))
-        master_id = str(int(float(row['KundeSagsnr'])))
-
-        customer_uuid = lookup_customer(id_number)
-
-        if not customer_uuid:
-            new_customer_uuid = create_customer(
-                id_number=id_number,
-                key=customer_number,
-                name=row['KundeNavn'],
-                master_id=master_id,
-                phone=row['Telefonnr'],
-                email=row['EmailKunde'],
-                mobile=row['MobilTlf'],
-            )
-
-            if new_customer_uuid:
-                # New customer created
-                customer_uuid = new_customer_uuid
-                n += 1
+        if new_customer_uuid:
+            # New customer created
+            customer_uuid = new_customer_uuid
+        else:
+            # No customer created or found.
+            main_customer = cpr_cvr(int_str(fields['PersonnrSEnr']))
+            if id_number == main_customer:
+                role = 'hovedkunde'
             else:
-                # No customer created or found.
-                report_error("No customer created: %s %s" % (
-                             row['KundeNavn'],
-                             row['PersonnrSEnr']))
-                continue
-
-        # Create customer relation
-        # NOTE: In KMD EE, there's always one customer relation for each row in
-        # the Kunde table.
-
-        # If customer relation already exists, please skip.
-
-        if lookup_interessefaellesskab(customer_number):
-            print("This customer relation already exists:", customer_number)
-            continue
-
-        # Get Forbrugsstedadresse
-        forbrugssted = row['ForbrugsstedID']
-
-        (forbrugssted_address,
-         forbrugssted_address_uuid) = get_forbrugssted_address_uuid(
-            connection,
-            forbrugssted,
-            id_number
-        )
-
-        name_address = forbrugssted_address
-        if not forbrugssted_address_uuid:
-            report_error(forbrugssted_address)
-        cr_name = "{0}, {1}".format(VARME, name_address)
-        cr_type = VARME  # Always for KMD EE
-        cr_address_uuid = forbrugssted_address_uuid
-        cr_uuid = create_customer_relation(
-            customer_number, cr_name, cr_type, cr_address_uuid
-        )
-
-        assert(cr_uuid)
-
-        # This done, create customer roles & link customer and relation
-        role_uuid = create_customer_role(customer_uuid, cr_uuid, KUNDE)
-        assert(role_uuid)
-
-        # Now handle partner/roommate, ignore empty CPR numbers
-        if len(ligest_personnr) > 1:
-
-            ligest_uuid = lookup_customer(ligest_personnr)
-
-            if not ligest_uuid:
-                new_ligest_uuid = create_customer(
-                    id_number=ligest_personnr,
-                    key=customer_number,
-                    name=row['KundeNavn'],
-                    master_id=master_id
-                )
-                if new_ligest_uuid:
-                    ligest_uuid = new_ligest_uuid
-                    ligest_persons += 1
-
-            if ligest_uuid:
-                create_customer_role(
-                    ligest_uuid, cr_uuid, LIGESTILLINGSKUNDE
-                )
-
-        # Create agreement
-        name = 'Fjernvarmeaftale'
-        agreement_type = VARME
-        invoice_address = (row['VejNavn'].replace(',-', ' ') +
-                           ', ' + row['Postdistrikt'])
-        try:
-            invoice_address_uuid = fuzzy_address_uuid(invoice_address)
-        except Exception as e:
+                role = 'ligestilling'
             report_error(
-                "Customer {1}: Unable to lookup invoicing address: {0}".format(
-                    str(e), id_number
+                "No customer created: {} {} {} ({})".format(
+                    fields['KundeNavn'], id_number, customer_number, role
                 )
             )
-        start_date = row['Tilflytningsdato']
-        end_date = row['Fraflytningsdato']
+            return
 
-        # There is always one agreement for each location (Forbrugssted)
-        # AND only one location for each customer record.
 
-        customer_id = row['KundeID']
+def import_customer_record(fields):
+    """Import a new customer record including relation, agreement, products.
 
-        products = get_products_for_location(connection, forbrugssted)
+    Assume customers themselves have already been imported.
+    """
+    # Lookup customer in LoRa - insert if it doesn't exist already.
+    id_number = cpr_cvr(int_str(fields['PersonnrSEnr']))
+    ligest_personnr = cpr_cvr(int_str(fields['LigestPersonnr']))
+    customer_number = int_str(fields['Kundenr'])
 
-        no_of_products = len(products)
+    # If customer relation already exists, please skip.
+    if lookup_customer_relation(customer_number):
+        # print("This customer relation already exists:", customer_number)
+        return
 
-        product_uuids = []
+    # Now start handling customers etc.
+    customer_uuid = lookup_customer(id_number)
+    # Customer *must* have been created during previous import step
+    if not customer_uuid:
+        # This must have failed
+        print("Customer not found:", id_number, fields['KundeNavn'])
 
-        for p in products:
-            identification = p['InstalNummer']
-            installation_type = VARME
-            meter_number = p['Målernr']
-            meter_type = p['MaalerTypeBetegnel']
-            name = "{0}, {1} {2}".format(meter_number, p['Målertypefabrikat'],
-                                         meter_type)
-            start_date = p['DatoFra']
-            end_date = p['DatoTil']
-            product_address = None
-            # Check alternative address
-            alternativsted_id = p['AlternativStedID']
-            if alternativsted_id:
-                alternativ_adresse_uuid = get_alternativsted_address_uuid(
-                    connection, alternativsted_id
-                )
-                if alternativ_adresse_uuid:
-                    product_address = alternativ_adresse_uuid
+    # Create customer relation
+    # NOTE: In KMD EE, there's always one customer relation for each row in
+    # the Kunde table.
 
-            product_uuid = create_product(
-                name, identification, installation_type, meter_number,
-                meter_type, start_date, end_date, product_address
-            )
-            if product_uuid:
-                product_uuids.append(product_uuid)
+    # Get Forbrugsstedadresse
+    (forbrugssted_address,
+     forbrugssted_address_uuid) = get_forbrugssted_address_uuid(fields)
 
-        agreement_name = "Varme, " + name
-        agreement_uuid = create_agreement(
-            agreement_name, agreement_type, no_of_products,
-            invoice_address_uuid, start_date, end_date, forbrugssted,
-            cr_uuid, product_uuids
-        )
-        assert(agreement_uuid)
-    print("Fandt {0} primære kunder og {1} ligestillingskunder.".format(
-        n, ligest_persons)
+    if not forbrugssted_address_uuid:
+        report_error(forbrugssted_address)
+    cr_name = "{0}, {1}".format(VARME, forbrugssted_address)
+    cr_type = VARME  # Always for KMD EE
+    cr_address_uuid = forbrugssted_address_uuid
+    cr_uuid = create_customer_relation(
+        customer_number, cr_name, cr_type, cr_address_uuid
     )
+
+    if not cr_uuid:
+        print("Unable to create customer relation for customer {}".format(
+            customer_number)
+        )
+
+    # This done, create customer roles & link customer and relation
+    role_uuid = create_customer_role(customer_uuid, cr_uuid, KUNDE)
+    assert(role_uuid)
+
+    # Now handle partner/roommate, ignore empty CPR numbers
+    if len(ligest_personnr) > 1:
+
+        ligest_uuid = lookup_customer(ligest_personnr)
+        # Customer was already created before this step
+        if not customer_uuid:
+            # This must have failed
+            print("Ligest Customer not found:", id_number, fields['KundeNavn'])
+
+        create_customer_role(
+            ligest_uuid, cr_uuid, LIGESTILLINGSKUNDE
+        )
+
+    # Create agreement
+    name = 'Fjernvarmeaftale'
+    agreement_type = VARME
+    invoice_address = (fields['VejNavn'].replace(',-', ' ') +
+                       ', ' + fields['Postdistrikt'])
+    try:
+        invoice_address_uuid = fuzzy_address_uuid(invoice_address)
+    except Exception as e:
+        invoice_address_uuid = None
+        report_error(
+            "Customer {1}: Unable to lookup invoicing address: {0}".format(
+                str(e), id_number
+            )
+        )
+    agreement_start_date = fields['Tilflytningsdato']
+    agreement_end_date = fields['Fraflytningsdato']
+
+    # There is always one agreement for each location (Forbrugssted)
+    # AND only one location for each customer record.
+
+    forbrugssted = fields['ForbrugsstedID']
+
+    products = get_products_for_location(forbrugssted)
+
+    no_of_products = len(products)
+
+    product_uuids = []
+
+    for p in products:
+        meter_number = p['Målernr']
+        meter_type = p['MaalerTypeBetegnel']
+        product_uuid = create_product(
+            name="{0}, {1} {2}".format(
+                meter_number, p['Målertypefabrikat'], meter_type
+            ),
+            identification=p['InstalNummer'],
+            installation_type=VARME,
+            meter_number=meter_number,
+            meter_type=meter_type,
+            start_date=p['DatoFra'],
+            end_date=p['DatoTil'],
+            product_address=get_alternativsted_address_uuid(
+                p['AlternativStedID']
+            )
+        )
+        if product_uuid:
+            product_uuids.append(product_uuid)
+
+    agreement_name = "Varme, " + name
+    agreement_uuid = create_agreement(
+        agreement_name, agreement_type, no_of_products, invoice_address_uuid,
+        agreement_start_date, agreement_end_date, forbrugssted, cr_uuid,
+        product_uuids
+    )
+    assert(agreement_uuid)
+
+
+def update_customer_record(fields, changed_fields):
+    """Update relevant LoRa objects with the specific changes."""
+    customer_fields = ['Telefon', 'MobilTlf', 'Fax', 'Kundesagsnr']
+    customer_relation_fields = ['ForbrStVejnavn', 'Vejkode', 'Postnr',
+                                'ForbrStPostdistrikt', 'Husnr', 'Bogstav',
+                                'Etage', 'Sidedørnr', 'PersonnrSEnr',
+                                'LigestPersonnr']
+    agreement_fields = ['Vejnavn', 'Postdistrikt', 'Tilflytningsdato',
+                        'Fraflytningsdato']
+    update_handlers = [(customer_fields, update_customer),
+                       (customer_relation_fields, update_customer_relation),
+                       (agreement_fields, update_agreement)]
+    changed_keys = set(changed_fields)
+
+    for field_list, handler in update_handlers:
+        if changed_keys & set(field_list):
+            handler(fields, changed_fields)
+
+
+def delete_customer_record(customer_number):
+        """Purge relation and customer roles, agreements and products."""
+        cr_uuid = lookup_customer_relation(customer_number)
+        # This should exist provided everything is up to date!
+        if not cr_uuid:
+            print("Customer number {} not found.".format(customer_number))
+            report_error(
+                "Customer number {} not found.".format(customer_number)
+            )
+            return
+
+        # Look up the customer roles and customers for this customer relation.
+
+        roles = lookup_customer_roles(customer_relation=cr_uuid)
+
+        # Delete the customer roles.
+
+        for role in roles:
+            delete_customer_role(role)
+
+        # Delete all agreements and products corresponding to this customer
+        # relation.
+        # There can be only one agreement per customer as is, but in the future
+        # this might change.
+        agreements = lookup_agreements(customer_relation=cr_uuid)
+
+        for agreement_uuid in agreements:
+            products = lookup_products(agreement_uuid=agreement_uuid)
+
+            for p in products:
+                delete_product(p)
+
+            delete_agreement(agreement_uuid)
+        # Now go ahead and delete the customer relation
+        delete_customer_relation(cr_uuid)
+
+
+"""Installation related functions.
+
+Import, update, delete.
+"""
+
+
+def import_installation_record(fields):
+    """Import product from KMD EE installation record."""
+    # check there's an agreement corresponding to this Forbrugssted
+    customer_number = int_str(fields['Kundenr'])
+    cr_uuid = lookup_customer_relation(customer_number)
+    agreement_uuid = lookup_agreements(cr_uuid)[0] if cr_uuid else None
+    if agreement_uuid:
+        # Agreement found.
+        product_uuid = lookup_product(fields['InstalNummer'])
+        if product_uuid:
+            # If product exists, don't import it.
+            return
+        # create the product
+        meter_number = fields['Målernr']
+        meter_type = fields['MaalerTypeBetegnel']
+        product_uuid = create_product(
+            name="{0}, {1} {2}".format(
+                meter_number, fields['Målertypefabrikat'], meter_type
+            ),
+            identification=fields['InstalNummer'],
+            installation_type=VARME,
+            meter_number=meter_number,
+            meter_type=meter_type,
+            start_date=fields['DatoFra'],
+            end_date=fields['DatoTil'],
+            product_address=get_alternativsted_address_uuid(
+                fields['AlternativStedID']
+            )
+        )
+        if product_uuid:
+            # add it to the agreement
+            add_product_to_agreement(product_uuid, agreement_uuid)
+    else:
+        print("No agreement found for customer number {}".format(
+            customer_number))
+
+
+def update_installation_record(old_fields, changed_fields):
+    """Update relevant LoRa objects with the changes for each installation."""
+    relevant_fields = {'Målernr', 'Målertypefabrikat', 'MaalerTypeBetegnel',
+                       'AlternativStedID'}
+    if relevant_fields & changed_fields.keys():
+        product_uuid = lookup_product(old_fields['InstalNummer'])
+        if not product_uuid:
+            say("Error: Product {} not found".format(
+                old_fields['InstalNummer']))
+            return
+        say("Updating product: {}".format(changed_fields))
+        update_product(product_uuid, old_fields, changed_fields)
+
+
+def delete_installation_record(product_id):
+    """Delete product from LoRa when no longer relevant."""
+    # get product UUID
+    product_uuid = lookup_product(product_id)
+    # delete product & find agreement for this product UUID, if any
+    if product_uuid:
+        delete_product(product_uuid)
+        agreement_uuid = lookup_agreement_from_product(product_uuid)
+    else:
+        return
+    if agreement_uuid:
+        # remove product from agreement
+        agreement_json = read_agreement(agreement_uuid)
+        products = agreement_json['relationer']['indsatskvalitet']
+        for p in products:
+            if p["uuid"] == product_uuid:
+                p["uuid"] = ''
+        agreement_json['relationer']['indsatskvalitet'] = products
+
+        write_agreement_dict(agreement_uuid, agreement_json)
+
+
+def main():
+    """Main program. Calculate changes since last run and sync with LoRa.
+
+    * Argument parsing.
+    * Read all customer records from KMD EE and calculate changes.
+    * From these changes, delete expired records; import new ones; update
+      existing ones.
+    * Repeat for installations/products.
+
+    Note that products are *not* created separately during the inital import,
+    since they're imported as part of creating each agreement.
+
+    """
+    # argument parsing
+    import argparse
+    global VERBOSE
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--verbose', action='store_true',
+                        help='print helpful comments during execution')
+    parser.add_argument('--initial-import', action='store_true',
+                        help='only perform inital import')
+    args = parser.parse_args()
+    VERBOSE = args.verbose
+    initial_import = args.initial_import
+
+    """CUSTOMERS AND CUSTOMER RELATIONS"""
+    connection = connect(server, database, username, password)
+    cursor = connection.cursor(as_dict=True)
+    new_values = read_customer_records(cursor)
+    new_installation_values = read_installation_records(cursor)
+    old_installation_values = retrieve_installation_records()
+    connection.close()
+
+    old_values = retrieve_customer_records()
+
+    say('Comparison, new_values == old_values:', new_values == old_values)
+
+    new_keys = new_values.keys() - old_values.keys()
+    lost_keys = old_values.keys() - new_values.keys()
+    common_keys = new_values.keys() & old_values.keys()
+
+    say("new customers:", len(new_keys))
+    say("lost customers:", len(lost_keys))
+    say("existing customers:", len(common_keys))
+
+    # Now calculate diff between new values and old values.
+    # Build a mapping between customer numbers and
+    # dictionaries containing only the changed values.
+
+    changed_records = {
+        k: {
+            f: v for f, v in new_values[k].items() if
+            new_values[k][f] != old_values[k][f]
+          } for k in common_keys if new_values[k] != old_values[k]
+    }
+
+    say("Number of changed customer records:", len(changed_records))
+    # Handle notifications for customer part, do the installations afterwards.
+    if len(lost_keys) > 0:
+        say("... deleting {} customers...".format(len(lost_keys)))
+        for k in lost_keys:
+            # These records are no longer active and should be deleted in LoRa
+            delete_customer_record(k)
+        say("... done")
+    # New customer relations - import along with agreements & products
+    # First explicitly create the new customers
+
+    new_customer_fields = {**{
+        new_values[k]['PersonnrSEnr']: new_values[k]
+        for k in new_keys}, **{
+            new_values[k]['LigestPersonnr']: new_values[k]
+            for k in new_keys if len(
+                int_str(new_values[k]['LigestPersonnr'])
+            ) > 1
+        }}
+    # Now import all the new customers using threads
+    if len(new_customer_fields) > 0:
+        say("... importing {} new customers ...".format(
+            len(new_customer_fields)
+        ))
+        p = Pool(15)
+        p.map(import_customer, new_customer_fields.items())
+        p.close()
+        p.join()
+        say("... done")
+
+    if len(new_keys) > 0:
+        say('... importing {} new customer relations ...'.format(
+            len(new_keys)
+        ))
+        p = Pool(16)
+        p.map(import_customer_record, [new_values[k] for k in new_keys])
+        p.close()
+        p.join()
+        say("... done")
+
+    # Now (and finally) handle update of the specific changed fields.
+    if len(changed_records) > 0:
+        say('... updating {} customer records ...'.format(
+            len(changed_records)
+        ))
+        for k, changed_fields in changed_records.items():
+            update_customer_record(old_values[k], changed_fields)
+        say("... done")
+
+    if initial_import:
+        # In this case, we shouldn't handle changed installations, only
+        # record the ones we've seen.
+        store_customer_records(new_values)
+        store_installation_records(new_installation_values)
+        sys.exit()
+
+    """INSTALLATIONS AND PRODUCTS"""
+
+    new_installation_keys = (new_installation_values.keys() -
+                             old_installation_values.keys())
+    lost_installation_keys = (old_installation_values.keys() -
+                              new_installation_values.keys())
+    common_installation_keys = (new_installation_values.keys() &
+                                old_installation_values.keys())
+
+    say("new installations:", len(new_installation_keys))
+    say("lost installations:", len(lost_installation_keys))
+    say("existing installations:", len(common_installation_keys))
+
+    changed_installation_records = {
+        k: {
+            f: v for f, v in new_installation_values[k].items() if
+            new_installation_values[k][f] != old_installation_values[k][f]
+          } for k in common_installation_keys if
+        new_installation_values[k] != old_installation_values[k]
+    }
+
+    say("Number of changed installation records:", len(changed_records))
+    #  Those that disappear are expired, either by the customer disappearing or
+    #  by crossing the expiry date. If the customer disappeared, it should
+    #  already be gone.
+    say("... deleting {} expired installations ...".format(
+        len(lost_installation_keys)
+    ))
+    for k in lost_installation_keys:
+        delete_installation_record(k)
+    say("... done")
+
+    # New records may come into being by entering the valid period.
+    # if so, they should be attached to the Aftale corresponding to this
+    # Forbrugssted. If none such exists, they should not be created.
+
+    say(
+        "... importing {} new installations ...".format(
+            len(new_installation_keys)
+        )
+    )
+    for k in new_installation_keys:
+        import_installation_record(new_installation_values[k])
+    say("... done")
+
+    # Now handle updates
+    say("... updating {} changed installations ...".format(
+        len(changed_installation_records)
+    ))
+    for k, changed_fields in changed_installation_records.items():
+        update_installation_record(old_installation_values[k], changed_fields)
+    say("... done")
+
+    # All's well that ends well
+    store_customer_records(new_values)
+    store_installation_records(new_installation_values)
 
 
 if __name__ == '__main__':
-    from mssql_config import username, password, server, database
-
-    connection = connect(server, database, username, password)
-    import_all(connection)
+    main()
