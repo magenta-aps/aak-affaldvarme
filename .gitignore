@@ -34,7 +34,7 @@ var/
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+# Unit sp_cvronline_servicedesc.txt / coverage reports
 htmlcov/
 .tox/
 .coverage
@@ -87,3 +87,12 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+#Intellij IDEA
+.idea
+
+# Apple macOS attribute file
+.DS_Store
+
+research/sandbox/mssql_config.py
+aak_integration/python-env
