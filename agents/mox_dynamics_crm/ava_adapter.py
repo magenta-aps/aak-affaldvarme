@@ -83,10 +83,13 @@ def ava_bruger(entity):
             if "urn:email" in item["urn"]:
                 kmd_ee["email"] = item["urn"].split(":")[-1]
 
-    except:
+    except Exception as error:
         # TODO: Must be sent to error queue for manual processing
         log.error("Error getting address from: {0}".format(origin_id))
         log.error("Relationer: {0}".format(relationer))
+
+        # Debug
+        log.debug(error)
 
     # Convert gender to CRM values
     gender = egenskaber.get("ava_koen")
@@ -432,12 +435,12 @@ def ava_aftale(entity):
     try:
         indsatsdokument = relationer.get("indsatsdokument")[0]
         ava_faktureringsgrad = indsatsdokument.get("uuid")
-    except:
+    except Exception as error:
         log.error(
             "Error getting address for: {0}".format(origin_id)
         )
 
-        log.debug(relationer.get("indsatsdokument"))
+        log.debug(error)
 
     # Cache layer compliant document
     document = {
