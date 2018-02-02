@@ -71,7 +71,6 @@ def process(kunderolle):
     contact = cache.get(table="contacts", uuid=contact_ref)
 
     if not contact:
-        print(contact)
         log.error("Contact not found: {}".format(contact_ref))
         log.error(kunderolle)
         return False
@@ -302,8 +301,11 @@ def process(kunderolle):
     klasse_ref = aftale["klasse_ref"]
 
     if not klasse_ref:
-        print("Causing an error: {}".format(klasse_ref))
-        print(aftale)
+        log.warning(
+            "No reference for product found: {internal}".format(
+                internal=aftale.get("id"),
+            )
+        )
         return
 
     produkt = cache.get(table="ava_installations", uuid=klasse_ref)
@@ -320,7 +322,12 @@ def process(kunderolle):
     if produkt["dawa_ref"]:
 
         utility_ref = produkt["dawa_ref"]
-        print(utility_ref)
+
+        # Debug
+        log.debug("Found utility address reference: {reference}".format(
+                reference=utility_ref
+            )
+        )
 
         # Get address external ref
         utility_address = cache.get(
@@ -332,9 +339,14 @@ def process(kunderolle):
         # Get from DAR and store in cache
 
         if not utility_address:
+            # Info
+            log.info(
+                "Utility address not found, importing from DAWA"
+            )
             utility_address = dawa.get_access_address(utility_ref)
-            print("GET ADR FROM DAR")
-            print(utility_address)
+
+            # Debug
+            log.debug("Utility address: {0}".format(utility_address))
 
     if utility_address:
         if not utility_address["external_ref"]:
