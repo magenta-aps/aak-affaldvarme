@@ -231,10 +231,7 @@ def delete_customer_record(customer_number):
         cr_uuid = lookup_customer_relation(customer_number)
         # This should exist provided everything is up to date!
         if not cr_uuid:
-            print("Customer number {} not found.".format(customer_number))
-            report_error(
-                "Customer number {} not found.".format(customer_number)
-            )
+            # Trying to delete a customer that doesn't exist is not an error.
             return
 
         # Look up the customer roles and customers for this customer relation.
@@ -433,7 +430,7 @@ def main():
         say('... importing {} new customer relations ...'.format(
             len(new_keys)
         ))
-        p = Pool(16)
+        p = Pool(15)
         p.map(import_customer_record, [new_values[k] for k in new_keys])
         p.close()
         p.join()
