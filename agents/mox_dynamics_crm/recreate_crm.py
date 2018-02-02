@@ -1,205 +1,58 @@
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-import time
-import json
-import adal
-import logging
-import requests
-
-# Local settings
-from settings import CRM_RESOURCE
-from settings import CRM_TENANT
-from settings import CRM_ENDPOINT
-from settings import CRM_CLIENT_ID
-from settings import CRM_CLIENT_SECRET
-from settings import CRM_REST_API_PATH
-from settings import CRM_OWNER_ID
-
-# Init logger
-log = logging.getLogger(__name__)
-
-# Set vars
-base_endpoint = "{resource}/{path}".format(
-    resource=CRM_RESOURCE,
-    path=CRM_REST_API_PATH
-)
-
-# Temporary file containing token
-filename = "access_token.tmp"
-
-# Issue/Hotfix:
-# We are not able to reliably fetch CRM references before insert
-# As a temporary fix, we are storing CRM references in memory
-# A more long term solution for this problem is in the works
-global_address = {}
-global_contact = {}
-global_aftale = {}
-global_kunderolle = {}
-global_produkt = {}
-global_account = {}
+from helper import get_config
+from crm_interface import get_request
+from crm_interface import delete_request
 
 
-def get_token():
+###################################
+#                                 #
+# IMPORTANT NOTE:                 #
+#                                 #
+# THIS IS A UTILITY TOOL          #
+# FOR DEVELOPMENT PURPOSES ONLY   #
+#                                 #
+# PLEASE DO NOT USE IN PRODUCTION #
+#                                 #
+###################################
+
+
+# Get config
+config = get_config("ms_dynamics_crm")
+
+# Configuration
+CRM_OWNER_ID = config["crm_owner_id"]
+
+
+def retrieve_all_object_guids(identifier, resource):
     """
-    Return token (from file)
-    There is no promise that the token is valid!
-    (This is to avoid requesting a new token for every request)
+    Retrieve all CRM object identifiers.
+
+    :param identifier:  Name of the identifier,
+                        Examples:
+                            Identifier for contacts is contactid
+                            Identifier for ava_adresses is ava_adresseid
+
+    :param resource:    Name of the API resource, e.g. contacts
+                        {REST_API}/<resource>
+
+    :return:            Returns list of CRM GUID's or None
     """
 
-    # If the file does not exist, generate it
-    if not os.path.isfile(filename):
-        request_token()
-
-    # Read the file and return the token
-    access_token = open(filename, "r")
-    return access_token.read()
-
-
-def request_token():
-    """Request a new access token from the MS OAUTH2 service"""
-
-    # Combine OUATH endpoint and tenant id for full endpoint URL
-    authority_url = "{url}/{tenant}".format(
-        url=CRM_ENDPOINT,
-        tenant=CRM_TENANT
-    )
-
-    # Connect and authenticate using the ADAL library
-    context = adal.AuthenticationContext(
-        authority_url,
-        validate_authority=CRM_TENANT != "adfs",
-        api_version=None
-    )
-
-    token = context.acquire_token_with_client_credentials(
-        CRM_RESOURCE,
-        CRM_CLIENT_ID,
-        CRM_CLIENT_SECRET
-    )
-
-    if not token:
-        return False
-
-    # Write token to temporary file
-    with open(filename, "w") as file:
-        file.write(token.get("accessToken"))
-
-    return token
-
-
-def get_request(resource, params):
-    """
-    Generic GET Request function
-    """
-
-    headers = {
-        "Authorization": get_token(),
-        "OData-MaxVersion": "4.0",
-        "OData-Version": "4.0",
-        "Accept": "application/json",
-        "Content-Type": "application/json; charset=utf-8",
-    }
-
-    service_url = "{base}/{resource}".format(
-        base=base_endpoint,
-        resource=resource
-    )
-
-    response = requests.get(
-        url=service_url,
-        headers=headers,
-        params=params
-    )
-
-    if response.status_code == 401:
-        print("Response: {0}".format(response.status_code))
-
-        # Generate a new token
-        print("Generate a new token")
-        request_token()
-
-        # Sleep 10 seconds
-        time.sleep(10)
-
-        # Set new token into the auth header
-        headers["Authorization"] = get_token()
-
-        # Perform the request again
-        response = requests.get(
-            url=service_url,
-            headers=headers,
-            params=params
-        )
-
-    # TODO: implement method to stop the application,
-    # if 401 has not been resolved.
-    log.debug("GET Request: ")
-    log.debug(response.text)
-    return response
-
-
-def delete_request(resource):
-    """
-    Generic delete request
-    """
-
-    headers = {
-        "Authorization": get_token(),
-        "OData-MaxVersion": "4.0",
-        "OData-Version": "4.0",
-        "Accept": "application/json",
-        "Content-Type": "application/json; charset=utf-8",
-        "Prefer": "return=representation"
-    }
-
-    service_url = "{base}/{resource}".format(
-        base=base_endpoint,
-        resource=resource
-    )
-
-    response = requests.delete(
-        url=service_url,
-        headers=headers
-    )
-
-    if response.status_code == 401:
-        print('Requesting token and retrying delete request')
-
-        # Generate a new token
-        request_token()
-
-        # Sleep 10 seconds
-        time.sleep(10)
-
-        # Set new token into the auth header
-        headers["Authorization"] = get_token()
-
-        # Perform the request again
-        response = requests.delete(
-            url=service_url,
-            headers=headers
-        )
-
-    return response
-
-
-def get_all_guids(identifier, resource):
-
-    filter_string = "_ownerid_value eq {0}".format(CRM_OWNER_ID)
-
+    # Query parameters
     params = {
         "$select": identifier,
-        "$filter": filter_string
+        "$filter": "_ownerid_value eq {0}".format(CRM_OWNER_ID)
     }
 
-    query = get_request(resource, params)
-    print(query)
+    # Call underlying GET request
+    query = get_request(resource, **params)
+
+    # Results
     list_of_contacts = query.json()["value"]
 
     if not list_of_contacts:
-        log.info("Contact does not exist in CRM")
+        print("Contact does not exist in CRM")
         return False
 
     # If object exists return identifier
@@ -207,8 +60,25 @@ def get_all_guids(identifier, resource):
 
 
 def delete_all(identifier, resource):
+    """
+    Utility function to remove all CRM objects
+    created by the LORA integration user.
 
-    entities = get_all_guids(
+    FOR DEVELOPMENT PURPOSES ONLY!
+
+    :param identifier:  Name of the identifier,
+                        Examples:
+                            Identifier for contacts is contactid
+                            Identifier for ava_adresses is ava_adresseid
+
+    :param resource:    Name of the API resource, e.g. contacts
+                        {REST_API}/<resource>
+
+    :return:            Nothing is returned,
+                        Activity is printed in the terminal.
+    """
+
+    entities = retrieve_all_object_guids(
         identifier=identifier,
         resource=resource
     )
@@ -219,17 +89,23 @@ def delete_all(identifier, resource):
 
     for entity in entities:
         guid = entity[identifier]
-        service = "{0}({1})".format(resource, guid)
-        print(service)
 
-        response = delete_request(service)
+        response = delete_request(resource, guid)
 
-        if response.status_code != 200:
+        if not response.status_code == 204:
+            print("NOT 204")
             print(response.text)
 
+        print(
+            "Deleting: {entity}: {id} ({status})".format(
+                entity=resource,
+                id=guid,
+                status=response.status_code
+            )
+        )
+
+
 if __name__ == "__main__":
-    # Request new token
-    request_token()
 
     # Delete all entities
     delete_all("contactid", "contacts")
