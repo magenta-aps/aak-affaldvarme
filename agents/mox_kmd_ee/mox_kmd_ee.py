@@ -11,6 +11,7 @@ import sys
 
 from multiprocessing.dummy import Pool
 
+import ee_utils
 from mssql_config import username, password, server, database
 from ee_utils import connect, int_str, cpr_cvr
 from ee_oio import KUNDE, LIGESTILLINGSKUNDE
@@ -27,22 +28,13 @@ from crm_utils import update_customer_relation, write_agreement_dict
 
 from ee_utils import get_forbrugssted_address_uuid
 from ee_utils import get_products_for_location
-from ee_utils import get_alternativsted_address_uuid
+from ee_utils import get_alternativsted_address_uuid, say
 
 from ee_data import read_customer_records, store_customer_records
 from ee_data import retrieve_customer_records, read_installation_records
 from ee_data import store_installation_records, retrieve_installation_records
 
 from service_clients import report_error, fuzzy_address_uuid
-
-
-VERBOSE = False
-
-
-def say(*args):
-    """Local utility to give output in verbose mode."""
-    if __name__ == '__main__' and VERBOSE:
-        print(*args)
 
 
 """CUSTOMER RELATED FUNCTIONS.
@@ -120,7 +112,9 @@ def import_customer_record(fields):
      forbrugssted_address_uuid) = get_forbrugssted_address_uuid(fields)
 
     if not forbrugssted_address_uuid:
-        report_error(forbrugssted_address)
+        report_error("No Forbrugssted address found ({}): {}".format(
+            customer_number, forbrugssted_address
+        ))
     cr_name = "{0}, {1}".format(VARME, forbrugssted_address)
     cr_type = VARME  # Always for KMD EE
     cr_address_uuid = forbrugssted_address_uuid
@@ -302,7 +296,7 @@ def import_installation_record(fields):
             # add it to the agreement
             add_product_to_agreement(product_uuid, agreement_uuid)
     else:
-        print("No agreement found for customer number {}".format(
+        say("No agreement found for customer number {}".format(
             customer_number))
 
 
@@ -357,7 +351,6 @@ def main():
     """
     # argument parsing
     import argparse
-    global VERBOSE
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--verbose', action='store_true',
@@ -365,7 +358,7 @@ def main():
     parser.add_argument('--initial-import', action='store_true',
                         help='only perform inital import')
     args = parser.parse_args()
-    VERBOSE = args.verbose
+    ee_utils.VERBOSE = args.verbose
     initial_import = args.initial_import
 
     """CUSTOMERS AND CUSTOMER RELATIONS"""

@@ -28,7 +28,7 @@ from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_oio import Relation, KUNDE, LIGESTILLINGSKUNDE
 from ee_oio import write_object, write_object_dict
-from ee_utils import is_cvr, is_cpr, int_str, cpr_cvr
+from ee_utils import is_cvr, is_cpr, int_str, cpr_cvr, say
 from ee_utils import get_forbrugssted_address_uuid
 from service_clients import report_error, get_cvr_data, get_address_uuid
 from service_clients import fuzzy_address_uuid
@@ -157,9 +157,17 @@ def lookup_address_from_sp_data(sp_dict, id_number):
     try:
         address_uuid = get_address_uuid(address)
     except Exception as e:
+        # First, determine customer type and include street name, if any.
+        if is_cvr(id_number):
+            customer_type = "CVR"
+        else:
+            customer_type = "CPR"
+        if "vejnavn" in sp_dict:
+            address["vejnavn"] = sp_dict["vejnavn"]
+
         report_error(
-            "Unable to lookup address for {0}: {1}".format(
-                id_number, str(address)
+            "Unable to lookup address for {} from SP data ({}): {}".format(
+                id_number, customer_type, str(address)
             ), error_stack=None
         )
         address_uuid = None
@@ -172,7 +180,6 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
                     mobile="", fax="", note=""):
     """Create customer from data extracted from KMD EE."""
     if is_cvr(id_number):
-
         # Collect info from SP and include in call creating user.
         try:
             company_dir = get_cvr_data(id_number)
@@ -181,9 +188,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
             try:
                 company_dir = get_cvr_data(id_number)
             except Exception as e:
-                report_error(
-                    "CVR number {0} not found: {1}".format(id_number, str(e))
-                )
+                say("CVR number {0} not found: {1}".format(id_number, str(e)))
                 return None
 
         name = company_dir['organisationsnavn']
@@ -192,37 +197,21 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
             address_uuid = lookup_address_from_sp_data(company_dir, id_number)
         company_type = company_dir['virksomhedsform']
         industry_code = company_dir['branchekode']
-        address_string = "{0} {1}, {2}".format(
-            company_dir.get('vejnavn'), company_dir.get('husnummer'),
-            company_dir.get('postnummer')
-        )
 
         result = create_organisation(
             id_number, key, name, master_id, phone, email, mobile, fax,
             address_uuid, company_type, industry_code, note
         )
     elif is_cpr(id_number):
-        # This is a CPR number
-
         # Collect info from SP and include in call creating user.
-        # Avoid getting throttled by SP
         try:
             person_dir = get_cpr_data(id_number)
         except Exception as e:
-            error_message = "SP CPR Lookup failed, ID: {0}".format(id_number)
-
             # Retry *once*
             try:
                 person_dir = get_cpr_data(id_number)
             except Exception as e:
-                # Hotfix:
-                print("CPR lookup failed after retrying:", id_number, name)
-                # Certain CPR ID's are actually P-Numbers
-                # These must be manually processed
-                report_error(
-                    error_message=error_message,
-                    error_object=id_number
-                )
+                say("CPR lookup failed after retrying:", id_number, name)
                 return None
 
         first_name = person_dir['fornavn']
@@ -230,14 +219,6 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         last_name = person_dir['efternavn']
 
         address_uuid = lookup_address_from_sp_data(person_dir, id_number)
-        # Cache address for customer relation
-        address_string = "{0}".format(
-            person_dir.get('standardadresse', '')
-        )
-
-        # Hotfix:
-        if 'postnummer' in person_dir:
-            address_string += ", {0}".format(person_dir['postnummer'])
 
         gender = person_dir['koen']
         marital_status = person_dir['civilstand']
@@ -249,9 +230,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
             marital_status, address_protection, note
         )
     else:
-        report_error("Forkert CPR/SE-nr for {0}: {1}".format(
-            name, id_number)
-        )
+        say("Forkert CPR/SE-nr for {0}: {1}".format(name, id_number))
         # Invalid customer
         return None
 
@@ -417,7 +396,10 @@ def update_customer_relation(fields, new_values):
         (new_address,
          new_address_uuid) = get_forbrugssted_address_uuid(new_fields)
         if not new_address_uuid:
-            report_error(new_address)
+            report_error(
+                "Unable to look up new address for Forbrugssted: {}".format(
+                    new_address)
+            )
 
         if new_address_uuid and new_address_uuid != old_address_uuid:
             relations['adresser'] = [Relation("uuid", new_address_uuid)]

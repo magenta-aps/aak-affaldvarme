@@ -5,6 +5,18 @@ from ee_sql import TREFINSTALLATION_SQL
 from ee_sql import ALTERNATIVSTED_ADRESSE_SQL
 from service_clients import get_address_uuid, fuzzy_address_uuid
 from service_clients import report_error, access_address_uuid
+
+
+VERBOSE = False
+
+
+def say(*args):
+    """Local utility to give output in verbose mode."""
+    global VERBOSE
+
+    if VERBOSE:
+        print(*args)
+
 # CPR/CVR helper function
 
 
@@ -100,11 +112,6 @@ def get_forbrugssted_address_uuid(row):
         try:
             address_uuid = fuzzy_address_uuid(address_string)
         except Exception as e:
-            id_number = row['PersonnrSEnr']
-            err_str = "Forbrugsadresse fejler for kunde {0}: {1}".format(
-                id_number, address_string
-            )
-            report_error(err_str, error_stack=None, error_object=address)
             address_uuid = None
     return (address_string, address_uuid)
 
