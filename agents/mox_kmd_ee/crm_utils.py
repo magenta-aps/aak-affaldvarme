@@ -475,7 +475,7 @@ def update_agreement(fields, new_values):
     if len(agreements) > 0:
         agreement_uuid = agreements[0]
     else:
-        print("Agreement not found for customer:", customer_number)
+        report_error("Agreement not found for customer:", customer_number)
         return
 
     properties = {}

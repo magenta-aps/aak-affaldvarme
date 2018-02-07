@@ -101,7 +101,7 @@ def import_customer_record(fields):
     # Customer *must* have been created during previous import step
     if not customer_uuid:
         # This must have failed
-        print("Customer not found:", id_number, fields['KundeNavn'])
+        report_error("Customer not found:", id_number, fields['KundeNavn'])
 
     # Create customer relation
     # NOTE: In KMD EE, there's always one customer relation for each row in
@@ -123,22 +123,24 @@ def import_customer_record(fields):
     )
 
     if not cr_uuid:
-        print("Unable to create customer relation for customer {}".format(
-            customer_number)
+        report_error(
+            "Unable to create customer relation for customer {}".format(
+                customer_number)
         )
 
     # This done, create customer roles & link customer and relation
-    role_uuid = create_customer_role(customer_uuid, cr_uuid, KUNDE)
-    assert(role_uuid)
+    create_customer_role(customer_uuid, cr_uuid, KUNDE)
 
     # Now handle partner/roommate, ignore empty CPR numbers
     if len(ligest_personnr) > 1:
 
         ligest_uuid = lookup_customer(ligest_personnr)
         # Customer was already created before this step
-        if not customer_uuid:
+        if not ligest_uuid:
             # This must have failed
-            print("Ligest Customer not found:", id_number, fields['KundeNavn'])
+            report_error(
+                "Ligest Customer not found:", id_number, fields['KundeNavn']
+            )
 
         create_customer_role(
             ligest_uuid, cr_uuid, LIGESTILLINGSKUNDE
