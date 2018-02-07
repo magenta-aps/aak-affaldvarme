@@ -313,7 +313,6 @@ def update_installation_record(old_fields, changed_fields):
             say("Error: Product {} not found".format(
                 old_fields['InstalNummer']))
             return
-        say("Updating product: {}".format(changed_fields))
         update_product(product_uuid, old_fields, changed_fields)
 
 
