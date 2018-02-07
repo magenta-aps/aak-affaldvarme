@@ -12,6 +12,8 @@ import pytz
 
 from collections import defaultdict
 
+from settings import AVA_ORGANISATION
+
 try:
     from serviceplatformen_cpr import get_cpr_data
 except (TypeError, ImportError):
@@ -30,6 +32,7 @@ from ee_oio import Relation, KUNDE, LIGESTILLINGSKUNDE
 from ee_oio import write_object, write_object_dict
 from ee_utils import is_cvr, is_cpr, int_str, cpr_cvr, say
 from ee_utils import get_forbrugssted_address_uuid
+from ee_utils import get_alternativsted_address_uuid
 from service_clients import report_error, get_cvr_data, get_address_uuid
 from service_clients import fuzzy_address_uuid
 
@@ -288,13 +291,12 @@ def create_product(name, identification, installation_type, meter_number,
 def update_product(uuid, fields, new_values):
     """Update product with new information."""
     name_fields = {'Målernr', 'Målertypefabrikat', 'MaalerTypeBetegnel'}
-    alt_place = 'AlternativStedID'
 
     properties = {}
     relations = defaultdict(list)
     all_fields = {**fields, **new_values}
-
-    if name_fields & new_values.keys:
+    alt_place = 'AlternativStedID'
+    if name_fields & new_values.keys():
         properties['eksempel'] = all_fields['Målernr']
         properties['beskrivelse'] = all_fields['MaalerTypeBetegnel']
         properties['name'] = '{0}, {1} {2}'.format(
@@ -303,7 +305,7 @@ def update_product(uuid, fields, new_values):
         )
 
     if alt_place in new_values:
-        new_id = new_values[alt_place] if new_values[alt_place] != '0' else ''
+        new_id = get_alternativsted_address_uuid(new_values[alt_place]) or ''
         relations['ava_opstillingsadresse'].append(Relation('uuid', new_id))
 
     write_object(uuid, properties, relations, "klassifikation", "klasse")
@@ -388,8 +390,14 @@ def update_customer_relation(fields, new_values):
         # while.
 
         properties = {}
-        relations = {}
-        old_addresses = customer_relation['relationer'].get('adresser', [])
+
+        relations = dict(tilhoerer=[Relation("uuid", AVA_ORGANISATION)])
+
+        try:
+            old_addresses = customer_relation['relationer'].get('adresser', [])
+        except KeyError:
+            print("Customer with no owner found? {}".format(customer_number))
+            old_addresses = []
         assert(len(old_addresses) <= 1)
         old_address_uuid = old_addresses[0] if old_addresses else None
         # Recalculate address & set correct address link.
