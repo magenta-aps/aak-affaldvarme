@@ -7,22 +7,29 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-from logging import getLogger
+import logging
 from datetime import datetime
 from configparser import ConfigParser
-config = ConfigParser()
 
 
 def get_config(section="DEFAULT"):
     """
     Helper function to get a configuration section from config.ini
-    This file is required
+    TODO: We may need to set default location to '/etc/mox/config.ini'
+
+    This file is required.
 
     :param section: Name of the configuration section
                     (If empty, revert to default)
+
     :return:        Dictionary containing the config parameters
     """
 
+    # Create instance
+    config = ConfigParser()
+
+    # Location of config file
+    # With a local 'config.ini' fallback location
     config_file = "config.ini"
 
     # Read "config.ini"
@@ -30,14 +37,13 @@ def get_config(section="DEFAULT"):
 
     # Exit if file does not exist
     if not read_config:
-        sys.exit(
-            "Configuration file {0} does not exist".format(config_file)
+        raise RuntimeError(
+            "Configuration file does not exist"
         )
 
     if section not in config:
-        sys.exit(
-            "Configuration section: {0} is missing".format(section)
-        )
+        error = "Configuration section: {0} is missing".format(section)
+        raise RuntimeError(error)
 
     return config[section]
 
@@ -68,13 +74,21 @@ def start_logging(loglevel=10, logfile="debug.log"):
     This has been set to write to a specified log file,
     or to a local 'debug.log' logfile.
 
-    :param loglevel:
-    :param logfile:
-    :return:
+    :param loglevel:    Log level value (Type: int)
+
+    :param logfile:     Name and the full path to the log file.
+
+                        Default is a local 'debug.log' file
+                        Best practice would be to set the path
+                        to the 'global' log location,
+                        e.g.
+                            /var/log/mox/<name>.log
+
+    :return:            Returns a configured instance of the logging class
     """
 
     # Set logger name
-    logger = getLogger()
+    logger = logging.getLogger()
 
     # Set logger handler
     handler = logging.FileHandler(logfile)
