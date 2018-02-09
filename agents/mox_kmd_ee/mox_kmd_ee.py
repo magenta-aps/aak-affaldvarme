@@ -13,7 +13,7 @@ from multiprocessing.dummy import Pool
 
 import ee_utils
 from mssql_config import username, password, server, database
-from ee_utils import connect, int_str, cpr_cvr
+from ee_utils import connect, int_str, cpr_cvr, is_cpr
 from ee_oio import KUNDE, LIGESTILLINGSKUNDE
 from crm_utils import lookup_customer_relation, lookup_customer_roles, VARME
 from crm_utils import lookup_customer, lookup_agreements, lookup_product
@@ -43,6 +43,14 @@ Import customer, import customer relation, update, delete.
 """
 
 
+def hide_cpr(id_number):
+    """Obfuscate CPR number."""
+    if is_cpr(id_number):
+        return '123456xxxx'
+    else:
+        return id_number
+
+
 def import_customer(id_and_fields):
     """Import a new customer, log if it fails."""
     id_number, fields = id_and_fields
@@ -61,6 +69,7 @@ def import_customer(id_and_fields):
             phone=fields['Telefonnr'],
             email=fields['EmailKunde'],
             mobile=fields['MobilTlf'],
+            customer_number=customer_number
         )
 
         if new_customer_uuid:
@@ -75,7 +84,8 @@ def import_customer(id_and_fields):
                 role = 'ligestilling'
             report_error(
                 "No customer created: {} {} {} ({})".format(
-                    fields['KundeNavn'], id_number, customer_number, role
+                    fields['KundeNavn'], hide_cpr(id_number),
+                    customer_number, role
                 )
             )
             return
@@ -101,7 +111,8 @@ def import_customer_record(fields):
     # Customer *must* have been created during previous import step
     if not customer_uuid:
         # This must have failed
-        report_error("Customer not found:", id_number, fields['KundeNavn'])
+        report_error("Customer not found:", hide_cpr(id_number),
+                     fields['KundeNavn'])
 
     # Create customer relation
     # NOTE: In KMD EE, there's always one customer relation for each row in
@@ -139,7 +150,8 @@ def import_customer_record(fields):
         if not ligest_uuid:
             # This must have failed
             report_error(
-                "Ligest Customer not found:", id_number, fields['KundeNavn']
+                "Ligest Customer not found:", hide_cpr(id_number),
+                fields['KundeNavn']
             )
 
         create_customer_role(
@@ -157,7 +169,7 @@ def import_customer_record(fields):
         invoice_address_uuid = None
         report_error(
             "Customer {1}: Unable to lookup invoicing address: {0}".format(
-                str(e), id_number
+                str(e), hide_cpr(id_number)
             )
         )
     agreement_start_date = fields['Tilflytningsdato']
@@ -414,7 +426,7 @@ def main():
         say("... importing {} new customers ...".format(
             len(new_customer_fields)
         ))
-        p = Pool(15)
+        p = Pool(10)
         p.map(import_customer, new_customer_fields.items())
         p.close()
         p.join()
@@ -424,7 +436,7 @@ def main():
         say('... importing {} new customer relations ...'.format(
             len(new_keys)
         ))
-        p = Pool(15)
+        p = Pool(10)
         p.map(import_customer_record, [new_values[k] for k in new_keys])
         p.close()
         p.join()

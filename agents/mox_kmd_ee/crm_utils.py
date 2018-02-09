@@ -141,7 +141,7 @@ def add_product_to_agreement(product_uuid, agreement_uuid):
 
 
 # Address lookup
-def lookup_address_from_sp_data(sp_dict, id_number):
+def lookup_address_from_sp_data(sp_dict, id_number, customer_number=None):
     """Lookup DAWA address from data returned by SP."""
     address = {}
 
@@ -159,7 +159,7 @@ def lookup_address_from_sp_data(sp_dict, id_number):
 
     try:
         address_uuid = get_address_uuid(address)
-    except Exception as e:
+    except RuntimeError as e:
         # First, determine customer type and include street name, if any.
         if is_cvr(id_number):
             customer_type = "CVR"
@@ -170,8 +170,13 @@ def lookup_address_from_sp_data(sp_dict, id_number):
 
         report_error(
             "Unable to lookup address for {} from SP data ({}): {}".format(
-                id_number, customer_type, str(address)
-            ), error_stack=None
+                customer_number, customer_type,
+                "{} - {}".format(
+                    str(e), ', '.join(
+                        ['{}: {}'.format(k, v) for k, v in address.items()]
+                    )
+                )
+            )
         )
         address_uuid = None
 
@@ -180,7 +185,7 @@ def lookup_address_from_sp_data(sp_dict, id_number):
 
 # Create functions
 def create_customer(id_number, key, name, master_id, phone="", email="",
-                    mobile="", fax="", note=""):
+                    mobile="", fax="", note="", customer_number=""):
     """Create customer from data extracted from KMD EE."""
     if is_cvr(id_number):
         # Collect info from SP and include in call creating user.
@@ -197,7 +202,9 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         name = company_dir['organisationsnavn']
         address_uuid = company_dir['dawa_uuid']
         if not address_uuid:
-            address_uuid = lookup_address_from_sp_data(company_dir, id_number)
+            address_uuid = lookup_address_from_sp_data(
+                company_dir, id_number, customer_number
+            )
         company_type = company_dir['virksomhedsform']
         industry_code = company_dir['branchekode']
 
@@ -221,7 +228,9 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
         middle_name = person_dir.get('mellemnavn', '')
         last_name = person_dir['efternavn']
 
-        address_uuid = lookup_address_from_sp_data(person_dir, id_number)
+        address_uuid = lookup_address_from_sp_data(
+            person_dir, id_number, customer_number
+        )
 
         gender = person_dir['koen']
         marital_status = person_dir['civilstand']
@@ -405,8 +414,8 @@ def update_customer_relation(fields, new_values):
          new_address_uuid) = get_forbrugssted_address_uuid(new_fields)
         if not new_address_uuid:
             report_error(
-                "Unable to look up new address for Forbrugssted: {}".format(
-                    new_address)
+                "Can't find new Forbrugssted address: {}, customer {}".format(
+                    new_address, customer_number)
             )
 
         if new_address_uuid and new_address_uuid != old_address_uuid:
