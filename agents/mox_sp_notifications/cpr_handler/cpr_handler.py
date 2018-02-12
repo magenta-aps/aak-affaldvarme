@@ -19,12 +19,12 @@ log = getLogger(__name__)
 # List of comparisons to perform.
 COMPARISONS = [
     (
-        compare.extract_dawa_uuid_from_lora,
-        compare.extract_dawa_uuid_from_sp,
+        compare.extract_address_uuid_from_oio,
+        compare.extract_address_uuid_from_sp,
         compare.update_address
     ),
     (
-        compare.extract_details_from_lora,
+        compare.extract_details_from_oio,
         compare.extract_details_from_sp,
         compare.update_details
     )
