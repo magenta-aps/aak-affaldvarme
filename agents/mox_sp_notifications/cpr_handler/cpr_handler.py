@@ -7,67 +7,98 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
+from logging import getLogger
 from helper import get_config
 from udvidet_person_stamdata import get_citizen
-from cpr_handler.compare import COMPARISON
-
-config = get_config("sp_cpr")
-
-uuids = {
-    "service_agreement": config["service_agreement"],
-    "user_system": config["user_system"],
-    "user": config["user"],
-    "service": config["service"]
-}
-
-certificate = config["certificate"]
+from cpr_handler import compare
 
 
-def cpr_handler(object):
+# Init log
+log = getLogger(__name__)
+
+# List of comparisons to perform.
+COMPARISONS = [
+    (
+        compare.extract_dawa_uuid_from_lora,
+        compare.extract_dawa_uuid_from_sp,
+        compare.update_address
+    ),
+    (
+        compare.extract_details_from_lora,
+        compare.extract_details_from_sp,
+        compare.update_details
+    )
+]
+
+
+def cpr_handler(bruger_data):
     """
-    CPR Handler
+    Handler for comparing CPR and SP data sets.
+    The handler extracts the CPR ID value and retrieves
+    the matching SP data set.
 
-    :param object:
-    :return:
+    The two data sets are compared,
+    using the compare functions from the list above.
+
+    COMPARISON:
+    Each item contains two adapter type functions
+    which will return a specified value/set from both the OIO and SP data set.
+    Lastly a function to generate an update if the value/sets are not equal.
+
+    Example on generated update object:
+
+        (section: relationer, key: adresser)
+
+        {
+            "uuid": "8B0DA89B-B1DE-436D-9500-D96FCA2A5868"
+        }
+
+    For more information on update objects,
+    please see the compare module.
+
+    :param bruger_data:     OIO (Bruger) data set
+
+    :return:                Returns a list of updates.
+                            One data set can have several sections which
     """
 
-    # Lora data
-    bruger_data = object[0]
+    # Map
     uuid = bruger_data["id"]
     cpr_id = extract_cpr_id(bruger_data)
 
     # Info
-    print(
+    log.info(
         "Processing bruger: {0}".format(uuid)
     )
 
     # Service platform data
     sp_data = get_cpr_data(cpr_id)
 
+    # List of updates found
+    list_of_updates = []
 
-    updates = []
-
-    # This will contain objects to update
-    for extract_lora_data, extract_sp_data, create_update in COMPARISON:
+    # Run all the comparisons from the specified list
+    for extract_lora_data, extract_sp_data, create_update in COMPARISONS:
         lora_value = extract_lora_data(bruger_data)
         sp_value = extract_sp_data(sp_data)
 
         if not lora_value == sp_value:
             update = create_update(sp_value)
-            updates.append(update)
+            list_of_updates.append(update)
 
-
-    if not updates:
-        print("Nothing to update")
+    # Confirm in the log
+    # that no updates were found
+    if not list_of_updates:
+        log.info("Nothing to update")
         return
 
-    return updates
+    return list_of_updates
 
 
 def extract_cpr_id(data):
     """
-    Person/CPR specific helper function
-    to extract CPR ID value from OIO REST object.
+    Helper function to extract CPR ID value
+    from the OIO data object.
 
     :param data:    OIO REST data object (Lora)
 
@@ -86,17 +117,35 @@ def extract_cpr_id(data):
     return cpr_id
 
 
-def get_cpr_data(cprnr):
+def get_cpr_data(cpr_id):
+    """
+    Helper function to retrieve SP data set
+    by CPR ID value.
+
+    :param cpr_id:  The 10-digit CPR ID value,
+                    without the "-" seperator.
+
+                    e.g.
+                        121212334 (121212-3344)
+
+    :return:        Returns SP data set
+    """
+
+    config = get_config("sp_cpr")
+
+    uuids = {
+        "service_agreement": config["service_agreement"],
+        "user_system": config["user_system"],
+        "user": config["user"],
+        "service": config["service"]
+    }
+
+    certificate = config["certificate"]
 
     result = get_citizen(
         service_uuids=uuids,
         certificate=certificate,
-        cprnr=cprnr
+        cprnr=cpr_id
     )
 
     return result
-
-
-
-
-
