@@ -1,6 +1,12 @@
-# -*- coding: utf-8 -*-
+# -- coding: utf-8 --
+#
+# Copyright (c) 2017, Magenta ApS
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
 
-import re
 import requests
 from logging import getLogger
 
@@ -13,10 +19,15 @@ log = getLogger(__name__)
 
 def get_request(resource, **params):
     """
-    Parent GET request primarily used by wrapper functions
+    Generic function to build a HTTP GET request.
+
+    A HTTP 200 response is expected,
+    other responses are treated as an error and written to logs.
 
     :param resource:    REST API resource path (e.g. /adresser/<uuid>)
+
     :param uuid:        Address object identifier (Type: uuid)
+
     :param params:      Query parameters, by default 'flad'
                         which provides a flattened object structure
 
@@ -51,29 +62,61 @@ def get_request(resource, **params):
     return response.json()
 
 
-def fuzzy_address_uuid(addr_str):
-    "Get DAWA UUID from string using the 'datavask' API."
+def fuzzy_address_uuid(address_string):
+    """
+    If a conventional search does not yield any results,
+    this function is called to perform a fuzzy address search.
 
-    DAWA_DATAVASK_URL = "https://dawa.aws.dk/datavask/adresser"
+    For more information on the "datavask" resource,
+    please see: http://dawa.aws.dk/dok/adresser#adressevask
 
-    params = {'betegnelse': addr_str}
+    :param address_string:  String describing the full address,
 
-    result = requests.get(url=DAWA_DATAVASK_URL, params=params)
+                            e.g.
+                                "pilestræde 43, 3.sal, 1112 kbh"
 
-    if result:
-        addrs = result.json()['resultater']
-        if len(addrs) == 1:
-            return addrs[0]['adresse']['id']
-        elif len(addrs) > 1:
-            # print("Adresses found:")
-            # print(addrs)
-            raise RuntimeError(
-                'Non-unique (datavask) address: {0}'.format(addr_str)
+    :return:                Returns address object
+                            if found by the given string.
+    """
+
+    # Resource (Datavask)
+    datavask = "datavask/adresser"
+
+    response = get_request(
+        resource=datavask,
+        betegnelse=address_string
+    )
+
+    if not response:
+        log.error("Nothing returned from DAR")
+        return False
+
+    # Extract results list
+    addresses = response["resultater"]
+
+    # If no addresses are returned
+    if not addresses:
+        log.error(
+            "No addresses are matching the search string: {search}".format(
+                search=address_string
             )
-        else:
-            # len(addrs) == 0
-            raise RuntimeError(
-                '(datavask) address not found: {0}'.format(addr_str)
+        )
+        return False
+
+    # If more than 1 address is returned,
+    # we cannot determine the correct address
+    if len(addresses) > 1:
+        # Error log
+        log.error("Several addresses returned for: {search}".format(
+            search=address_string
             )
-    else:
-        return None
+        )
+
+        # Include addresses
+        log.error(addresses)
+        return False
+
+    # Extract identifier (DAWA UUID) from address object
+    identifier = addresses[0]['adresse']['id']
+
+    return identifier
