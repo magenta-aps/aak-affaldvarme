@@ -7,37 +7,56 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
+from logging import getLogger
 from helper import create_virkning
+from interfaces.dawa_interface import get_request
+from interfaces.dawa_interface import fuzzy_address_uuid
 
-from interfaces.dawa_interface import get_request, fuzzy_address_uuid
 
-def create_lora_map(data):
+# Init log
+log = getLogger(__name__)
+
+
+def create_object_map(oio_data):
     """
-    Helper function to create a simple mapped OIO object
+    Helper function to create a simple mapped OIO object.
+    The function splits the data object into its primary sections.
 
-    :param data:
-    :return:
+    OIO data arrives as a list.
+    There should be only 1 "registrering",
+    as such we map only the 1st object of the list.
+
+    :param oio_data:    OIO data object (list)
+
+    :return:            Returns mapped oio object
     """
 
-    # Mapping (Lora data)
-    registreringer = data["registreringer"][0]
+    # Map sections of OIO object
+    registrering = oio_data["registreringer"][0]
 
     return {
-        "attributter": registreringer["attributter"],
-        "relationer": registreringer["relationer"],
-        "tilstande": registreringer["tilstande"]
+        "attributter": registrering["attributter"],
+        "relationer": registrering["relationer"],
+        "tilstande": registrering["tilstande"]
     }
 
 
-def extract_details_from_lora(data):
+def extract_details_from_oio(oio_data):
     """
+    Helper function to extract a set of details ("brugeregenskaber")
+    from the OIO data set.
 
-    :param data:
-    :return:
+    The reason we are not returning the entire set is that only
+    a fraction of the set can be compared with values from SP.
+
+    :param oio_data:    OIO data object (list)
+
+    :return:            Returns dictionary containing
+                        SP verifiable set of values
     """
 
     # Create map
-    map = create_lora_map(data)
+    map = create_object_map(oio_data)
 
     attributter = map["attributter"]
     egenskaber = attributter["brugeregenskaber"][0]
@@ -52,79 +71,178 @@ def extract_details_from_lora(data):
     }
 
 
-def extract_details_from_sp(data):
+def extract_details_from_sp(spa_data):
+    """
+    Helper function to extract a set of person details
+    containing a set of values which can be compared with
+    a selection of OIO data values.
 
+    :param spa_data:    SP data object
 
-    if not data:
-        raise Exception("NO SP DATA")
+    :return:            Returns dictionary containing
+                        a selection of values to compare with OIO.
+    """
 
-    payload = {
-        "ava_fornavn": data.get("fornavn"),
-        "ava_mellemnavn": data.get("mellemnavn"),
-        "ava_efternavn": data.get("efternavn"),
-        "ava_koen": data.get("koen"),
-        "ava_civilstand": data.get("civilstand"),
-        "ava_adressebeskyttelse": data.get("adressebeskyttelse")
+    # Sanity check
+    if not spa_data:
+        raise RuntimeError("No SP data provided")
+
+    return {
+        "ava_fornavn": spa_data.get("fornavn"),
+        "ava_mellemnavn": spa_data.get("mellemnavn"),
+        "ava_efternavn": spa_data.get("efternavn"),
+        "ava_koen": spa_data.get("koen"),
+        "ava_civilstand": spa_data.get("civilstand"),
+        "ava_adressebeskyttelse": spa_data.get("adressebeskyttelse")
     }
-
-    return payload
-
-
 
 
 def update_details(update_value):
+    """
+    Generate an update object with the updated value(s) from SP.
+
+    Example:
+
+    {
+        "section": "attributter",
+        "key": "brugeregenskaber",
+        "update": {
+        "ava_efternavn": "LAST NAME",
+        "ava_fornavn": "FIRST NAME",
+        "ava_koen": "K",
+        "virkning": {  <-- Genererated
+            "from": "2017-12-04 11:09:10.912111+01",
+            "to": "infinity"
+        }
+    }
+
+    :param update_value:    Updated value set (from SP),
+                            the actual updated set
+                            from the example above is:
+
+                            {
+                                "ava_efternavn": "LAST NAME",
+                                "ava_fornavn": "FIRST NAME",
+                                "ava_koen": "K"
+                            }
+
+    :return:                Returns update object
+                            (Object as shown in the top example)
+    """
 
     if not update_value:
         return False
 
-    print(update_value)
+    # Create "virkning"
+    virkning = {
+        "virkning": create_virkning()
+    }
+
+    # Update dictionary with "virkning"
+    update_value.update(virkning)
+
     return {
-        "type": "update",
-        "group": "attributter",
-        "subgroup": "brugeregenskaber",
+        "section": "attributter",
+        "key": "brugeregenskaber",
         "update": update_value
     }
 
 
-def extract_dawa_uuid_from_lora(data):
+def extract_address_uuid_from_oio(oio_data):
+    """
+    Helper function to extract a set of person details
+    containing a set of values which can be compared with
+    a selection of OIO data values.
 
-    # Create map
-    map = create_lora_map(data)
+    :param spa_data:    SP data object
 
-    # Traverse through the map
+    :return:            Returns dictionary containing
+                            a selection of values to compare with OIO.
+    """
+
+    # Map
+    map = create_object_map(oio_data)
     relationer = map["relationer"]
 
-    if not "adresser" in relationer:
-        print("Address does not exist")
+    if "adresser" not in relationer:
+        # Warning should be enough
+        log.warning("Address section does not exists in oio object")
         return
 
+    # List of address objects
+    # NOTE: this may also contain phone numbers/email addresses
     adresser = relationer["adresser"]
 
+    # Fallback
+    address_uuid = None
+
+    # Iterate over the address list
+    # Target object that contains the key "uuid"
+    # (Only residence addresses will contain "uuid")
+    # Other address objects will contain "urn" key
     for item in adresser:
 
-        if not "uuid" in item:
+        if "uuid" not in item:
             continue
 
-        dawa_uuid = item["uuid"]
+        # Set value
+        address_uuid = item["uuid"]
 
-        # There are objects with no address
-        if not dawa_uuid:
-            return False
+    # There are objects
+    # which carry no residence address
+    if not address_uuid:
+        log.warning(
+            "No address reference found in OIO object"
+        )
+        return False
 
-        return dawa_uuid
+    return address_uuid
 
 
+def extract_address_uuid_from_sp(sp_data):
+    """
+    Helper function to extract the address uuid from DAR/DAWA.
 
-def extract_dawa_uuid_from_sp(data):
+    Building a set of query parameters with values such as:
+        - street code
+        - building id/number
+        - floor id
+        - door id
+        - zip code
+        - city
 
-    vejkode = data.get("vejkode")
-    postnummer = data.get("postnummer")
-    husnummer = data.get("husnummer")
-    etage = data.get("etage")
-    sidedoer = data.get("sidedoer")
-    standardadresse = data.get("standardadresse")
-    postdistrikt = data.get("postdistrikt")
+    The provided address data may not contain values for all parameters,
+    for example not every address will contain a floor/door id.
 
+    To accomodate for this, empty parameter keys are filtered/deleted.
+    Additionally, some identifiers have left padding (zerofilled),
+    these are stripped as well.
+
+    If no definitive address is returned,
+    a fuzzy search is performed using the entire address as a string.
+
+    (As defined in the "standardadresse" from the SP data set)
+
+    For more information, please see the dawa_interface module.
+
+    :param sp_data:     SP data object
+
+    :return:            Returns address identifier (Type: uuid)
+
+                        Example:
+                        04448F85-4FEA-430F-A386-C65DE21F8F2F
+    """
+
+    # Map
+    vejkode = sp_data.get("vejkode")
+    postnummer = sp_data.get("postnummer")
+    husnummer = sp_data.get("husnummer")
+    etage = sp_data.get("etage")
+    sidedoer = sp_data.get("sidedoer")
+    standardadresse = sp_data.get("standardadresse")
+    postdistrikt = sp_data.get("postdistrikt")
+
+    # Query parameters
     params = {
         "vejkode": vejkode,
         "husnummer": husnummer,
@@ -134,65 +252,98 @@ def extract_dawa_uuid_from_sp(data):
         "struktur": "mini"
     }
 
-    fields = [
-        "husnummer",
-        "etage",
-        "sidedoer"
-    ]
+    # Filter
+    filtered_params = dict()
 
-    for value in fields:
+    # Remove empty pairs
+    for key, value in params.items():
         if not value:
-            del params[key]
             continue
 
         if value.startswith("0"):
-            params[key] = value.lstrip("0")
+            value = value.lstrip("0")
 
-    address_uuid = None
+        filtered_params.update({key: value})
 
-    address = get_request("adresser", **params)
+    # Build HTTP request
+    address = get_request("adresser", **filtered_params)
 
-    if not address or len(address) > 1:
+    if not address:
+        log.warning(
+            "No address returned from DAR/DAWA"
+        )
+        return False
+
+    # We expect only 1 address returned
+    if len(address) == 1:
+        # Set value
+        address_uuid = address[0]["id"]
+
+    else:
+        # Create search string
         fuzzy_string = "{street}, {zip} {city}".format(
             street=standardadresse,
             zip=postnummer,
             city=postdistrikt
         )
 
+        # Info
+        log.info(
+            "Address not found, performing fuzzy search: {string}".format(
+                string=fuzzy_string
+            )
+        )
+
         address_uuid = fuzzy_address_uuid(fuzzy_string)
 
-    else:
-        address_uuid = address[0]["id"]
+    if not address_uuid:
+        log.warning(
+            "Unable to retrieve definitive DAR/DAWA reference"
+        )
+        # Include params
+        log.debug(filtered_params)
+        return False
 
     return address_uuid
 
 
 def update_address(update_value):
+    """
+    Generate an update object with the updated address reference.
+
+    Example:
+
+    {
+        "section": "relationer",
+        "key": "adresser",
+        "update": {
+            "uuid": "04448F85-4FEA-430F-A386-C65DE21F8F2F"
+        }
+    }
+
+    :param update_value:    Updated address reference (SP/DAR)
+                            the actual updated set
+                            from the example above is:
+
+                            {
+                                "uuid": "04448F85-4FEA-430F-A386-C65DE21F8F2F"
+                            }
+
+    :return:                Returns update object
+                            (Object as shown in the top example)
+    """
 
     if not update_value:
         return False
 
+    virkning = create_virkning()
     print(update_value)
 
     return {
-        "type": "update",
-        "group": "relationer",
-        "subgroup": "adresser",
+        "section": "relationer",
+        "key": "adresser",
         "update": {
-            "uuid": update_value
+            "uuid": update_value,
+            "virkning": virkning
         }
     }
-
-
-COMPARISON = [
-    (
-        extract_dawa_uuid_from_lora,
-        extract_dawa_uuid_from_sp,
-        update_address
-    ),
-    (
-        extract_details_from_lora,
-        extract_details_from_sp,
-        update_details
-    )
-]
