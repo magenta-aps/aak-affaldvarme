@@ -336,14 +336,13 @@ def update_address(update_value):
     if not update_value:
         return False
 
-    virkning = create_virkning()
-    print(update_value)
+    update = {
+        "uuid": update_value,
+        "virkning": create_virkning()
+    }
 
     return {
         "section": "relationer",
         "key": "adresser",
-        "update": {
-            "uuid": update_value,
-            "virkning": virkning
-        }
+        "update": update
     }
