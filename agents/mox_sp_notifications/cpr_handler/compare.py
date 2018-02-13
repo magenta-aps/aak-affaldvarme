@@ -171,30 +171,20 @@ def extract_address_uuid_from_oio(oio_data):
 
     # List of address objects
     # NOTE: this may also contain phone numbers/email addresses
-    adresser = relationer["adresser"]
+    address_list = relationer["adresser"]
 
-    # Fallback
-    address_uuid = None
-
-    # Iterate over the address list
     # Target object that contains the key "uuid"
-    # (Only residence addresses will contain "uuid")
-    # Other address objects will contain "urn" key
-    for item in adresser:
+    addresses = [adr for adr in address_list if "uuid" in adr]
 
-        if "uuid" not in item:
-            continue
-
-        # Set value
-        address_uuid = item["uuid"]
-
-    # There are objects
-    # which carry no residence address
-    if not address_uuid:
+    if not addresses:
         log.warning(
             "No address reference found in OIO object"
         )
         return False
+
+    # Get value
+    address = addresses[0]
+    address_uuid = address["uuid"]
 
     return address_uuid
 
@@ -302,7 +292,6 @@ def extract_address_uuid_from_sp(sp_data):
         )
         # Include params
         log.debug(filtered_params)
-        return False
 
     return address_uuid
 
