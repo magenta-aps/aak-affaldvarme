@@ -99,12 +99,9 @@ def get_forbrugssted_address_uuid(row):
         "vejkode": vejkode,
         "postnr": postnr
     }
-    if etage:
-        address["etage"] = etage
-    if doer:
-        address["dør"] = doer.strip('-')
-    if husnummer:
-        address["husnr"] = husnummer
+    address["etage"] = etage or ''
+    address["dør"] = doer.strip('-') or ''
+    address["husnr"] = husnummer.upper() or ''
 
     try:
         address_uuid = get_address_uuid(address)
@@ -152,14 +149,11 @@ def get_alternativsted_address_uuid(alternativsted_id):
         "postnr": postnr,
         "vejnavn": vejnavn
     }
-    if etage:
-        address["etage"] = etage
-    if doer:
-        address["dør"] = doer
-    if husnummer:
-        address["husnr"] = husnummer
+    address["etage"] = etage or ''
+    address["dør"] = doer or ''
+    address["husnr"] = husnummer.upper() or ''
     if bogstav:
-        address["bogstav"] = bogstav
+        address["husnr"] += bogstav.strip().upper()
 
     try:
         address_uuid = access_address_uuid(address)

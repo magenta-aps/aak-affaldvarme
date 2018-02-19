@@ -33,10 +33,18 @@ def get_address_from_service(dawa_service, address):
     """Get DAWA UUID from dictionary with correct fields."""
     address['struktur'] = 'mini'
 
-    response = requests.get(
-        url=dawa_service,
-        params=address
-    )
+    if len(address) <= 2:
+        raise RuntimeError("Insufficient data")
+
+    try:
+        response = requests.get(
+            url=dawa_service,
+            params=address
+        )
+    except MemoryError:
+        print("MemoryError with address = ", address)
+        print("Bug in requests module?")
+        return
 
     if response.status_code == 429:
         # Sleep and retry
@@ -48,10 +56,13 @@ def get_address_from_service(dawa_service, address):
     try:
         js = response.json()
     except json.decoder.JSONDecodeError:
-        print("Problem looking up address", response.text)
+        print("Problem looking up address:", str(address),
+              response.text)
         if response.status_code == 429:
             print("Blocked by DAWA!")
-        response.raise_for_status()
+            response.raise_for_status()
+        else:
+            raise RuntimeError("Internal Server Error from Dawa")
 
     if len(js) == 1:
         address_uuid = js[0]['id']

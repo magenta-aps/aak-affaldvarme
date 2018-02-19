@@ -149,18 +149,24 @@ def lookup_address_from_sp_data(sp_dict, id_number, customer_number=None):
         address["vejkode"] = sp_dict["vejkode"]
     if "postnummer" in sp_dict:
         address["postnr"] = sp_dict["postnummer"]
-
-    if "etage" in sp_dict:
-        address["etage"] = sp_dict["etage"].lstrip('0')
-    if "sidedoer" in sp_dict:
-        address["dør"] = sp_dict["sidedoer"].lstrip('0')
-    if "husnummer" in sp_dict:
-        address["husnr"] = sp_dict["husnummer"]
+    address["husnr"] = sp_dict.get("husnummer", "").upper()
+    address["etage"] = sp_dict.get("etage", "").lstrip('0')
+    address["dør"] = sp_dict.get("sidedoer", "").lstrip('0')
 
     try:
         address_uuid = get_address_uuid(address)
-    except RuntimeError as e:
+    except RuntimeError as e1:
         # First, determine customer type and include street name, if any.
+        e = e1
+        try:
+            if "sidedoer" in sp_dict:
+                address["dør"] = "0" + address["dør"]
+                address_uuid = get_address_uuid(address)
+                if address_uuid:
+                    return address_uuid
+        except RuntimeError as e2:
+            e = e2
+
         if is_cvr(id_number):
             customer_type = "CVR"
         else:
