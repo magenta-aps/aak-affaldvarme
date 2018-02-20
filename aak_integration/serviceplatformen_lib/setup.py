@@ -30,5 +30,6 @@ setup(
         "requests==2.18.4",
         "urllib3==1.22",
         "xmltodict==0.11.0",
+        "zeep==2.4.0"
     ]
 )
