@@ -209,6 +209,9 @@ def ava_organisation(entity):
         if "urn:mobile" in item["urn"]:
             kmd_ee["mobile"] = item["urn"].split(":")[-1]
 
+        if "urn:email" in item["urn"]:
+            kmd_ee["email"] = item["urn"].split(":")[-1]
+
     # Fetch CVR ID from field
     cvr_id = relationer.get("virksomhed")[0]["urn"].split(":")
     ava_cvr_id = cvr_id[-1]
