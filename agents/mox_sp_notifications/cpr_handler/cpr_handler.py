@@ -9,7 +9,7 @@
 
 from logging import getLogger
 from helper import get_config
-from udvidet_person_stamdata import get_citizen
+from service_person_stamdata_udvidet import get_citizen
 from cpr_handler import compare
 
 

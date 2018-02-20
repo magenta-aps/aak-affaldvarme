@@ -11,7 +11,7 @@ import json
 from helper import get_config
 from logging import getLogger
 from cvr_handler import compare
-from serviceplatformen_cvr import get_cvr_data
+from service_cvr_online import get_cvr_data
 
 
 # Init logging

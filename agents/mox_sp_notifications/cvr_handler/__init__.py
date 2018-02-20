@@ -7,4 +7,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-from cvr_handler.cvr_handler import cvr_handler
+from .cvr_handler import cvr_handler

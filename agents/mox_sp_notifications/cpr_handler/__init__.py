@@ -7,4 +7,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-from cpr_handler.cpr_handler import cpr_handler
+from .cpr_handler import cpr_handler
