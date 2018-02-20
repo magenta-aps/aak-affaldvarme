@@ -9,9 +9,9 @@
 
 import os
 import xmltodict
-from udvidet_person_stamdata.helpers import http_post
-from udvidet_person_stamdata.helpers import validate_cprnr
-from udvidet_person_stamdata.helpers import construct_envelope_SF1520
+from .helpers import http_post
+from .helpers import validate_cprnr
+from .helpers import construct_envelope_SF1520
 
 
 __author__ = "Heini Leander Ovason"
