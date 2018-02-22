@@ -13,6 +13,7 @@ Welcome to the AVA LoRa documentation
    :caption: Contents:
 
    mox_kmd_ee/index.rst
+   mox_sp_notifications/index.rst
    news.rst
 
 Indices and tables

@@ -41,9 +41,12 @@ Please note that we are using a specialised handler for each data set from the S
 Installation
 ------------
 Requirements:
-    Python 3.5.4+
-    Virtual environment
 
+* Python 3.5.4+
+* Virtual environment
+
+
+Install:
 
 1) Navigate to application directory: ::
 
