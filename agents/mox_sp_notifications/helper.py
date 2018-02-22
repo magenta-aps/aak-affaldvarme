@@ -7,7 +7,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
+import os
 import logging
+from pathlib import Path
 from datetime import datetime
 from configparser import ConfigParser
 
@@ -30,7 +32,7 @@ def get_config(section="DEFAULT"):
 
     # Location of config file
     # With a local 'config.ini' fallback location
-    config_file = "config.ini"
+    config_file = set_config_file_path()
 
     # Read "config.ini"
     read_config = config.read(config_file)
@@ -46,6 +48,48 @@ def get_config(section="DEFAULT"):
         raise RuntimeError(error)
 
     return config[section]
+
+
+def set_config_file_path():
+    """
+    Retrieve config file from the various locations,
+    in the following order:
+
+    * Environment variable: AVA_MOX_CONFIG
+    * Global config path:   /etc/mox/ava.conf
+    * Local config path:    config.ini
+
+    :return:                Returns file location (Type: string)
+    """
+
+    # Global config path
+    global_config = None
+
+    # Set local fallback path
+    local_config = "config.ini"
+
+    # Get config path from ENV
+    config_env = os.environ.get("AVA_MOX_CONFIG")
+
+    if config_env:
+        config_env_path = Path(config_env)
+
+    # Global config path
+    config_etc_path = Path("/etc/mox/ava.conf")
+
+    if config_env_path.is_file():
+        global_config = config_env_path
+
+    elif config_etc_path.is_file():
+        global_config = config_etc_path
+
+    # Global config takes presendence
+    if global_config:
+        config_file = global_config
+    else:
+        config_file = local_config
+
+    return config_file
 
 
 def create_virkning():
@@ -107,3 +151,8 @@ def start_logging(loglevel=10, logfile="debug.log"):
 
     # Return logger
     return logger
+
+
+if __name__ == "__main__":
+    config = set_config_file_path()
+    print(config)
