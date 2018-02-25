@@ -74,14 +74,14 @@ def set_config_file_path():
     if config_env:
         config_env_path = Path(config_env)
 
-    # Global config path
-    config_etc_path = Path("/etc/mox/ava.conf")
+        # Global config path
+        config_etc_path = Path("/etc/mox/ava.conf")
 
-    if config_env_path.is_file():
-        global_config = config_env_path
+        if config_env_path.is_file():
+            global_config = config_env_path
 
-    elif config_etc_path.is_file():
-        global_config = config_etc_path
+        elif config_etc_path.is_file():
+            global_config = config_etc_path
 
     # Global config takes presendence
     if global_config:
