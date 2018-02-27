@@ -33,6 +33,7 @@ from ee_utils import get_alternativsted_address_uuid, say
 from ee_data import read_customer_records, store_customer_records
 from ee_data import retrieve_customer_records, read_installation_records
 from ee_data import store_installation_records, retrieve_installation_records
+from ee_data import has_customer_records
 
 from service_clients import report_error, fuzzy_address_uuid
 
@@ -365,11 +366,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--verbose', action='store_true',
                         help='print helpful comments during execution')
-    parser.add_argument('--initial-import', action='store_true',
-                        help='only perform inital import')
     args = parser.parse_args()
     ee_utils.VERBOSE = args.verbose
-    initial_import = args.initial_import
+
+    # Decide if this is the initial import.
+    initial_import = not has_customer_records()
+    say("Initial import: {}".format("YES" if initial_import else "NO"))
 
     """CUSTOMERS AND CUSTOMER RELATIONS"""
     connection = connect(server, database, username, password)

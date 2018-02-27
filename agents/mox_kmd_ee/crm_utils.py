@@ -473,9 +473,11 @@ def update_customer_relation(fields, new_values):
                     mobile=new_fields['MobilTlf'],
                 )
             if not customer_uuid:
-                report_error("Unable to lookup or create customer {}".format(
-                    field
-                ))
+                report_error(
+                    "Unable to lookup or create customer {} ({})".format(
+                        customer_number, field
+                    )
+                )
                 return
             create_customer_role(customer_uuid, cr_uuid, KUNDE)
 
