@@ -1,0 +1,88 @@
+{
+  "id": "8a7de9dc-8bb4-4d83-b4bd-c8d5aa3c88de",
+  "registreringer": [
+    {
+      "attributter": {
+        "organisationfunktionegenskaber": [
+          {
+            "brugervendtnoegle": "915240004",
+            "funktionsnavn": "Kunde",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ]
+      },
+      "brugerref": "42c432e8-9c4a-11e6-9f62-873cf34a735f",
+      "fratidspunkt": {
+        "graenseindikator": true,
+        "tidsstempeldatotid": "2017-12-04 11:31:38.720595+01"
+      },
+      "livscykluskode": "Opstaaet",
+      "relationer": {
+        "organisatoriskfunktionstype": [
+          {
+            "urn": "urn:915240004",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ],
+        "tilknyttedebrugere": [
+          {
+            "uuid": "13b8c51d-29dc-4205-982c-5082396b6660",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ],
+        "tilknyttedeinteressefaellesskaber": [
+          {
+            "uuid": "9c8f3feb-bbd6-4e83-a7d3-a79517258993",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ]
+      },
+      "tilstande": {
+        "organisationfunktiongyldighed": [
+          {
+            "gyldighed": "Aktiv",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ]
+      },
+      "tiltidspunkt": {
+        "tidsstempeldatotid": "infinity"
+      }
+    }
+  ]
+}

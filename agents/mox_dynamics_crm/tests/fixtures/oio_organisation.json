@@ -1,0 +1,140 @@
+{
+  "id": "9EC08DC9-8028-4030-9861-CDB2973A4372",
+  "registreringer": [
+    {
+      "attributter": {
+        "organisationegenskaber": [
+          {
+            "ava_masterid": "1122",
+            "virkning": {
+              "to": "infinity",
+              "from_included": true,
+              "from": "2018-02-06 00:00:00+01",
+              "to_included": false
+            },
+            "organisationsnavn": "DeathStar - It's NOT a moon",
+            "brugervendtnoegle": "112233"
+          }
+        ]
+      },
+      "relationer": {
+        "virksomhedstype": [
+          {
+            "virkning": {
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:11:14.69961+01",
+              "to_included": false,
+              "to": "infinity",
+              "from_included": true,
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c"
+            },
+            "urn": "urn:110"
+          }
+        ],
+        "branche": [
+          {
+            "virkning": {
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:11:14.69961+01",
+              "to_included": false,
+              "to": "infinity",
+              "from_included": true,
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c"
+            },
+            "urn": "urn:682010"
+          }
+        ],
+        "adresser": [
+          {
+            "virkning": {
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:11:14.69961+01",
+              "to_included": false,
+              "to": "infinity",
+              "from_included": true,
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c"
+            },
+            "uuid": "A83604B4-C363-4B9A-9F02-CCC16F93639D"
+          },
+          {
+            "urn": "urn:tel:11223344",
+            "virkning": {
+              "from": "2018-02-13 00:00:00+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          },
+          {
+            "urn": "urn:mobile:11223344",
+            "virkning": {
+              "from": "2018-02-13 00:00:00+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          },
+          {
+            "urn": "urn:email:email@example.com",
+            "virkning": {
+              "from": "2018-02-13 00:00:00+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ],
+        "tilhoerer": [
+          {
+            "virkning": {
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:11:14.69961+01",
+              "to_included": false,
+              "to": "infinity",
+              "from_included": true,
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c"
+            },
+            "uuid": "842092f6-7147-4349-bf8c-626757a28771"
+          }
+        ],
+        "virksomhed": [
+          {
+            "virkning": {
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:11:14.69961+01",
+              "to_included": false,
+              "to": "infinity",
+              "from_included": true,
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c"
+            },
+            "urn": "urn:11223344"
+          }
+        ]
+      },
+      "brugerref": "42c432e8-9c4a-11e6-9f62-873cf34a735f",
+      "tiltidspunkt": {
+        "tidsstempeldatotid": "infinity"
+      },
+      "livscykluskode": "Rettet",
+      "fratidspunkt": {
+        "graenseindikator": true,
+        "tidsstempeldatotid": "2018-02-06T02:02:37.61208+01:00"
+      },
+      "tilstande": {
+        "organisationgyldighed": [
+          {
+            "virkning": {
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:11:14.69961+01",
+              "to_included": false,
+              "to": "infinity",
+              "from_included": true,
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c"
+            },
+            "gyldighed": "Aktiv"
+          }
+        ]
+      }
+    }
+  ]
+}
