@@ -1,0 +1,99 @@
+{
+  "id": "43214E3A-EF6D-4478-9466-B7B3B722817D",
+  "registreringer": [
+    {
+      "attributter": {
+        "brugeregenskaber": [
+          {
+            "ava_adressebeskyttelse": "false",
+            "ava_civilstand": "G",
+            "ava_efternavn": "Last",
+            "ava_fornavn": "First",
+            "ava_koen": "K",
+            "ava_masterid": "112233",
+            "brugernavn": "First Last",
+            "brugervendtnoegle": "11220",
+            "virkning": {
+              "from": "2018-02-13 00:00:00+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ]
+      },
+      "brugerref": "43214E3A-EF6D-4478-9466-B7B3B722817D",
+      "fratidspunkt": {
+        "graenseindikator": true,
+        "tidsstempeldatotid": "2018-02-13 09:46:34.665967+01"
+      },
+      "livscykluskode": "Rettet",
+      "relationer": {
+        "adresser": [
+          {
+            "uuid": "09DF29D5-ED30-4710-BA7C-25A38DFD636B",
+            "virkning": {
+              "from": "2018-02-13 00:00:00+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          },
+          {
+            "urn": "urn:phone:11223344",
+            "virkning": {
+              "from": "2018-02-13 00:00:00+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ],
+        "tilhoerer": [
+          {
+            "uuid": "43214E3A-EF6D-4478-9466-B7B3B722817D",
+            "virkning": {
+              "aktoerref": "43214E3A-EF6D-4478-9466-B7B3B722817D",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:09:10.912111+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ],
+        "tilknyttedepersoner": [
+          {
+            "urn": "urn:0102034567",
+            "virkning": {
+              "aktoerref": "43214E3A-EF6D-4478-9466-B7B3B722817D",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:09:10.912111+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ]
+      },
+      "tilstande": {
+        "brugergyldighed": [
+          {
+            "gyldighed": "Aktiv",
+            "virkning": {
+              "aktoerref": "43214E3A-EF6D-4478-9466-B7B3B722817D",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:09:10.912111+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ]
+      },
+      "tiltidspunkt": {
+        "tidsstempeldatotid": "infinity"
+      }
+    }
+  ]
+}
