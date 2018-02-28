@@ -1,0 +1,76 @@
+{
+  "id": "4a2d223a-e4dd-471f-ba5c-a29c96753059",
+  "registreringer": [
+    {
+      "attributter": {
+        "interessefaellesskabegenskaber": [
+          {
+            "brugervendtnoegle": "123456",
+            "interessefaellesskabsnavn": "Varme, Testgade 99, 9999 Testby",
+            "interessefaellesskabstype": "Varme",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ]
+      },
+      "brugerref": "42c432e8-9c4a-11e6-9f62-873cf34a735f",
+      "fratidspunkt": {
+        "graenseindikator": true,
+        "tidsstempeldatotid": "2017-12-04 11:29:51.468197+01"
+      },
+      "livscykluskode": "Opstaaet",
+      "relationer": {
+        "adresser": [
+          {
+            "uuid": "befdd8a8-2fc6-45f4-86be-10d75fca204b",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ],
+        "tilhoerer": [
+          {
+            "uuid": "842092f6-7147-4349-bf8c-626757a28771",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ]
+      },
+      "tilstande": {
+        "interessefaellesskabgyldighed": [
+          {
+            "gyldighed": "Aktiv",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ]
+      },
+      "tiltidspunkt": {
+        "tidsstempeldatotid": "infinity"
+      }
+    }
+  ]
+}

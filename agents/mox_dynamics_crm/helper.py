@@ -58,17 +58,3 @@ def generate_password(length: int):
         password += random.choice(chars)
 
     return password
-
-
-def generate_config(section, **params):
-    """
-    Create configuration file
-    """
-
-    config[section] = params
-
-    # Write config to file
-    with open('config.ini', 'w') as file:
-        config.write(file)
-
-    print("Creating config.ini")

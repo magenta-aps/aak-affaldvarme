@@ -230,6 +230,7 @@ def post_request(resource, payload):
 
         # Generate a new token
         log.info("Generating a new token")
+        request_token()
 
         # Sleep 10 seconds
         time.sleep(10)
@@ -290,6 +291,7 @@ def patch_request(resource, payload):
 
         # Generate a new token
         log.info("Generating a new token")
+        request_token()
 
         # Sleep 10 seconds
         time.sleep(10)

@@ -12,6 +12,7 @@ import import_client
 import export_client
 import cache_interface as cache
 import crm_interface as crm
+import installer
 from helper import get_config
 from logger import start_logging
 
@@ -42,6 +43,33 @@ def cli():
     See 'help' for available options
     """
     pass
+
+
+@cli.command(name="configure")
+@click.option(
+    "--setup/--no-setup",
+    default=False,
+    help="Automatically setup cache layer"
+)
+def configure(setup):
+    """
+    Auto configure agent
+    (Create config file)
+
+    If the --setup flag is passed,
+    setup will be run, to install the cache layer
+    """
+
+    # Message user
+    click.echo("Configure client")
+
+    # Auto configure
+    installer.auto_configure()
+
+    if setup:
+        installer.auto_setup_cache()
+
+    click.echo("Client configured")
 
 
 @cli.command(name="import")

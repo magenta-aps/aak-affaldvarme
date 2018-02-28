@@ -30,7 +30,10 @@ def connect():
     """
 
     # Get configuration
-    config = get_config("cache_layer")
+    # config = get_config("cache_layer")
+
+    # Changed for compatibility
+    config = get_config("rethinkdb")
 
     if not config:
         raise Exception("Unable to connect")
