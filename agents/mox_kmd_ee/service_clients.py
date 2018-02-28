@@ -8,6 +8,7 @@
 #
 
 import json
+import time
 import datetime
 import functools
 
@@ -24,27 +25,52 @@ except ImportError:
 from settings import SP_UUIDS, CERTIFICATE_FILE, ERROR_MQ_QUEUE, ERROR_MQ_HOST
 
 
-DAWA_ADDRESS_URL = 'https://dawa.aws.dk/adresser'
-DAWA_ACCESS_URL = 'https://dawa.aws.dk/adgangsadresser'
+DAWA_ADDRESS_URL = 'http://dawa.aws.dk/adresser'
+DAWA_ACCESS_URL = 'http://dawa.aws.dk/adgangsadresser'
 
 
 def get_address_from_service(dawa_service, address):
     """Get DAWA UUID from dictionary with correct fields."""
     address['struktur'] = 'mini'
 
-    response = requests.get(
-        url=dawa_service,
-        params=address
-    )
-    js = response.json()
+    if len(address) <= 2:
+        raise RuntimeError("Insufficient data")
+
+    try:
+        response = requests.get(
+            url=dawa_service,
+            params=address
+        )
+    except MemoryError:
+        print("MemoryError with address = ", address)
+        print("Bug in requests module?")
+        return
+
+    if response.status_code == 429:
+        # Sleep and retry
+        time.sleep(1)
+        response = requests.get(
+            url=dawa_service,
+            params=address
+        )
+    try:
+        js = response.json()
+    except json.decoder.JSONDecodeError:
+        print("Problem looking up address:", str(address),
+              response.text)
+        if response.status_code == 429:
+            print("Blocked by DAWA!")
+            response.raise_for_status()
+        else:
+            raise RuntimeError("Internal Server Error from Dawa")
 
     if len(js) == 1:
         address_uuid = js[0]['id']
     elif len(js) > 1:
-        raise RuntimeError('Non-unique address: {0}'.format(address))
+        raise RuntimeError('Non-unique address')
     else:
         # len(js) == 0
-        raise RuntimeError('Address not found: {0}'.format(address))
+        raise RuntimeError('Address not found')
     return address_uuid
 
 
@@ -78,7 +104,8 @@ def fuzzy_address_uuid(addr_str):
                 '(datavask) address not found: {0}'.format(addr_str)
             )
     else:
-        raise RuntimeError("Unable to look up address: {0}".format(addr_str))
+        result.raise_for_status()
+        # raise RuntimeError("Unable to look up address: {0}".format(addr_str))
 
 
 def get_cvr_data(cvr_number):

@@ -5,6 +5,18 @@ from ee_sql import TREFINSTALLATION_SQL
 from ee_sql import ALTERNATIVSTED_ADRESSE_SQL
 from service_clients import get_address_uuid, fuzzy_address_uuid
 from service_clients import report_error, access_address_uuid
+
+
+VERBOSE = False
+
+
+def say(*args):
+    """Local utility to give output in verbose mode."""
+    global VERBOSE
+
+    if VERBOSE:
+        print(*args)
+
 # CPR/CVR helper function
 
 
@@ -87,12 +99,9 @@ def get_forbrugssted_address_uuid(row):
         "vejkode": vejkode,
         "postnr": postnr
     }
-    if etage:
-        address["etage"] = etage
-    if doer:
-        address["dør"] = doer.strip('-')
-    if husnummer:
-        address["husnr"] = husnummer
+    address["etage"] = etage or ''
+    address["dør"] = doer.strip('-') or ''
+    address["husnr"] = husnummer.upper() or ''
 
     try:
         address_uuid = get_address_uuid(address)
@@ -100,11 +109,6 @@ def get_forbrugssted_address_uuid(row):
         try:
             address_uuid = fuzzy_address_uuid(address_string)
         except Exception as e:
-            id_number = row['PersonnrSEnr']
-            err_str = "Forbrugsadresse fejler for kunde {0}: {1}".format(
-                id_number, address_string
-            )
-            report_error(err_str, error_stack=None, error_object=address)
             address_uuid = None
     return (address_string, address_uuid)
 
@@ -145,14 +149,11 @@ def get_alternativsted_address_uuid(alternativsted_id):
         "postnr": postnr,
         "vejnavn": vejnavn
     }
-    if etage:
-        address["etage"] = etage
-    if doer:
-        address["dør"] = doer
-    if husnummer:
-        address["husnr"] = husnummer
+    address["etage"] = etage or ''
+    address["dør"] = doer or ''
+    address["husnr"] = husnummer.upper() or ''
     if bogstav:
-        address["bogstav"] = bogstav
+        address["husnr"] += bogstav.strip().upper()
 
     try:
         address_uuid = access_address_uuid(address)

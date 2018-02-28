@@ -12,6 +12,8 @@ import pytz
 
 from collections import defaultdict
 
+from settings import AVA_ORGANISATION
+
 try:
     from serviceplatformen_cpr import get_cpr_data
 except (TypeError, ImportError):
@@ -28,8 +30,9 @@ from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_oio import Relation, KUNDE, LIGESTILLINGSKUNDE
 from ee_oio import write_object, write_object_dict
-from ee_utils import is_cvr, is_cpr, int_str, cpr_cvr
+from ee_utils import is_cvr, is_cpr, int_str, cpr_cvr, say
 from ee_utils import get_forbrugssted_address_uuid
+from ee_utils import get_alternativsted_address_uuid
 from service_clients import report_error, get_cvr_data, get_address_uuid
 from service_clients import fuzzy_address_uuid
 
@@ -138,7 +141,7 @@ def add_product_to_agreement(product_uuid, agreement_uuid):
 
 
 # Address lookup
-def lookup_address_from_sp_data(sp_dict, id_number):
+def lookup_address_from_sp_data(sp_dict, id_number, customer_number=None):
     """Lookup DAWA address from data returned by SP."""
     address = {}
 
@@ -146,21 +149,40 @@ def lookup_address_from_sp_data(sp_dict, id_number):
         address["vejkode"] = sp_dict["vejkode"]
     if "postnummer" in sp_dict:
         address["postnr"] = sp_dict["postnummer"]
-
-    if "etage" in sp_dict:
-        address["etage"] = sp_dict["etage"].lstrip('0')
-    if "sidedoer" in sp_dict:
-        address["dør"] = sp_dict["sidedoer"].lstrip('0')
-    if "husnummer" in sp_dict:
-        address["husnr"] = sp_dict["husnummer"]
+    address["husnr"] = sp_dict.get("husnummer", "").upper()
+    address["etage"] = sp_dict.get("etage", "").lstrip('0')
+    address["dør"] = sp_dict.get("sidedoer", "").lstrip('0')
 
     try:
         address_uuid = get_address_uuid(address)
-    except Exception as e:
+    except RuntimeError as e1:
+        # First, determine customer type and include street name, if any.
+        e = e1
+        try:
+            if "sidedoer" in sp_dict:
+                address["dør"] = "0" + address["dør"]
+                address_uuid = get_address_uuid(address)
+                if address_uuid:
+                    return address_uuid
+        except RuntimeError as e2:
+            e = e2
+
+        if is_cvr(id_number):
+            customer_type = "CVR"
+        else:
+            customer_type = "CPR"
+        if "vejnavn" in sp_dict:
+            address["vejnavn"] = sp_dict["vejnavn"]
+
         report_error(
-            "Unable to lookup address for {0}: {1}".format(
-                id_number, str(address)
-            ), error_stack=None
+            "Unable to lookup address for {} from SP data ({}): {}".format(
+                customer_number, customer_type,
+                "{} - {}".format(
+                    str(e), ', '.join(
+                        ['{}: {}'.format(k, v) for k, v in address.items()]
+                    )
+                )
+            )
         )
         address_uuid = None
 
@@ -169,10 +191,9 @@ def lookup_address_from_sp_data(sp_dict, id_number):
 
 # Create functions
 def create_customer(id_number, key, name, master_id, phone="", email="",
-                    mobile="", fax="", note=""):
+                    mobile="", fax="", note="", customer_number=""):
     """Create customer from data extracted from KMD EE."""
     if is_cvr(id_number):
-
         # Collect info from SP and include in call creating user.
         try:
             company_dir = get_cvr_data(id_number)
@@ -181,63 +202,41 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
             try:
                 company_dir = get_cvr_data(id_number)
             except Exception as e:
-                report_error(
-                    "CVR number {0} not found: {1}".format(id_number, str(e))
-                )
+                say("CVR number {0} not found: {1}".format(id_number, str(e)))
                 return None
 
         name = company_dir['organisationsnavn']
         address_uuid = company_dir['dawa_uuid']
         if not address_uuid:
-            address_uuid = lookup_address_from_sp_data(company_dir, id_number)
+            address_uuid = lookup_address_from_sp_data(
+                company_dir, id_number, customer_number
+            )
         company_type = company_dir['virksomhedsform']
         industry_code = company_dir['branchekode']
-        address_string = "{0} {1}, {2}".format(
-            company_dir.get('vejnavn'), company_dir.get('husnummer'),
-            company_dir.get('postnummer')
-        )
 
         result = create_organisation(
             id_number, key, name, master_id, phone, email, mobile, fax,
             address_uuid, company_type, industry_code, note
         )
     elif is_cpr(id_number):
-        # This is a CPR number
-
         # Collect info from SP and include in call creating user.
-        # Avoid getting throttled by SP
         try:
             person_dir = get_cpr_data(id_number)
         except Exception as e:
-            error_message = "SP CPR Lookup failed, ID: {0}".format(id_number)
-
             # Retry *once*
             try:
                 person_dir = get_cpr_data(id_number)
             except Exception as e:
-                # Hotfix:
-                print("CPR lookup failed after retrying:", id_number, name)
-                # Certain CPR ID's are actually P-Numbers
-                # These must be manually processed
-                report_error(
-                    error_message=error_message,
-                    error_object=id_number
-                )
+                say("CPR lookup failed after retrying:", id_number, name)
                 return None
 
         first_name = person_dir['fornavn']
         middle_name = person_dir.get('mellemnavn', '')
         last_name = person_dir['efternavn']
 
-        address_uuid = lookup_address_from_sp_data(person_dir, id_number)
-        # Cache address for customer relation
-        address_string = "{0}".format(
-            person_dir.get('standardadresse', '')
+        address_uuid = lookup_address_from_sp_data(
+            person_dir, id_number, customer_number
         )
-
-        # Hotfix:
-        if 'postnummer' in person_dir:
-            address_string += ", {0}".format(person_dir['postnummer'])
 
         gender = person_dir['koen']
         marital_status = person_dir['civilstand']
@@ -249,9 +248,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
             marital_status, address_protection, note
         )
     else:
-        report_error("Forkert CPR/SE-nr for {0}: {1}".format(
-            name, id_number)
-        )
+        say("Forkert CPR/SE-nr for {0}: {1}".format(name, id_number))
         # Invalid customer
         return None
 
@@ -309,13 +306,12 @@ def create_product(name, identification, installation_type, meter_number,
 def update_product(uuid, fields, new_values):
     """Update product with new information."""
     name_fields = {'Målernr', 'Målertypefabrikat', 'MaalerTypeBetegnel'}
-    alt_place = 'AlternativStedID'
 
     properties = {}
     relations = defaultdict(list)
     all_fields = {**fields, **new_values}
-
-    if name_fields & new_values.keys:
+    alt_place = 'AlternativStedID'
+    if name_fields & new_values.keys():
         properties['eksempel'] = all_fields['Målernr']
         properties['beskrivelse'] = all_fields['MaalerTypeBetegnel']
         properties['name'] = '{0}, {1} {2}'.format(
@@ -324,7 +320,7 @@ def update_product(uuid, fields, new_values):
         )
 
     if alt_place in new_values:
-        new_id = new_values[alt_place] if new_values[alt_place] != '0' else ''
+        new_id = get_alternativsted_address_uuid(new_values[alt_place]) or ''
         relations['ava_opstillingsadresse'].append(Relation('uuid', new_id))
 
     write_object(uuid, properties, relations, "klassifikation", "klasse")
@@ -409,15 +405,24 @@ def update_customer_relation(fields, new_values):
         # while.
 
         properties = {}
-        relations = {}
-        old_addresses = customer_relation['relationer'].get('adresser', [])
+
+        relations = dict(tilhoerer=[Relation("uuid", AVA_ORGANISATION)])
+
+        try:
+            old_addresses = customer_relation['relationer'].get('adresser', [])
+        except KeyError:
+            print("Customer with no owner found? {}".format(customer_number))
+            old_addresses = []
         assert(len(old_addresses) <= 1)
         old_address_uuid = old_addresses[0] if old_addresses else None
         # Recalculate address & set correct address link.
         (new_address,
          new_address_uuid) = get_forbrugssted_address_uuid(new_fields)
         if not new_address_uuid:
-            report_error(new_address)
+            report_error(
+                "Can't find new Forbrugssted address: {}, customer {}".format(
+                    new_address, customer_number)
+            )
 
         if new_address_uuid and new_address_uuid != old_address_uuid:
             relations['adresser'] = [Relation("uuid", new_address_uuid)]
@@ -468,9 +473,11 @@ def update_customer_relation(fields, new_values):
                     mobile=new_fields['MobilTlf'],
                 )
             if not customer_uuid:
-                report_error("Unable to lookup or create customer {}".format(
-                    field
-                ))
+                report_error(
+                    "Unable to lookup or create customer {} ({})".format(
+                        customer_number, field
+                    )
+                )
                 return
             create_customer_role(customer_uuid, cr_uuid, KUNDE)
 
@@ -493,7 +500,7 @@ def update_agreement(fields, new_values):
     if len(agreements) > 0:
         agreement_uuid = agreements[0]
     else:
-        print("Agreement not found for customer:", customer_number)
+        report_error("Agreement not found for customer:", customer_number)
         return
 
     properties = {}

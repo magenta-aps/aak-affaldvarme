@@ -254,7 +254,7 @@ def create_organisation(cvr_number, key, name, master_id, phone="", email="",
     if phone:
         adresser.append(Relation("urn", "urn:tel:{0}".format(phone)))
     if mobile:
-        adresser.append(Relation("urn", "urn:mobile:{0}".format(phone)))
+        adresser.append(Relation("urn", "urn:mobile:{0}".format(mobile)))
     if email:
         adresser.append(Relation("urn", "urn:email:{0}".format(email)))
     if address_uuid:

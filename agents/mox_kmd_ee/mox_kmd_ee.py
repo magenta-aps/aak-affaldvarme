@@ -11,8 +11,9 @@ import sys
 
 from multiprocessing.dummy import Pool
 
+import ee_utils
 from mssql_config import username, password, server, database
-from ee_utils import connect, int_str, cpr_cvr
+from ee_utils import connect, int_str, cpr_cvr, is_cpr
 from ee_oio import KUNDE, LIGESTILLINGSKUNDE
 from crm_utils import lookup_customer_relation, lookup_customer_roles, VARME
 from crm_utils import lookup_customer, lookup_agreements, lookup_product
@@ -27,28 +28,28 @@ from crm_utils import update_customer_relation, write_agreement_dict
 
 from ee_utils import get_forbrugssted_address_uuid
 from ee_utils import get_products_for_location
-from ee_utils import get_alternativsted_address_uuid
+from ee_utils import get_alternativsted_address_uuid, say
 
 from ee_data import read_customer_records, store_customer_records
 from ee_data import retrieve_customer_records, read_installation_records
 from ee_data import store_installation_records, retrieve_installation_records
+from ee_data import has_customer_records
 
 from service_clients import report_error, fuzzy_address_uuid
-
-
-VERBOSE = False
-
-
-def say(*args):
-    """Local utility to give output in verbose mode."""
-    if __name__ == '__main__' and VERBOSE:
-        print(*args)
 
 
 """CUSTOMER RELATED FUNCTIONS.
 
 Import customer, import customer relation, update, delete.
 """
+
+
+def hide_cpr(id_number):
+    """Obfuscate CPR number."""
+    if is_cpr(id_number):
+        return '123456xxxx'
+    else:
+        return id_number
 
 
 def import_customer(id_and_fields):
@@ -69,6 +70,7 @@ def import_customer(id_and_fields):
             phone=fields['Telefonnr'],
             email=fields['EmailKunde'],
             mobile=fields['MobilTlf'],
+            customer_number=customer_number
         )
 
         if new_customer_uuid:
@@ -83,7 +85,8 @@ def import_customer(id_and_fields):
                 role = 'ligestilling'
             report_error(
                 "No customer created: {} {} {} ({})".format(
-                    fields['KundeNavn'], id_number, customer_number, role
+                    fields['KundeNavn'], hide_cpr(id_number),
+                    customer_number, role
                 )
             )
             return
@@ -109,7 +112,8 @@ def import_customer_record(fields):
     # Customer *must* have been created during previous import step
     if not customer_uuid:
         # This must have failed
-        print("Customer not found:", id_number, fields['KundeNavn'])
+        report_error("Customer not found:", hide_cpr(id_number),
+                     fields['KundeNavn'])
 
     # Create customer relation
     # NOTE: In KMD EE, there's always one customer relation for each row in
@@ -120,7 +124,9 @@ def import_customer_record(fields):
      forbrugssted_address_uuid) = get_forbrugssted_address_uuid(fields)
 
     if not forbrugssted_address_uuid:
-        report_error(forbrugssted_address)
+        report_error("No Forbrugssted address found ({}): {}".format(
+            customer_number, forbrugssted_address
+        ))
     cr_name = "{0}, {1}".format(VARME, forbrugssted_address)
     cr_type = VARME  # Always for KMD EE
     cr_address_uuid = forbrugssted_address_uuid
@@ -129,22 +135,25 @@ def import_customer_record(fields):
     )
 
     if not cr_uuid:
-        print("Unable to create customer relation for customer {}".format(
-            customer_number)
+        report_error(
+            "Unable to create customer relation for customer {}".format(
+                customer_number)
         )
 
     # This done, create customer roles & link customer and relation
-    role_uuid = create_customer_role(customer_uuid, cr_uuid, KUNDE)
-    assert(role_uuid)
+    create_customer_role(customer_uuid, cr_uuid, KUNDE)
 
     # Now handle partner/roommate, ignore empty CPR numbers
     if len(ligest_personnr) > 1:
 
         ligest_uuid = lookup_customer(ligest_personnr)
         # Customer was already created before this step
-        if not customer_uuid:
+        if not ligest_uuid:
             # This must have failed
-            print("Ligest Customer not found:", id_number, fields['KundeNavn'])
+            report_error(
+                "Ligest Customer not found:", hide_cpr(id_number),
+                fields['KundeNavn']
+            )
 
         create_customer_role(
             ligest_uuid, cr_uuid, LIGESTILLINGSKUNDE
@@ -161,7 +170,7 @@ def import_customer_record(fields):
         invoice_address_uuid = None
         report_error(
             "Customer {1}: Unable to lookup invoicing address: {0}".format(
-                str(e), id_number
+                str(e), hide_cpr(id_number)
             )
         )
     agreement_start_date = fields['Tilflytningsdato']
@@ -231,10 +240,7 @@ def delete_customer_record(customer_number):
         cr_uuid = lookup_customer_relation(customer_number)
         # This should exist provided everything is up to date!
         if not cr_uuid:
-            print("Customer number {} not found.".format(customer_number))
-            report_error(
-                "Customer number {} not found.".format(customer_number)
-            )
+            # Trying to delete a customer that doesn't exist is not an error.
             return
 
         # Look up the customer roles and customers for this customer relation.
@@ -302,7 +308,7 @@ def import_installation_record(fields):
             # add it to the agreement
             add_product_to_agreement(product_uuid, agreement_uuid)
     else:
-        print("No agreement found for customer number {}".format(
+        say("No agreement found for customer number {}".format(
             customer_number))
 
 
@@ -316,7 +322,6 @@ def update_installation_record(old_fields, changed_fields):
             say("Error: Product {} not found".format(
                 old_fields['InstalNummer']))
             return
-        say("Updating product: {}".format(changed_fields))
         update_product(product_uuid, old_fields, changed_fields)
 
 
@@ -357,16 +362,16 @@ def main():
     """
     # argument parsing
     import argparse
-    global VERBOSE
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--verbose', action='store_true',
                         help='print helpful comments during execution')
-    parser.add_argument('--initial-import', action='store_true',
-                        help='only perform inital import')
     args = parser.parse_args()
-    VERBOSE = args.verbose
-    initial_import = args.initial_import
+    ee_utils.VERBOSE = args.verbose
+
+    # Decide if this is the initial import.
+    initial_import = not has_customer_records()
+    say("Initial import: {}".format("YES" if initial_import else "NO"))
 
     """CUSTOMERS AND CUSTOMER RELATIONS"""
     connection = connect(server, database, username, password)
@@ -423,7 +428,7 @@ def main():
         say("... importing {} new customers ...".format(
             len(new_customer_fields)
         ))
-        p = Pool(15)
+        p = Pool(10)
         p.map(import_customer, new_customer_fields.items())
         p.close()
         p.join()
@@ -433,7 +438,7 @@ def main():
         say('... importing {} new customer relations ...'.format(
             len(new_keys)
         ))
-        p = Pool(16)
+        p = Pool(10)
         p.map(import_customer_record, [new_values[k] for k in new_keys])
         p.close()
         p.join()
