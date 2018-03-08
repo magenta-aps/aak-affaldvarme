@@ -190,10 +190,11 @@ def ava_organisation(entity):
     kmd_ee = {}
 
     # Filter "living" address
-    residence = (key for key in relationer["adresser"] if "uuid" in key.keys())
+    residence = (addr for addr in relationer.get("adresser", []) if
+                 "uuid" in addr)
 
     # Filter other address items
-    other = (key for key in relationer["adresser"] if "urn" in key.keys())
+    other = (addr for addr in relationer.get("adresser", []) if "urn" in addr)
 
     # Fetch address uuid
     dawa_address = None
@@ -275,7 +276,7 @@ def ava_kunderolle(entity):
 
     # Fetch references
     tilknyttedebrugere = relationer.get("tilknyttedebrugere")[0]
-    customer_ref = tilknyttedebrugere["uuid"]
+    customer_ref = tilknyttedebrugere.get("uuid")
 
     rolle_ref = egenskaber.get("funktionsnavn")
 
@@ -299,6 +300,10 @@ def ava_kunderolle(entity):
     # Related reference
     kundeforhold = relationer.get("tilknyttedeinteressefaellesskaber")[0]
     ava_kundeforhold = kundeforhold.get("uuid")
+    if not ava_kundeforhold:
+        log.error(
+            "Kundeforhold not found on role: {0}".format(entity)
+        )
 
     # Cache layer compliant document
     document = {
@@ -485,14 +490,18 @@ def ava_installation(entity):
     # Map data object
     registeringer = entity["registreringer"][0]
     attributter = registeringer["attributter"]
-    relationer = registeringer["relationer"]
+    relationer = registeringer.get("relationer", {})
     egenskaber = attributter["klasseegenskaber"][0]
 
     # Fetch references
     ava_name = egenskaber.get("titel")
     ava_identifikation = egenskaber.get("brugervendtnoegle")
     ava_maalertype = egenskaber.get("beskrivelse")
-    installationstype = relationer.get("overordnetklasse")[0]
+    if relationer:
+        installationstype = relationer.get("overordnetklasse")[0]
+    else:
+        # TODO: Change this when we add Arosia integration
+        installationstype = {"urn": "urn:Varme"}
 
     # Convert type to literal
     type_ref = installationstype.get("urn").split(":")[-1]
@@ -502,7 +511,7 @@ def ava_installation(entity):
     }
 
     # Get type
-    ava_installationstype = installation_types.get(type_ref)
+    ava_installationstype = installation_types[type_ref]
 
     ava_maalernummer = egenskaber.get("eksempel")
 

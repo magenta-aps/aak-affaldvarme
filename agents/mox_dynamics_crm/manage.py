@@ -16,7 +16,6 @@ import installer
 from helper import get_config
 from logger import start_logging
 
-
 # Get config
 config = get_config()
 
@@ -87,11 +86,18 @@ def import_from_lora():
 
 
 @cli.command(name="export")
-def export_to_crm():
+@click.option(
+    "--dry-run/--no-dry-run",
+    default=False,
+    help="Run without sending data to CRM"
+)
+def export_to_crm(dry_run):
     """
     Build relations and export all objects to CRM
     For further information, please see the 'export_client'.
     """
+
+    crm.DO_WRITE = not dry_run
 
     # Message user
     click.echo("Begin export from cache to CRM")
