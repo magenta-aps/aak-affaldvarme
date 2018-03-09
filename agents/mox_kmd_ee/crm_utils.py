@@ -535,12 +535,14 @@ def update_agreement(fields, new_values):
         try:
             invoice_address_uuid = fuzzy_address_uuid(invoice_address)
         except Exception as e:
-            invoice_address_uuid = None
-            report_error(
-                "Customer {1}: Unable to lookup invoicing address: {0}".format(
-                    str(e), customer_number
+            id_number = cpr_cvr(int_str(fields['PersonnrSEnr']))
+            invoice_address_uuid = get_sp_address(id_number, customer_number)
+            if not invoice_address_uuid:
+                report_error(
+                    "Customer {1}: Can't lookup invoicing address: {0}".format(
+                        str(e), customer_number
+                    )
                 )
-            )
         if invoice_address_uuid:
             relations['indsatsdokument'].append(
                 Relation("uuid", invoice_address_uuid)
