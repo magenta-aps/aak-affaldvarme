@@ -25,6 +25,7 @@ from crm_utils import delete_agreement, delete_product
 from crm_utils import add_product_to_agreement, update_product
 from crm_utils import update_customer, update_agreement, read_agreement
 from crm_utils import update_customer_relation, write_agreement_dict
+from crm_utils import get_sp_address
 
 from ee_utils import get_forbrugssted_address_uuid
 from ee_utils import get_products_for_location
@@ -167,12 +168,14 @@ def import_customer_record(fields):
     try:
         invoice_address_uuid = fuzzy_address_uuid(invoice_address)
     except Exception as e:
-        invoice_address_uuid = None
-        report_error(
-            "Customer {1}: Unable to lookup invoicing address: {0}".format(
-                str(e), hide_cpr(id_number)
+        # try ServicePlatformen
+        invoice_address_uuid = get_sp_address(id_number, customer_number)
+        if not invoice_address_uuid:
+            report_error(
+                "Customer {1}: Unable to lookup invoicing address: {0}".format(
+                    str(e), hide_cpr(id_number)
+                )
             )
-        )
     agreement_start_date = fields['Tilflytningsdato']
     agreement_end_date = fields['Fraflytningsdato']
 

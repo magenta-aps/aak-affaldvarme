@@ -189,6 +189,24 @@ def lookup_address_from_sp_data(sp_dict, id_number, customer_number=None):
     return address_uuid
 
 
+# Just get address
+def get_sp_address(id_number, customer_number):
+    address_uuid = None
+    if is_cvr(id_number):
+        company_dir = get_cvr_data(id_number)
+        address_uuid = company_dir['dawa_uuid']
+        if not address_uuid:
+            address_uuid = lookup_address_from_sp_data(
+                company_dir, id_number, customer_number
+            )
+    elif is_cpr(id_number):
+        person_dir = get_cpr_data(id_number)
+        address_uuid = lookup_address_from_sp_data(
+             person_dir, id_number, customer_number
+         )
+    return address_uuid
+
+
 # Create functions
 def create_customer(id_number, key, name, master_id, phone="", email="",
                     mobile="", fax="", note="", customer_number=""):
