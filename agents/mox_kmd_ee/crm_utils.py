@@ -340,10 +340,14 @@ def update_customer(fields, new_values):
     id_number = cpr_cvr(int_str(
         new_values.get('PersonnrSEnr', None) or fields.get('PersonnrSEnr')
     ))
+    customer_number = int_str(fields['Kundenr'])
 
     customer_uuid = lookup_customer(id_number)
     if not customer_uuid:
-        print("Customer {} not found when updating: ERROR".format(id_number))
+        print("Customer {} not found when updating: ERROR".format(
+           customer_number
+        ))
+
         return
 
     if is_cpr(id_number):
