@@ -13,7 +13,7 @@ from multiprocessing.dummy import Pool
 
 import ee_utils
 from mssql_config import username, password, server, database
-from ee_utils import connect, int_str, cpr_cvr, is_cpr
+from ee_utils import connect, int_str, cpr_cvr
 from ee_oio import KUNDE, LIGESTILLINGSKUNDE
 from crm_utils import lookup_customer_relation, lookup_customer_roles, VARME
 from crm_utils import lookup_customer, lookup_agreements, lookup_product
@@ -29,7 +29,7 @@ from crm_utils import get_sp_address
 
 from ee_utils import get_forbrugssted_address_uuid
 from ee_utils import get_products_for_location
-from ee_utils import get_alternativsted_address_uuid, say
+from ee_utils import get_alternativsted_address_uuid, say, hide_cpr
 
 from ee_data import read_customer_records, store_customer_records
 from ee_data import retrieve_customer_records, read_installation_records
@@ -43,14 +43,6 @@ from service_clients import report_error, fuzzy_address_uuid
 
 Import customer, import customer relation, update, delete.
 """
-
-
-def hide_cpr(id_number):
-    """Obfuscate CPR number."""
-    if is_cpr(id_number):
-        return '123456xxxx'
-    else:
-        return id_number
 
 
 def import_customer(id_and_fields):
@@ -173,7 +165,7 @@ def import_customer_record(fields):
         if not invoice_address_uuid:
             report_error(
                 "Customer {1}: Unable to lookup invoicing address: {0}".format(
-                    str(e), hide_cpr(id_number)
+                    str(e), customer_number
                 )
             )
     agreement_start_date = fields['Tilflytningsdato']

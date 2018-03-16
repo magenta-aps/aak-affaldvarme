@@ -30,7 +30,7 @@ from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_oio import Relation, KUNDE, LIGESTILLINGSKUNDE
 from ee_oio import write_object, write_object_dict
-from ee_utils import is_cvr, is_cpr, int_str, cpr_cvr, say
+from ee_utils import is_cvr, is_cpr, int_str, cpr_cvr, hide_cpr, say
 from ee_utils import get_forbrugssted_address_uuid
 from ee_utils import get_alternativsted_address_uuid
 from service_clients import report_error, get_cvr_data, get_address_uuid
@@ -193,14 +193,34 @@ def lookup_address_from_sp_data(sp_dict, id_number, customer_number=None):
 def get_sp_address(id_number, customer_number):
     address_uuid = None
     if is_cvr(id_number):
-        company_dir = get_cvr_data(id_number)
+        try:
+            company_dir = get_cvr_data(id_number)
+        except Exception as e:
+            # Retry *once*
+            try:
+                company_dir = get_cvr_data(id_number)
+            except Exception as e:
+                say(
+                    "Invoicing addr: CVR number {0} not found: {1}".format(
+                        id_number, str(e))
+                )
+                return None
         address_uuid = company_dir['dawa_uuid']
         if not address_uuid:
             address_uuid = lookup_address_from_sp_data(
                 company_dir, id_number, customer_number
             )
     elif is_cpr(id_number):
-        person_dir = get_cpr_data(id_number)
+        try:
+            person_dir = get_cpr_data(id_number)
+        except Exception as e:
+            # Retry *once*
+            try:
+                person_dir = get_cpr_data(id_number)
+            except Exception as e:
+                say("Invocing addr lookup: CPR lookup failed after retrying:",
+                    id_number, customer_number)
+                return None
         address_uuid = lookup_address_from_sp_data(
              person_dir, id_number, customer_number
          )
@@ -245,7 +265,8 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
             try:
                 person_dir = get_cpr_data(id_number)
             except Exception as e:
-                say("CPR lookup failed after retrying:", id_number, name)
+                say("CPR lookup failed after retrying:",
+                    hide_cpr(id_number), name)
                 return None
 
         first_name = person_dir['fornavn']
@@ -266,7 +287,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
             marital_status, address_protection, note
         )
     else:
-        say("Forkert CPR/SE-nr for {0}: {1}".format(name, id_number))
+        say("Forkert CPR/SE-nr for {0}: {1}".format(name, hide_cpr(id_number)))
         # Invalid customer
         return None
 
