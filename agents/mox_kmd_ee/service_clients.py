@@ -10,6 +10,7 @@
 import json
 import time
 import datetime
+import os
 import functools
 
 import requests
@@ -113,16 +114,19 @@ def get_cvr_data(cvr_number):
     return _get_cvr_data(cvr_number, SP_UUIDS, CERTIFICATE_FILE)
 
 
-def report_error(error_message, error_stack=None, error_object=None):
+
+def report_error(error_message, error_stack=None, error_object=None, headers={}):
     """Report error, logging to file and sending to an AMQP Queue.
 
     The AMQP queue will decide what to do with the various errors depending on
-    their gravity - e.g inform users by email, log to a special log or discard.
+    the accompanying headers - e.g inform users by email, 
+    if no headers are supplied messages, stacks and objects will be logged
+    log to a special log or discard.
     """
     source = "MOX KMD EE"
     error_msg = {
         "source": source,
-        "error_mesage": error_message,
+        "error_message": error_message,
         "error_stack": error_stack,
         "error_object": error_object
     }
@@ -134,10 +138,12 @@ def report_error(error_message, error_stack=None, error_object=None):
 
     try:
         channel.basic_publish(
-            exchange='', routing_key=ERROR_MQ_QUEUE, body=json.dumps(error_msg)
+            exchange='', routing_key=ERROR_MQ_QUEUE, body=json.dumps(error_msg),
+            properties = pika.spec.BasicProperties(headers=headers)
         )
     except Exception:
         print("Unable to send", error_msg, "to AMQP service")
+
     connection.close()
 
     # Print error to the error file

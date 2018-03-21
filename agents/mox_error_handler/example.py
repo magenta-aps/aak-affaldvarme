@@ -15,7 +15,12 @@ connection = pika.BlockingConnection(
 channel = connection.channel()
 
 # Declare queue
-channel.queue_declare(queue=MQ_QUEUE)
+try:
+    channel.queue_declare(queue=MQ_QUEUE)
+except:
+    # queue exists 
+    # https://github.com/MassTransit/MassTransit/issues/370
+    pass
 
 
 def create_error(error_object):

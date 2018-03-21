@@ -1,0 +1,24 @@
+{
+    "1":{
+        "PersonnrSEnr":"1234561234", 
+        "LigestPersonnr":"1234561234", 
+        "KundeSagsnr":"1", 
+        "Kundenr":"1",
+        "KundeNavn":"1 1",
+        "Telefonnr":"1",
+        "EmailKunde":"1",
+        "MobilTlf":"1",
+        "ForbrStVejnavn":"Forbrugsstedets TestVej",
+        "ForbrStPostdistrikt":"Århus Å",
+        "Vejkode":"TestVejKode",
+        "Postnr":"8000",
+        "Husnr":"1",
+        "Bogstav":"Å",
+        "Etage":"8",
+        "Sidedørnr":"2",
+        "VejNavn": "TestVej"
+
+
+    }
+}
+

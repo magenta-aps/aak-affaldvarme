@@ -38,7 +38,6 @@ AVA_ORGANISATION = ""
 # API URL
 BASE_URL = ""
 
-
 CERTIFICATE_FILE = ''
 
 SP_UUIDS = {
@@ -52,4 +51,21 @@ SP_UUIDS = {
 ERROR_MQ_HOST = "localhost"
 
 # Name of the queue
-ERROR_MQ_QUEUE = "ava_mox_errors"'''.lstrip())
+ERROR_MQ_QUEUE = "ava_mox_errors"
+
+# SMTP-server for sending errors in bulk
+# example: localhost 
+# example: localhost:1025
+ERROR_BULK_MAIL_HOST = ""
+
+# Email-addresses of error-mail-recipients
+# example: ["me@example.com","you@example.com"]
+ERROR_BULK_MAIL_TO = []
+
+# Email-address of error-mail-sender
+# example: "me@example.com"
+ERROR_BULK_MAIL_FROM = ""
+
+# where are the bulk-mail-files put
+ERROR_BULK_MAIL_DIR = "var"
+'''.lstrip())
