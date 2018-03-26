@@ -25,10 +25,7 @@ def export_everything():
             on 'contacts' rather than 'kunderolles'.
     """
 
-    all_kunderolle = []
-
-    for kunderolle in cache.all("ava_kunderolles"):
-        all_kunderolle.append(kunderolle)
+    all_kunderolle = [k for k in cache.all("ava_kunderolles")]
 
     for kunderolle in all_kunderolle:
         process(kunderolle)
@@ -68,7 +65,10 @@ def process(kunderolle):
     interessefaellesskab_ref = kunderolle["interessefaellesskab_ref"]
 
     # Customer/Contact
-    contact = cache.get(table="contacts", uuid=contact_ref)
+    if contact_ref:
+        contact = cache.get(table="contacts", uuid=contact_ref)
+    else:
+        contact = None
 
     if not contact:
         log.error("Contact not found: {}".format(contact_ref))
@@ -86,8 +86,8 @@ def process(kunderolle):
 
     if not address_ref:
         log.info("No address reference found, skipping")
-        log.debug("Kunderolle: {0}".format(kunderolle["_id"]))
-        log.debug("Contact: {0}".format(contact["_id"]))
+        log.debug("Kunderolle: {0}".format(kunderolle.get("_id")))
+        log.debug("Contact: {0}".format(contact.get("_id")))
         return False
 
     address = cache.get(table="ava_adresses", uuid=address_ref)

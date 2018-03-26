@@ -30,7 +30,7 @@ from ee_oio import create_organisation, create_bruger, create_indsats
 from ee_oio import create_interessefaellesskab, create_organisationfunktion
 from ee_oio import Relation, KUNDE, LIGESTILLINGSKUNDE
 from ee_oio import write_object, write_object_dict
-from ee_utils import is_cvr, is_cpr, int_str, cpr_cvr, say
+from ee_utils import is_cvr, is_cpr, int_str, cpr_cvr, hide_cpr, say
 from ee_utils import get_forbrugssted_address_uuid
 from ee_utils import get_alternativsted_address_uuid
 from service_clients import report_error, get_cvr_data, get_address_uuid
@@ -189,6 +189,44 @@ def lookup_address_from_sp_data(sp_dict, id_number, customer_number=None):
     return address_uuid
 
 
+# Just get address
+def get_sp_address(id_number, customer_number):
+    address_uuid = None
+    if is_cvr(id_number):
+        try:
+            company_dir = get_cvr_data(id_number)
+        except Exception as e:
+            # Retry *once*
+            try:
+                company_dir = get_cvr_data(id_number)
+            except Exception as e:
+                say(
+                    "Invoicing addr: CVR number {0} not found: {1}".format(
+                        id_number, str(e))
+                )
+                return None
+        address_uuid = company_dir['dawa_uuid']
+        if not address_uuid:
+            address_uuid = lookup_address_from_sp_data(
+                company_dir, id_number, customer_number
+            )
+    elif is_cpr(id_number):
+        try:
+            person_dir = get_cpr_data(id_number)
+        except Exception as e:
+            # Retry *once*
+            try:
+                person_dir = get_cpr_data(id_number)
+            except Exception as e:
+                say("Invocing addr lookup: CPR lookup failed after retrying:",
+                    id_number, customer_number)
+                return None
+        address_uuid = lookup_address_from_sp_data(
+             person_dir, id_number, customer_number
+         )
+    return address_uuid
+
+
 # Create functions
 def create_customer(id_number, key, name, master_id, phone="", email="",
                     mobile="", fax="", note="", customer_number=""):
@@ -227,7 +265,8 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
             try:
                 person_dir = get_cpr_data(id_number)
             except Exception as e:
-                say("CPR lookup failed after retrying:", id_number, name)
+                say("CPR lookup failed after retrying:",
+                    hide_cpr(id_number), name)
                 return None
 
         first_name = person_dir['fornavn']
@@ -248,7 +287,7 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
             marital_status, address_protection, note
         )
     else:
-        say("Forkert CPR/SE-nr for {0}: {1}".format(name, id_number))
+        say("Forkert CPR/SE-nr for {0}: {1}".format(name, hide_cpr(id_number)))
         # Invalid customer
         return None
 
@@ -340,10 +379,14 @@ def update_customer(fields, new_values):
     id_number = cpr_cvr(int_str(
         new_values.get('PersonnrSEnr', None) or fields.get('PersonnrSEnr')
     ))
+    customer_number = int_str(fields['Kundenr'])
 
     customer_uuid = lookup_customer(id_number)
     if not customer_uuid:
-        print("Customer {} not found when updating: ERROR".format(id_number))
+        print("Customer {} not found when updating: ERROR".format(
+           customer_number
+        ))
+
         return
 
     if is_cpr(id_number):
@@ -513,12 +556,14 @@ def update_agreement(fields, new_values):
         try:
             invoice_address_uuid = fuzzy_address_uuid(invoice_address)
         except Exception as e:
-            invoice_address_uuid = None
-            report_error(
-                "Customer {1}: Unable to lookup invoicing address: {0}".format(
-                    str(e), customer_number
+            id_number = cpr_cvr(int_str(fields['PersonnrSEnr']))
+            invoice_address_uuid = get_sp_address(id_number, customer_number)
+            if not invoice_address_uuid:
+                report_error(
+                    "Customer {1}: Can't lookup invoicing address: {0}".format(
+                        str(e), customer_number
+                    )
                 )
-            )
         if invoice_address_uuid:
             relations['indsatsdokument'].append(
                 Relation("uuid", invoice_address_uuid)

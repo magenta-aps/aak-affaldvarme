@@ -17,8 +17,8 @@ def say(*args):
     if VERBOSE:
         print(*args)
 
-# CPR/CVR helper function
 
+# CPR/CVR helper functions
 
 def int_str(s):
     """Normalize numbers, e.g. CPR numbers, that are Float in MS SQL."""
@@ -49,6 +49,14 @@ def is_cpr(val):
 def is_cvr(val):
     """Determine if this is a CVR number."""
     return len(val) == 8 and val.isdigit()
+
+
+def hide_cpr(id_number):
+    """Obfuscate CPR number."""
+    if is_cpr(id_number):
+        return '123456xxxx'
+    else:
+        return id_number
 
 
 def connect(server, database, username, password):
