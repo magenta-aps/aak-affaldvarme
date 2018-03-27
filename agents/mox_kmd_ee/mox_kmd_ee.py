@@ -7,12 +7,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-import os, sys
-import datetime
+import sys
 
 from multiprocessing.dummy import Pool
 
-import ee_utils, settings
+import ee_utils
 from mssql_config import username, password, server, database
 from ee_utils import connect, int_str, cpr_cvr
 from ee_oio import KUNDE, LIGESTILLINGSKUNDE
@@ -37,7 +36,11 @@ from ee_data import retrieve_customer_records, read_installation_records
 from ee_data import store_installation_records, retrieve_installation_records
 from ee_data import has_customer_records
 
-from service_clients import report_error as _report_error, fuzzy_address_uuid
+from service_clients import (
+    report_error,
+    send_reported_errors,
+    fuzzy_address_uuid
+    )
 
 
 """CUSTOMER RELATED FUNCTIONS.
@@ -514,31 +517,6 @@ def main():
     store_installation_records(new_installation_values)
 
 
-# custom bulk logging to mail
-# see ../mox_error_handler/run_agent.py/with_headers
-error_headers={
-    "x-ava-bulk-report": os.path.abspath("{}/{}_{}_{}".format(
-    settings.ERROR_BULK_MAIL_DIR,
-    "error_report_mail",
-    datetime.datetime.now().strftime("%Y-%m-%d"),
-    str(os.getpid())))
-}
-
-# local report_error with default headers
-def report_error(msg, stack=None, obj=None, headers=error_headers):
-    _report_error(msg, stack, obj, headers)
-
 if __name__ == '__main__':
     main()
-    # prepare amqp mail headers
-    headers = {
-        "x-ava-bulk-to": settings.ERROR_BULK_MAIL_TO,
-        "x-ava-bulk-from": settings.ERROR_BULK_MAIL_FROM,
-        "x-ava-bulk-smtp": settings.ERROR_BULK_MAIL_HOST,
-    }
-    # get x-ava-bulk-report
-    headers.update(error_headers)
-    # send the mail
-    error_report("errors from ee integration", headers = headers)
-
-
+    send_reported_errors("errors from ee integration")

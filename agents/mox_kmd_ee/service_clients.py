@@ -15,6 +15,7 @@ import functools
 
 import requests
 import pika
+import settings
 
 try:
     from serviceplatformen_cvr import get_cvr_data as _get_cvr_data
@@ -114,12 +115,14 @@ def get_cvr_data(cvr_number):
     return _get_cvr_data(cvr_number, SP_UUIDS, CERTIFICATE_FILE)
 
 
-
-def report_error(error_message, error_stack=None, error_object=None, headers={}):
+def report_error_amqp(
+        error_message, error_stack=None,
+        error_object=None, headers={}
+        ):
     """Report error, logging to file and sending to an AMQP Queue.
 
     The AMQP queue will decide what to do with the various errors depending on
-    the accompanying headers - e.g inform users by email, 
+    the accompanying headers - e.g inform users by email,
     if no headers are supplied messages, stacks and objects will be logged
     log to a special log or discard.
     """
@@ -138,8 +141,11 @@ def report_error(error_message, error_stack=None, error_object=None, headers={})
 
     try:
         channel.basic_publish(
-            exchange='', routing_key=ERROR_MQ_QUEUE, body=json.dumps(error_msg),
-            properties = pika.spec.BasicProperties(headers=headers)
+            exchange='', routing_key=ERROR_MQ_QUEUE,
+            body=json.dumps(error_msg),
+            properties=pika.spec.BasicProperties(
+                headers=headers
+            )
         )
     except Exception:
         print("Unable to send", error_msg, "to AMQP service")
@@ -150,6 +156,37 @@ def report_error(error_message, error_stack=None, error_object=None, headers={})
     todaystr = str(datetime.datetime.today().date())
     with open("var/mox_kmd_ee_{0}.log".format(todaystr), "a") as f:
         f.write(error_message + '\n\n')
+
+
+# custom bulk logging to mail
+# see ../mox_error_handler/run_agent.py/route_via_headers
+error_headers = {
+    "x-ava-bulk-report": os.path.abspath(
+        "{}/{}_{}_{}".format(
+            settings.ERROR_BULK_MAIL_DIR,
+            "error_report_mail",
+            datetime.datetime.now().strftime("%Y-%m-%d"),
+            str(os.getpid())
+            )
+        )
+}
+
+
+def report_error(msg, stack=None, obj=None, headers=error_headers):
+    report_error_amqp(msg, stack, obj, headers)
+
+
+def send_reported_errors(mailsubject):
+    # prepare amqp mail headers
+    headers = {
+        "x-ava-bulk-to": settings.ERROR_BULK_MAIL_TO,
+        "x-ava-bulk-from": settings.ERROR_BULK_MAIL_FROM,
+        "x-ava-bulk-smtp": settings.ERROR_BULK_MAIL_HOST,
+    }
+    # get x-ava-bulk-report file name
+    headers.update(error_headers)
+    # send the mail
+    report_error(mailsubject, headers=headers)
 
 
 if __name__ == '__main__':

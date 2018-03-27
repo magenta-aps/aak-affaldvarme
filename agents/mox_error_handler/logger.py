@@ -29,6 +29,7 @@ def start_logging(
     # Return logger
     return logger
 
+
 # TESTING PURPOSES
 if __name__ == "__main__":
     # Create logger

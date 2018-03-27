@@ -17,8 +17,8 @@ channel = connection.channel()
 # Declare queue
 try:
     channel.queue_declare(queue=MQ_QUEUE)
-except:
-    # queue exists 
+except Exception:
+    # queue exists
     # https://github.com/MassTransit/MassTransit/issues/370
     pass
 
@@ -35,7 +35,10 @@ def create_error(error_object):
 
 
 # Mock error stack
-error = "TypeError: handler() missing 1 required positional argument: 'data_object'"
+error = (
+    "TypeError: handler() missing 1 "
+    "required positional argument: 'data_object'"
+    )
 
 # Mock failed data object
 data = {

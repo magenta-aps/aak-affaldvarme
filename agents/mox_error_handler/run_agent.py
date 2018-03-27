@@ -11,7 +11,7 @@ import smtplib
 
 from settings import MQ_HOST
 from settings import MQ_QUEUE
-from settings import LOG_FILE
+from settings import LOG_FILE   # noqa: F811
 from settings import DO_USE_DEBUG_LOG
 
 # Set connection
@@ -30,46 +30,63 @@ except pika.exceptions.ChannelClosed:
     channel = connection.channel()
     pass
 
-def with_headers(source, msg, stack, obj, headers, log):
+
+def route_via_mail(source, msg, stack, obj, headers, log):
     """ Handling mail-sending of report
     """
+    # get bulk file and possibly smtp server
     bulk_report = headers.get("x-ava-bulk-report", "")
-    if bulk_report:
-        bulk_smtp = headers.get("x-ava-bulk-smtp", "")
-        # send mail now if smtp server specified
-        if bulk_smtp:
+    bulk_smtp = headers.get("x-ava-bulk-smtp", "")
 
-            # compose mail
-            bulk_from = headers.get("x-ava-bulk-from", "")
-            bulk_to = headers.get("x-ava-bulk-to", "")
-            mail = MIMEText(open(bulk_report).read())
-            mail["Subject"] = msg
-            mail["To"] = bulk_to
-            mail["From"] = bulk_from
+    # send mail now if smtp server specified
+    if bulk_smtp:
 
-            # connect to smtp host/port
-            if ":" in bulk_smtp:
-                host, port = bulk_smtp.split(":")
-                port = int(port)
-            else:
-                host, port = bulk_smtp, 25
-            smtp = smtplib.SMTP()
-            # smtp.set_debuglevel(1) 
-            smtp.connect(host, port)
+        # compose mail
+        bulk_from = headers.get("x-ava-bulk-from", "")
+        bulk_to = headers.get("x-ava-bulk-to", "")
+        mail = MIMEText(open(bulk_report).read())
+        mail["Subject"] = msg
+        mail["To"] = bulk_to
+        mail["From"] = bulk_from
 
-            # send mail
-            smtp.sendmail(
-                bulk_from,
-                [bulk_to],
-                mail.as_string()
+        # connect to smtp host/port
+        if ":" in bulk_smtp:
+            host, port = bulk_smtp.split(":")
+            port = int(port)
+        else:
+            host, port = bulk_smtp, 25
+        smtp = smtplib.SMTP()
+        # smtp.set_debuglevel(1)
+        smtp.connect(host, port)
+
+        # send mail
+        smtp.sendmail(
+            bulk_from,
+            [bulk_to],
+            mail.as_string()
+        )
+        log.info("mail sent :%r", headers)
+
+    # else write message to bulk mail file
+    elif msg:
+        "add the line to the bulkfile"
+        with open(bulk_report, "a") as f:
+            f.write(msg + '\n\n')
+
+
+def route_via_headers(source, msg, stack, obj, headers, log):
+    """ Routing error messages as specified in headers
+    """
+    if headers.get("x-ava-bulk-report", ""):
+        route_via_mail(source, msg, stack, obj, headers, log)
+    else:
+        log.error(
+            "({source}): no route for headers: {headers}".format(
+                source=source,
+                headers=headers
             )
-            log.info("mail sent :%r", headers)
+        )
 
-        # else write message to bulk mail file
-        elif msg:
-            "add the line to the bulkfile" 
-            with open(bulk_report, "a") as f:
-                f.write(msg + '\n\n')
 
 def callback(ch, method, properties, body):
     """This method is the message handler"""
@@ -122,19 +139,20 @@ def callback(ch, method, properties, body):
     if error_headers:
         # Handle special cases like bulk sending etc
         try:
-            with_headers(source, error_message, 
-                    error_stack, error_object, error_headers,
-                    log = log
+            route_via_headers(
+                source, error_message, error_stack,
+                error_object, error_headers, log=log
                 )
         except Exception as e:
             log.error(
-                "({source}): failure {e} when handling headers: {headers}".format(
+                "({source}): failure {e} when "
+                "handling headers: {headers}".format(
                     source=source, e=e,
                     headers=error_headers
                 )
             )
 
-    ch.basic_ack(delivery_tag=method.delivery_tag)         
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 def consume():
@@ -152,7 +170,6 @@ def consume():
 
     except KeyboardInterrupt:
         channel.stop_consuming()
-        
 
     finally:
         connection.close()
@@ -163,7 +180,7 @@ def consume():
 if __name__ == "__main__":
 
     if DO_USE_DEBUG_LOG:
-        LOG_FILE = "debug.log"
+        LOG_FILE = "debug.log"  # noqa: F811
 
     # Start logging
     start_logging(

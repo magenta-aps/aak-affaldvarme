@@ -54,7 +54,7 @@ ERROR_MQ_HOST = "localhost"
 ERROR_MQ_QUEUE = "ava_mox_errors"
 
 # SMTP-server for sending errors in bulk
-# example: localhost 
+# example: localhost
 # example: localhost:1025
 ERROR_BULK_MAIL_HOST = ""
 
@@ -67,5 +67,4 @@ ERROR_BULK_MAIL_TO = []
 ERROR_BULK_MAIL_FROM = ""
 
 # where are the bulk-mail-files put
-ERROR_BULK_MAIL_DIR = "var"
-'''.lstrip())
+ERROR_BULK_MAIL_DIR = "var"'''.lstrip())
