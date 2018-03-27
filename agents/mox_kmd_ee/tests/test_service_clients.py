@@ -62,7 +62,7 @@ class TestServiceClients(common.Test):
             "x-ava-bulk-report": os.path.abspath("./var/bulkfile.txt")
         })
 
-        # make queue send the file by supplying an smtp server 
+        # make queue send the file by supplying an smtp server
         service_clients.report_error_amqp("This is the mail subject", headers={
             "x-ava-bulk-report": os.path.abspath("./var/bulkfile.txt"),
             "x-ava-bulk-to": "to@example.org",
@@ -80,7 +80,7 @@ class TestServiceClients(common.Test):
         m.close()
 
         # wait for asyncore loop to timeout after stopped mail server
-        thread.join() 
+        thread.join()
 
         # print (m.messages)
         # there should be a mail waiting for delivery
