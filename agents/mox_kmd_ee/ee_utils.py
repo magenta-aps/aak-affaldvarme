@@ -1,5 +1,8 @@
 """Miscellaneous utility functions specific to the KMD EE agent."""
 import pymssql
+import threading
+import random
+import time
 
 from ee_sql import TREFINSTALLATION_SQL
 from ee_sql import ALTERNATIVSTED_ADRESSE_SQL
@@ -59,17 +62,39 @@ def hide_cpr(id_number):
         return id_number
 
 
+# connection id is a tuple including connection parms and thread id
+connection_pool = {}
+
+
+def close_mssql():
+    for k in list(connection_pool):
+        connection_pool.pop(k).close()
+
+
 def connect(server, database, username, password):
-    """Connect to an MS SQL database."""
-    cnxn = None
-    try:
-        cnxn = pymssql.connect(server=server, user=username,
-                               password=password, database=database)
-    except Exception as e:
-        print(e)
-        report_error(str(e))
-        raise
-    return cnxn
+    """pooled Connect to an MS SQL database."""
+    conn_id = hash((
+        threading.get_ident(), server,
+        database, username, password,)
+    )
+    tries = 0
+    while not connection_pool.get(conn_id, False):
+        try:
+            connection_pool[conn_id] = pymssql.connect(
+                server=server, user=username,
+                password=password, database=database
+            )
+        except Exception as e:
+            tries = tries + 1
+            if tries > 3:
+                print(e)
+                report_error(str(e))
+                raise
+            else:
+                # try again - maybe too many in parallel
+                time.sleep(random.random() * 2)
+                continue
+    return connection_pool[conn_id]
 
 
 def get_products_for_location(forbrugssted):
@@ -79,7 +104,7 @@ def get_products_for_location(forbrugssted):
     cursor = connection.cursor(as_dict=True)
     cursor.execute(TREFINSTALLATION_SQL.format(forbrugssted))
     rows = cursor.fetchall()
-    connection.close()
+    # connection.close()
     return rows
 
 
@@ -116,7 +141,7 @@ def get_forbrugssted_address_uuid(row):
     except Exception:
         try:
             address_uuid = fuzzy_address_uuid(address_string)
-        except Exception as e:
+        except Exception:
             address_uuid = None
     return (address_string, address_uuid)
 
@@ -130,7 +155,7 @@ def get_alternativsted_address_uuid(alternativsted_id):
     cursor = connection.cursor(as_dict=True)
     cursor.execute(ALTERNATIVSTED_ADRESSE_SQL.format(alternativsted_id))
     rows = cursor.fetchall()
-    connection.close()
+    # connection.close()
 
     if len(rows) != 1:
         # Send error to log:
@@ -165,7 +190,7 @@ def get_alternativsted_address_uuid(alternativsted_id):
 
     try:
         address_uuid = access_address_uuid(address)
-    except Exception as e:
+    except Exception:
         report_error(
             "Alternativ adresse fejler for alt. sted {0}: {1}".format(
                 alternativsted_id, str(address)

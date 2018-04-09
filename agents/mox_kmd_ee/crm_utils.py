@@ -269,6 +269,11 @@ def create_customer(id_number, key, name, master_id, phone="", email="",
                     hide_cpr(id_number), name)
                 return None
 
+        if not person_dir:
+            say("CPR lookup returned empty object:",
+                hide_cpr(id_number), name)
+            return None
+
         first_name = person_dir['fornavn']
         middle_name = person_dir.get('mellemnavn', '')
         last_name = person_dir['efternavn']

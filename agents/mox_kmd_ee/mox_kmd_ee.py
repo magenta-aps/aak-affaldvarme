@@ -13,7 +13,7 @@ from multiprocessing.dummy import Pool
 
 import ee_utils
 from mssql_config import username, password, server, database
-from ee_utils import connect, int_str, cpr_cvr
+from ee_utils import connect, int_str, cpr_cvr, close_mssql
 from ee_oio import KUNDE, LIGESTILLINGSKUNDE
 from crm_utils import lookup_customer_relation, lookup_customer_roles, VARME
 from crm_utils import lookup_customer, lookup_agreements, lookup_product
@@ -187,22 +187,45 @@ def import_customer_record(fields):
     product_uuids = []
 
     for p in products:
-        meter_number = p['Målernr']
-        meter_type = p['MaalerTypeBetegnel']
-        product_uuid = create_product(
-            name="{0}, {1} {2}".format(
-                meter_number, p['Målertypefabrikat'], meter_type
-            ),
-            identification=p['InstalNummer'],
-            installation_type=VARME,
-            meter_number=meter_number,
-            meter_type=meter_type,
-            start_date=p['DatoFra'],
-            end_date=p['DatoTil'],
-            product_address=get_alternativsted_address_uuid(
+        try:
+            product_address = get_alternativsted_address_uuid(
                 p['AlternativStedID']
             )
-        )
+        except Exception as e:
+            report_error((
+                "AlternativSted Address for "
+                "'Målernr' not found: ({}), {} "
+                ).format(p['Målernr'], e)
+            )
+            continue
+
+        meter_number = p['Målernr']
+        meter_type = p['MaalerTypeBetegnel']
+        product_uuid = None
+        create_product_kwargs = {
+            'name': "{0}, {1} {2}".format(
+                    meter_number, p['Målertypefabrikat'], meter_type
+                ),
+            'identification': p['InstalNummer'],
+            'installation_type': VARME,
+            'meter_number': meter_number,
+            'meter_type': meter_type,
+            'start_date': p['DatoFra'],
+            'end_date': p['DatoTil'],
+            'product_address': product_address,
+        }
+        try:
+            product_uuid = create_product(**create_product_kwargs)
+        except Exception as e:
+            report_error((
+                "Create product for "
+                "'Målernr' mislykkedes ({}), {} "
+                ).format(
+                    p['Målernr'],
+                    create_product_kwargs
+                )
+            )
+
         if product_uuid:
             product_uuids.append(product_uuid)
 
@@ -365,6 +388,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--verbose', action='store_true',
                         help='print helpful comments during execution')
+    parser.add_argument('--skip-customers', action='store_true',
+                        help='bypass customer import')
+    parser.add_argument('--skip-customer-relations', action='store_true',
+                        help='bypass customer relations import')
+    parser.add_argument('--thread-pool-size', action='store', default=10,
+                        help='change size of thread pool')
     args = parser.parse_args()
     ee_utils.VERBOSE = args.verbose
 
@@ -372,13 +401,16 @@ def main():
     initial_import = not has_customer_records()
     say("Initial import: {}".format("YES" if initial_import else "NO"))
 
+    if args.thread_pool_size != 10:
+        say("thread-poolsize: {}".format(args.thread_pool_size))
+
     """CUSTOMERS AND CUSTOMER RELATIONS"""
     connection = connect(server, database, username, password)
     cursor = connection.cursor(as_dict=True)
     new_values = read_customer_records(cursor)
     new_installation_values = read_installation_records(cursor)
     old_installation_values = retrieve_installation_records()
-    connection.close()
+    # connection.close()
 
     old_values = retrieve_customer_records()
 
@@ -422,26 +454,48 @@ def main():
                 int_str(new_values[k]['LigestPersonnr'])
             ) > 1
         }}
+
+    # close existing thread specific mssql connections
+    close_mssql()
+
     # Now import all the new customers using threads
-    if len(new_customer_fields) > 0:
-        say("... importing {} new customers ...".format(
+    if args.skip_customers:
+        say(("NOT IMPORTING {} new customers"
+            " (cmd line has --skip-customers)...").format(
             len(new_customer_fields)
         ))
-        p = Pool(10)
-        p.map(import_customer, new_customer_fields.items())
-        p.close()
-        p.join()
-        say("... done")
+    else:
+        if len(new_customer_fields) > 0:
+            say("... importing {} new customers ...".format(
+                len(new_customer_fields)
+            ))
+            p = Pool(args.thread_pool_size)
+            p.map(import_customer, new_customer_fields.items())
+            p.close()
+            p.join()
+            say("... done")
 
-    if len(new_keys) > 0:
-        say('... importing {} new customer relations ...'.format(
+            # close existing thread specific mssql connections
+            close_mssql()
+
+    if args.skip_customer_relations:
+        say(('NOT IMPORTING {} new customer '
+            'relations (cmd line has --skip-customer-relations)...').format(
             len(new_keys)
         ))
-        p = Pool(10)
-        p.map(import_customer_record, [new_values[k] for k in new_keys])
-        p.close()
-        p.join()
-        say("... done")
+    else:
+        if len(new_keys) > 0:
+            say('... importing {} new customer relations ...'.format(
+                len(new_keys)
+            ))
+            p = Pool(args.thread_pool_size)
+            p.map(import_customer_record, [new_values[k] for k in new_keys])
+            p.close()
+            p.join()
+            say("... done")
+
+            # close existing thread specific mssql connections
+            close_mssql()
 
     # Now (and finally) handle update of the specific changed fields.
     if len(changed_records) > 0:
@@ -516,6 +570,8 @@ def main():
     store_customer_records(new_values)
     store_installation_records(new_installation_values)
 
+    # close existing thread specific mssql connections
+    close_mssql()
 
 if __name__ == '__main__':
     main()
