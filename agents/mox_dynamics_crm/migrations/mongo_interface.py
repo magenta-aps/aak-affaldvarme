@@ -5,20 +5,20 @@ from helper import get_config
 
 
 # Configuration
-config = get_config()
-mongo = config["mongodb"]
+config = get_config("mongodb")
 
 # Create mongo client connection pool
 client = MongoClient(
-    host=mongo["db_host"],
-    port=int(mongo["db_port"]),
-    authSource=mongo["db_name"],
-    username=mongo["db_user"],
-    password=mongo["db_pass"]
+    host=config["db_host"] or None,
+    port=int(config["db_port"]) or None,
+    authSource=config["db_name"] or None,
+    username=config["db_user"] or None,
+    password=config["db_pass"] or None
 )
 
 # Database connection object
-db = client[mongo["db_name"]]
+db_name = config["db_name"]
+db = client[db_name]
 
 
 def find_all(resource, **params):
@@ -27,7 +27,3 @@ def find_all(resource, **params):
     collection = db[resource]
 
     return collection.find(params)
-
-
-if __name__ == "__main__":
-    find_all()
