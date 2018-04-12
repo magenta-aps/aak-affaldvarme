@@ -424,6 +424,39 @@ def store_address(payload):
     return crm_guid
 
 
+def update_address(identifier, payload):
+    """
+    Wrapper function to update CRM address via a PATCH request.
+
+    CRM:    Adresse (ava_adresses)
+
+    :param identifier:  DAR/DAWA identifier (Type: uuid)
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns updated CRM object
+    """
+
+    # REST resource
+    resource = "ava_adresses({identifier})".format(
+        identifier=identifier
+    )
+
+    log.info("Updating address in CRM")
+    if DO_WRITE:
+        response = patch_request(resource, payload)
+    else:
+        response = DummyRequest(200)
+
+    # Return False if not created
+    if response.status_code != 200:
+        log.error("Error updating address in CRM")
+        log.error(response.text)
+        return False
+
+    log.info("Address updated")
+    return response
+
+
 def store_contact(payload):
     """
     Wrapper function
@@ -553,6 +586,40 @@ def store_kunderolle(payload):
     return crm_guid
 
 
+def update_kunderolle(identifier, payload):
+    """
+    Wrapper function to update CRM account via a PATCH request.
+
+    OIO:    Organisationfunktion
+    CRM:    Kunderolle (ava_kunderolles)
+
+    :param identifier:  CRM object identifier (Type: uuid)
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns updated CRM object
+    """
+
+    # REST resource
+    resource = "ava_kunderolles({identifier})".format(
+        identifier=identifier
+    )
+
+    log.info("Updating CRM kunderolle")
+    if DO_WRITE:
+        response = patch_request(resource, payload)
+    else:
+        response = DummyRequest(200)
+
+    # Return False if not created
+    if response.status_code != 200:
+        log.error("Error updating CRM kunderolle")
+        log.error(response.text)
+        return False
+
+    log.info("CRM kunderolle updated")
+    return response
+
+
 def store_account(payload):
     """
     Wrapper function
@@ -597,6 +664,40 @@ def store_account(payload):
     return crm_guid
 
 
+def update_account(identifier, payload):
+    """
+    Wrapper function to update CRM account via a PATCH request.
+
+    OIO:    Interessefaellesskab
+    CRM:    Kundeforhold (accounts)
+
+    :param identifier:  CRM object identifier (Type: uuid)
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns updated CRM object
+    """
+
+    # REST resource
+    resource = "accounts({identifier})".format(
+        identifier=identifier
+    )
+
+    log.info("Updating CRM account")
+    if DO_WRITE:
+        response = patch_request(resource, payload)
+    else:
+        response = DummyRequest(200)
+
+    # Return False if not created
+    if response.status_code != 200:
+        log.error("Error updating CRM account")
+        log.error(response.text)
+        return False
+
+    log.info("Account updated")
+    return response
+
+
 def store_aftale(payload):
     """
     Wrapper function
@@ -636,6 +737,40 @@ def store_aftale(payload):
         return False
 
     return crm_guid
+
+
+def update_aftale(identifier, payload):
+    """
+    Wrapper function to update CRM aftale via a PATCH request.
+
+    OIO:    Indsats
+    CRM:    Aftale (ava_aftales)
+
+    :param identifier:  CRM object identifier (Type: uuid)
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns updated CRM object
+    """
+
+    # REST resource
+    resource = "ava_aftales({identifier})".format(
+        identifier=identifier
+    )
+
+    log.info("Updating CRM aftale")
+    if DO_WRITE:
+        response = patch_request(resource, payload)
+    else:
+        response = DummyRequest(200)
+
+    # Return False if not created
+    if response.status_code != 200:
+        log.error("Error updating CRM aftale")
+        log.error(response.text)
+        return False
+
+    log.info("CRM aftale updated")
+    return response
 
 
 def store_produkt(payload):
