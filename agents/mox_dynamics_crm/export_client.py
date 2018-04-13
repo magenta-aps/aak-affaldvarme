@@ -161,7 +161,7 @@ def process(kunderolle):
         try:
             # Map
             contact_crm_id = contact["external_ref"]
-            contact_data = address["data"]
+            contact_data = contact["data"]
 
             # Update
             crm.update_contact(
