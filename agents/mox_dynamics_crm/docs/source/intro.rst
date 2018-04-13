@@ -21,10 +21,21 @@ The application hosts an import and export function:
 
 Installation
 ------------
-Requirements:
+Application requirements:
 
-* Python 3.5.4+
-* Virtual environment
+    * Python 3.5.4+
+    * Virtual environment
+
+
+System requirements:
+    The mox dynamics crm application is using a cache layer,
+    based "RethinkDB" (https://rethinkdb.com) for datastorage.
+
+    This document describes a minimal setup of RethinkDB in the configuration section.
+    A minimal setup is for development purposes only.
+
+    TODO: Add configuration sample for a production environment
+
 
 
 Install:
@@ -146,9 +157,20 @@ Additionally the cache layer can be configured automatically for development pur
 
 Running the following command will setup the cache layer (e.g. setup user, create database/tables etc.): ::
 
+    # On a newly created server/instance
+    # A sample config file (containing dummy values) can be auto generated
+    (python-env) # python manage.py configure
+
+    # To setup the cache database
+    # The following command will setup the database with the current configuration values
+    # Note that the setup script assumes that the admin user has a blank password
     (python-env) # python manage.py configure --setup
 
-:Note:
+:NOTE:
+    The auto generation of the "config.ini" file is for development purposes only.
+    In a production environment the responsability of creating e.g. credentials should
+    lie with the admin/team in charge of the environment.
+
     Running configure will print minimal information to the terminal.
     However a log file (install.log) is dumped in the application directory for debugging purposes.
 
