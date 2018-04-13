@@ -170,7 +170,7 @@ def generate_section_ms_dynamics_crm():
         "crm_oauth_endpoint": "cache_layer",
         "crm_client_id": uuid4(),
         "crm_client_secret": secret.decode(),
-        "crm_rest_api_path": "/api/v8.2/"
+        "crm_rest_api_path": "api/data/v8.2"
     }
 
 
