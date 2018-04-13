@@ -137,7 +137,7 @@ The configuration must contain the following three sections: ::
     crm_oauth_endpoint = https://login.windows.net
 
     # Web Api base path
-    crm_rest_api_path = /api/v8.2/
+    crm_rest_api_path = api/data/v8.2
 
     # Application resource (by default the endpoint of the CRM application)
     crm_resource = https://example.crm4.dynamics.com
