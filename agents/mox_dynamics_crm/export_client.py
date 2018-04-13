@@ -135,7 +135,8 @@ def process(kunderolle):
         except Exception as error:
             log.error(error)
 
-        # Update address lookup
+    # Update address lookup
+    if "external_ref" in address:
         lookup_address = "/ava_adresses({external_ref})".format(
             external_ref=address["external_ref"]
         )
@@ -172,7 +173,8 @@ def process(kunderolle):
         except Exception as error:
             log.error(error)
 
-        # Update contact lookup
+    # Update contact lookup
+    if "external_ref" in contact:
         lookup_contact = "/contacts({external_ref})".format(
             external_ref=contact["external_ref"]
         )
@@ -240,7 +242,8 @@ def process(kunderolle):
             except Exception as error:
                 log.error(error)
 
-            # Update address lookup
+        # Update address lookup
+        if "external_ref" in billing_address:
             lookup_billing_address = "/ava_adresses({external_ref})".format(
                 external_ref=billing_address["external_ref"]
             )
@@ -280,7 +283,8 @@ def process(kunderolle):
         except Exception as error:
             log.error(error)
 
-        # Update account lookup
+    # Update account lookup
+    if "external_ref" in kundeforhold:
         lookup_account = "/accounts({external_ref})".format(
             external_ref=kundeforhold["external_ref"]
         )
@@ -328,9 +332,10 @@ def process(kunderolle):
         except Exception as error:
             log.error(error)
 
-        # Update account lookup
+    # Update account lookup
+    if "external_ref" in kunderolle:
         lookup_account = "/accounts({external_ref})".format(
-            external_ref=kundeforhold["external_ref"]
+            external_ref=kunderolle["external_ref"]
         )
 
     # Aftale
@@ -381,7 +386,11 @@ def process(kunderolle):
         except Exception as error:
             log.error(error)
 
-        # Update aftale lookup
+    # Aftale external ref fallback
+    aftale_external_ref = None
+
+    # Update aftale lookup
+    if "external_ref" in aftale:
         aftale_external_ref = aftale["external_ref"]
 
         lookup_aftale = "/ava_aftales({external_ref})".format(
@@ -476,6 +485,8 @@ def process(kunderolle):
             except Exception as error:
                 log.error(error)
 
+        # Update utility address lookup
+        if "external_ref" in utility_address:
             lookup_utility_address = "/ava_adresses({reference})".format(
                 reference=utility_address["external_ref"]
             )
