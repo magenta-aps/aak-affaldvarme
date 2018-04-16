@@ -23,7 +23,7 @@ ORGANISATION_UUID = config["parent_organisation"] or None
 # This should be disabled when no commercial certificate is installed
 # (E.g. should be disabled or set to 'no' when using a self signed signature)
 # By default this is set to 'Yes'
-DO_VERIFY_SSL_SIGNATURE = config.getboolean("do_verify_ssl_signature", "yes")
+DO_VERIFY_SSL_SIGNATURE = config.getboolean("do_verify_ssl_signature", True)
 
 # Init logging
 log = getLogger(__name__)
@@ -185,10 +185,6 @@ def get_request(resource, **params):
 
     results = oio_response.json()["results"]
 
-    # Check if the list is empty
-    if len(results) <= 0:
-        return False
-
     # Currently OIO REST returns a list inside a list,
     # As such, we return the first result which is the actual list
     # {
@@ -196,6 +192,11 @@ def get_request(resource, **params):
     #     [ <objects...> ]  <-- This is what we want
     #   ]
     # }
+    
+    # First, check if the list is empty
+    if len(results[0]) <= 0:
+        return False
+
     return results[0]
 
 
