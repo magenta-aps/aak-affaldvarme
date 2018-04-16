@@ -63,11 +63,11 @@ def ava_bruger(entity):
 
     try:
         # Filter "living" address
-        residence = (key for key in relationer[
-                     "adresser"] if "uuid" in key.keys())
+        addresses = relationer.get("adresser", {})
+        residence = (addr for addr in addresses if "uuid" in addr)
 
         # Filter other address items
-        other = (key for key in relationer["adresser"] if "urn" in key.keys())
+        other = (addr for addr in addresses if "urn" in addr)
 
         for item in residence:
             dawa_address = item["uuid"]
@@ -403,7 +403,16 @@ def ava_aftale(entity):
     # Map data object
     data = entity["registreringer"][0]
     attributter = data["attributter"]
-    relationer = data["relationer"]
+    
+    # relationer = data["relationer"]
+    relationer = data.get("relationer")
+    # Bail out on no relations, avoiding program crash
+    if not relationer:
+        log.error(
+            "Error no relationer for: {0}".format(origin_id)
+        )
+        return False # make oio_interface skip
+
     egenskaber = attributter["indsatsegenskaber"][0]
 
     # Fetch references
@@ -522,7 +531,7 @@ def ava_installation(entity):
     alternative_address = relationer.get("ava_opstillingsadresse")
 
     if alternative_address:
-        ava_adresse = alternative_address[0]["uuid"]
+        ava_adresse = alternative_address[0].get('uuid')
 
     # Referenced by other entities
 
