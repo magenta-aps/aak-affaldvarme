@@ -32,7 +32,7 @@ if config.getboolean("do_run_in_test_mode", "yes"):
     LOG_FILE = "debug.log"
 
 # Set logging
-log = start_logging(20, LOG_FILE)
+log = start_logging(config.getint("loglevel", fallback=20), LOG_FILE)
 
 
 @click.group()
