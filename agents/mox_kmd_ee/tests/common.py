@@ -7,6 +7,8 @@ import functools
 import traceback
 
 
+# decorator used during debugging to drop into debug
+# when a specific exeption type occurs
 def debug(*exceptions):
     if not exceptions:
         exceptions = (AssertionError, )

@@ -11,7 +11,7 @@ import smtplib
 
 from settings import MQ_HOST
 from settings import MQ_QUEUE
-from settings import LOG_FILE   # noqa: F811
+from settings import LOG_FILE
 from settings import DO_USE_DEBUG_LOG
 
 # Set connection
@@ -179,8 +179,7 @@ def consume():
 # Run consume for testing
 if __name__ == "__main__":
 
-    if DO_USE_DEBUG_LOG:
-        LOG_FILE = "debug.log"  # noqa: F811
+    LOG_FILE = "debug.log" if DO_USE_DEBUG_LOG else LOG_FILE
 
     # Start logging
     start_logging(

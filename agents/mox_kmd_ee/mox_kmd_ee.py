@@ -40,7 +40,7 @@ from service_clients import (
     report_error,
     send_reported_errors,
     fuzzy_address_uuid
-    )
+)
 
 
 """CUSTOMER RELATED FUNCTIONS.

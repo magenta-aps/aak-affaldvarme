@@ -118,7 +118,7 @@ def get_cvr_data(cvr_number):
 def report_error_amqp(
         error_message, error_stack=None,
         error_object=None, headers={}
-        ):
+):
     """Report error, logging to file and sending to an AMQP Queue.
 
     The AMQP queue will decide what to do with the various errors depending on
