@@ -435,6 +435,14 @@ def update_customer_relation(fields, new_values):
     customer_roles = [KUNDE, LIGESTILLINGSKUNDE]
     customer_number = int_str(fields['Kundenr'])
     cr_uuid = lookup_customer_relation(customer_number)
+    if not cr_uuid:
+        report_error(
+            "Customer relation not found, customer {}".format(customer_number)
+        )
+        print(
+            "Customer relation not found, customer {}".format(customer_number)
+        )
+        return
     customer_relation = read_object(cr_uuid, "organisation",
                                     "interessefaellesskab")
     # Dictionary of updated values - no need to exclusively check new_values.
