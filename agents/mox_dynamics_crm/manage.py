@@ -12,9 +12,9 @@ import import_client
 import export_client
 import cache_interface as cache
 import crm_interface as crm
+import installer
 from helper import get_config
 from logger import start_logging
-
 
 # Get config
 config = get_config()
@@ -32,7 +32,7 @@ if config.getboolean("do_run_in_test_mode", "yes"):
     LOG_FILE = "debug.log"
 
 # Set logging
-log = start_logging(20, LOG_FILE)
+log = start_logging(config.getint("loglevel", fallback=20), LOG_FILE)
 
 
 @click.group()
@@ -42,6 +42,33 @@ def cli():
     See 'help' for available options
     """
     pass
+
+
+@cli.command(name="configure")
+@click.option(
+    "--setup/--no-setup",
+    default=False,
+    help="Automatically setup cache layer"
+)
+def configure(setup):
+    """
+    Auto configure agent
+    (Create config file)
+
+    If the --setup flag is passed,
+    setup will be run, to install the cache layer
+    """
+
+    # Message user
+    click.echo("Configure client")
+
+    # Auto configure
+    installer.auto_configure()
+
+    if setup:
+        installer.auto_setup_cache()
+
+    click.echo("Client configured")
 
 
 @cli.command(name="import")
@@ -59,11 +86,18 @@ def import_from_lora():
 
 
 @cli.command(name="export")
-def export_to_crm():
+@click.option(
+    "--dry-run/--no-dry-run",
+    default=False,
+    help="Run without sending data to CRM"
+)
+def export_to_crm(dry_run):
     """
     Build relations and export all objects to CRM
     For further information, please see the 'export_client'.
     """
+
+    crm.DO_WRITE = not dry_run
 
     # Message user
     click.echo("Begin export from cache to CRM")

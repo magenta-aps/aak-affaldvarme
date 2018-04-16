@@ -30,7 +30,10 @@ def connect():
     """
 
     # Get configuration
-    config = get_config("cache_layer")
+    # config = get_config("cache_layer")
+
+    # Changed for compatibility
+    config = get_config("rethinkdb")
 
     if not config:
         raise Exception("Unable to connect")
@@ -196,17 +199,17 @@ def filter(table, **params):
 
     with connect() as connection:
         query = r.table(table).filter(params)
-        run = query.run(connection)
+        result = query.run(connection)
 
         # Info
         log.info(
             "{table}: {query}".format(
                 table=table,
-                query=run
+                query=result
             )
         )
 
-        return run
+        return result
 
 
 def all(table):
@@ -269,15 +272,11 @@ def find_indsats(uuid):
     :return:        Returns either empty list or list of documents
     """
 
-    documents = []
+    documents = filter(table=mapping.get("indsats"),
+                       interessefaellesskab_ref=uuid)
 
-    for document in filter(
-        table=mapping.get("indsats"),
-        interessefaellesskab_ref=uuid
-    ):
-        documents.append(document)
-
-    return documents[0]
+    for d in documents:
+        return d
 
 
 def store(resource, payload):

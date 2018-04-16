@@ -1,0 +1,10 @@
+# development
+python-env
+certificates/*
+mock*
+
+# test
+.pytest_cache
+
+# config
+*.ini

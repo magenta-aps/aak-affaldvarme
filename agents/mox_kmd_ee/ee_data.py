@@ -9,6 +9,7 @@ Functions starting with "store" write to files on disk, and files starting with
 """
 
 import pickle
+import os
 
 from ee_sql import CUSTOMER_SQL, RELEVANT_TREF_INSTALLATIONS_SQL
 from ee_utils import int_str
@@ -18,6 +19,11 @@ CUSTOMER_RELATIONS_FILE = 'var/customer_relations'
 INSTALLATIONS_FILE = 'var/installations'
 
 """ CUSTOMER RECORDS """
+
+
+def has_customer_records():
+    """Decide if the initial import of customer records has run."""
+    return os.path.isfile(CUSTOMER_RELATIONS_FILE)
 
 
 def read_customer_records(cursor):

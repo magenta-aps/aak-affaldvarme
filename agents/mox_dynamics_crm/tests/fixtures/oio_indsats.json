@@ -1,0 +1,118 @@
+{
+  "id": "61f4eff4-80ab-41c3-9eb4-8e7506256b08",
+  "registreringer": [
+    {
+      "attributter": {
+        "indsatsegenskaber": [
+          {
+            "beskrivelse": "1",
+            "brugervendtnoegle": "Varme, 11223344, Testfacility 111-identifier qp 9,9",
+            "sluttidspunkt": "9999-12-31 01:00:00+01",
+            "starttidspunkt": "2014-10-09 00:00:00+02",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ]
+      },
+      "brugerref": "42c432e8-9c4a-11e6-9f62-873cf34a735f",
+      "fratidspunkt": {
+        "graenseindikator": true,
+        "tidsstempeldatotid": "2017-12-04 11:30:24.161887+01"
+      },
+      "livscykluskode": "Opstaaet",
+      "relationer": {
+        "indsatsdokument": [
+          {
+            "indeks": 1,
+            "uuid": "a619e796-3f77-4e5b-8138-9f9b8f40e527",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ],
+        "indsatskvalitet": [
+          {
+            "indeks": 1,
+            "uuid": "7eea142b-97cf-4b5d-b4ac-54875e7a7083",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ],
+        "indsatsmodtager": [
+          {
+            "uuid": "57f01ad2-0160-44f7-af9a-2be943dacc79",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ],
+        "indsatstype": [
+          {
+            "urn": "urn:Varme",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ]
+      },
+      "tilstande": {
+        "indsatsfremdrift": [
+          {
+            "fremdrift": "Disponeret",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ],
+        "indsatspubliceret": [
+          {
+            "publiceret": "IkkePubliceret",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2017-12-04 11:24:27.318112+01",
+              "from_included": true,
+              "to": "infinity",
+              "to_included": false
+            }
+          }
+        ]
+      },
+      "tiltidspunkt": {
+        "tidsstempeldatotid": "infinity"
+      }
+    }
+  ]
+}

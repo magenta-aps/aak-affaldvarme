@@ -25,10 +25,7 @@ def export_everything():
             on 'contacts' rather than 'kunderolles'.
     """
 
-    all_kunderolle = []
-
-    for kunderolle in cache.all("ava_kunderolles"):
-        all_kunderolle.append(kunderolle)
+    all_kunderolle = [k for k in cache.all("ava_kunderolles")]
 
     for kunderolle in all_kunderolle:
         process(kunderolle)
@@ -68,10 +65,12 @@ def process(kunderolle):
     interessefaellesskab_ref = kunderolle["interessefaellesskab_ref"]
 
     # Customer/Contact
-    contact = cache.get(table="contacts", uuid=contact_ref)
+    if contact_ref:
+        contact = cache.get(table="contacts", uuid=contact_ref)
+    else:
+        contact = None
 
     if not contact:
-        print(contact)
         log.error("Contact not found: {}".format(contact_ref))
         log.error(kunderolle)
         return False
@@ -87,8 +86,8 @@ def process(kunderolle):
 
     if not address_ref:
         log.info("No address reference found, skipping")
-        log.debug("Kunderolle: {0}".format(kunderolle["_id"]))
-        log.debug("Contact: {0}".format(contact["_id"]))
+        log.debug("Kunderolle: {0}".format(kunderolle.get("_id")))
+        log.debug("Contact: {0}".format(contact.get("_id")))
         return False
 
     address = cache.get(table="ava_adresses", uuid=address_ref)
@@ -119,8 +118,25 @@ def process(kunderolle):
         log.info("Updating cache for klasse")
         log.info(update_cache)
 
+    else:
+        # Update procedure
+        try:
+            # Map
+            address_crm_id = address["external_ref"]
+            address_data = address["data"]
+
+            # Update
+            crm.update_address(
+                identifier=address_crm_id,
+                payload=address_data
+            )
+
+        # TODO: Define exception type
+        except Exception as error:
+            log.error(error)
+
     # Update address lookup
-    if address["external_ref"]:
+    if "external_ref" in address:
         lookup_address = "/ava_adresses({external_ref})".format(
             external_ref=address["external_ref"]
         )
@@ -140,12 +156,25 @@ def process(kunderolle):
         log.info("Updating cache for contact")
         log.info(update_cache)
 
-    # Update contact lookup
-    if contact["external_ref"]:
-        # Hotfix:
-        contact_external_ref = contact["external_ref"]
+    else:
+        # Update procedure
+        try:
+            # Map
+            contact_crm_id = contact["external_ref"]
+            contact_data = contact["data"]
 
-        # Create lookup
+            # Update
+            crm.update_contact(
+                identifier=contact_crm_id,
+                payload=contact_data
+            )
+
+        # TODO: Define exception type
+        except Exception as error:
+            log.error(error)
+
+    # Update contact lookup
+    if "external_ref" in contact:
         lookup_contact = "/contacts({external_ref})".format(
             external_ref=contact["external_ref"]
         )
@@ -196,8 +225,25 @@ def process(kunderolle):
             log.info("Updating cache for billing_address")
             log.info(update_cache)
 
+        else:
+            # Update procedure
+            try:
+                # Map
+                billing_address_crm_id = billing_address["external_ref"]
+                billing_address_data = billing_address["data"]
+
+                # Update
+                crm.update_address(
+                    identifier=billing_address_crm_id,
+                    payload=billing_address_data
+                )
+
+            # TODO: Define exception type
+            except Exception as error:
+                log.error(error)
+
         # Update address lookup
-        if billing_address["external_ref"]:
+        if "external_ref" in billing_address:
             lookup_billing_address = "/ava_adresses({external_ref})".format(
                 external_ref=billing_address["external_ref"]
             )
@@ -220,8 +266,25 @@ def process(kunderolle):
         log.info("Updating cache for kundeforhold")
         log.info(update_cache)
 
+    else:
+        # Update procedure
+        try:
+            # Map
+            account_crm_id = kundeforhold["external_ref"]
+            account_data = kundeforhold["data"]
+
+            # Update
+            crm.update_account(
+                identifier=account_crm_id,
+                payload=account_data
+            )
+
+        # TODO: Define exception type
+        except Exception as error:
+            log.error(error)
+
     # Update account lookup
-    if kundeforhold["external_ref"]:
+    if "external_ref" in kundeforhold:
         lookup_account = "/accounts({external_ref})".format(
             external_ref=kundeforhold["external_ref"]
         )
@@ -251,6 +314,29 @@ def process(kunderolle):
 
         log.info("Updating cache for organisationfunktion")
         log.info(update_cache)
+
+    else:
+        # Update procedure
+        try:
+            # Map
+            kunderolle_crm_id = kunderolle["external_ref"]
+            kunderolle_data = kunderolle["data"]
+
+            # Update
+            crm.update_kunderolle(
+                identifier=kunderolle_crm_id,
+                payload=kunderolle_data
+            )
+
+        # TODO: Define exception type
+        except Exception as error:
+            log.error(error)
+
+    # Update account lookup
+    if "external_ref" in kunderolle:
+        lookup_account = "/accounts({external_ref})".format(
+            external_ref=kunderolle["external_ref"]
+        )
 
     # Aftale
     aftale = cache.find_indsats(interessefaellesskab_ref)
@@ -283,9 +369,28 @@ def process(kunderolle):
         log.info("Updating cache for indsats")
         log.info(update_cache)
 
+    else:
+        # Update procedure
+        try:
+            # Map
+            aftale_crm_id = aftale["external_ref"]
+            aftale_data = aftale["data"]
+
+            # Update
+            crm.update_aftale(
+                identifier=aftale_crm_id,
+                payload=aftale_data
+            )
+
+        # TODO: Define exception type
+        except Exception as error:
+            log.error(error)
+
+    # Aftale external ref fallback
+    aftale_external_ref = None
+
     # Update aftale lookup
-    if aftale["external_ref"]:
-        # Hotfix:
+    if "external_ref" in aftale:
         aftale_external_ref = aftale["external_ref"]
 
         lookup_aftale = "/ava_aftales({external_ref})".format(
@@ -302,8 +407,11 @@ def process(kunderolle):
     klasse_ref = aftale["klasse_ref"]
 
     if not klasse_ref:
-        print("Causing an error: {}".format(klasse_ref))
-        print(aftale)
+        log.warning(
+            "No reference for product found: {internal}".format(
+                internal=aftale.get("id"),
+            )
+        )
         return
 
     produkt = cache.get(table="ava_installations", uuid=klasse_ref)
@@ -320,7 +428,12 @@ def process(kunderolle):
     if produkt["dawa_ref"]:
 
         utility_ref = produkt["dawa_ref"]
-        print(utility_ref)
+
+        # Debug
+        log.debug("Found utility address reference: {reference}".format(
+                reference=utility_ref
+            )
+        )
 
         # Get address external ref
         utility_address = cache.get(
@@ -332,9 +445,14 @@ def process(kunderolle):
         # Get from DAR and store in cache
 
         if not utility_address:
+            # Info
+            log.info(
+                "Utility address not found, importing from DAWA"
+            )
             utility_address = dawa.get_access_address(utility_ref)
-            print("GET ADR FROM DAR")
-            print(utility_address)
+
+            # Debug
+            log.debug("Utility address: {0}".format(utility_address))
 
     if utility_address:
         if not utility_address["external_ref"]:
@@ -349,7 +467,26 @@ def process(kunderolle):
                 payload=utility_address
             )
 
-        if utility_address["external_ref"]:
+        else:
+
+            # Update procedure
+            try:
+                # Map
+                utility_address_crm_id = utility_address["external_ref"]
+                utility_address_data = utility_address["data"]
+
+                # Update
+                crm.update_address(
+                    identifier=utility_address_crm_id,
+                    payload=utility_address_data
+                )
+
+            # TODO: Define exception type
+            except Exception as error:
+                log.error(error)
+
+        # Update utility address lookup
+        if "external_ref" in utility_address:
             lookup_utility_address = "/ava_adresses({reference})".format(
                 reference=utility_address["external_ref"]
             )
@@ -374,6 +511,23 @@ def process(kunderolle):
         #     produkt_data["ava_adresse@odata.bind"] = lookup_billing_address
 
         produkt["external_ref"] = crm.store_produkt(produkt["data"])
+
+    else:
+        # Update procedure
+        try:
+            # Map
+            produkt_crm_id = produkt["external_ref"]
+            produkt_data = produkt["data"]
+
+            # Update
+            crm.update_produkt(
+                identifier=produkt_crm_id,
+                payload=produkt_data
+            )
+
+        # TODO: Define exception type
+        except Exception as error:
+            log.error(error)
 
     # Update cache
     update_cache = cache.update(
