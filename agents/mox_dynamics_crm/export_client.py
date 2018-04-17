@@ -372,43 +372,29 @@ def process(kunderolle):
             log.debug("Utility address: {0}".format(utility_address))
 
     if utility_address:
-        if not utility_address["external_ref"]:
 
+        if not utility_address["external_ref"]:
             utility_address["external_ref"] = crm.store_address(
                 utility_address["data"]
             )
-
-            # Store in cache
-            cache.store(
-                resource="dawa_access",
-                payload=utility_address
+        else:
+            crm.update_address(
+                identifier=utility_address["external_ref"],
+                payload=utility_address["data"]
             )
 
-        else:
-
-            # Update procedure
-            try:
-                # Map
-                utility_address_crm_id = utility_address["external_ref"]
-                utility_address_data = utility_address["data"]
-
-                # Update
-                crm.update_address(
-                    identifier=utility_address_crm_id,
-                    payload=utility_address_data
-                )
-
-            # TODO: Define exception type
-            except Exception as error:
-                log.error(error)
+        # Store in cache
+        cache.store(
+            resource="dawa_access",
+            payload=utility_address
+        )
 
         # Update utility address lookup
-        if "external_ref" in utility_address:
-            lookup_utility_address = "/ava_adresses({reference})".format(
-                reference=utility_address["external_ref"]
-            )
+        lookup_utility_address = "/ava_adresses({reference})".format(
+            reference=utility_address["external_ref"]
+        )
 
-            produkt["data"]["ava_adresse@odata.bind"] = lookup_utility_address
+        produkt["data"]["ava_adresse@odata.bind"] = lookup_utility_address
 
     # Workaround
     if aftale_external_ref:
