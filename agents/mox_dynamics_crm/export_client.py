@@ -230,10 +230,9 @@ def process(kunderolle):
     log.info(update_cache)
 
     # Update account lookup
-    if "external_ref" in kundeforhold:
-        lookup_account = "/accounts({external_ref})".format(
-            external_ref=kundeforhold["external_ref"]
-        )
+    lookup_account = "/accounts({external_ref})".format(
+        external_ref=kundeforhold["external_ref"]
+    )
 
     # Kunderolle
     # Depends on: Contact, Account
@@ -308,22 +307,18 @@ def process(kunderolle):
     log.info("Updating cache for indsats")
     log.info(update_cache)
 
-    # Aftale external ref fallback
-    aftale_external_ref = None
-
     # Update aftale lookup
-    if "external_ref" in aftale:
-        aftale_external_ref = aftale["external_ref"]
+    aftale_external_ref = aftale["external_ref"]
 
-        lookup_aftale = "/ava_aftales({external_ref})".format(
-            external_ref=aftale["external_ref"]
-        )
+    lookup_aftale = "/ava_aftales({external_ref})".format(
+        external_ref=aftale["external_ref"]
+    )
 
-        # Create link between aftale and contact
-        crm.contact_and_aftale_link(
-            contact_guid=contact_external_ref,
-            aftale_guid=aftale_external_ref
-        )
+    # Create link between aftale and contact
+    crm.contact_and_aftale_link(
+        contact_guid=contact_external_ref,
+        aftale_guid=aftale_external_ref
+    )
 
     # Installation
     klasse_ref = aftale["klasse_ref"]
