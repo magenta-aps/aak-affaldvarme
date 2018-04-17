@@ -306,31 +306,19 @@ def process(kunderolle):
         kunderolle["external_ref"] = crm.store_kunderolle(
             kunderolle_data
         )
-
-        update_cache = cache.update(
-            table="ava_kunderolles",
-            document=kunderolle
+    else:
+        crm.update_kunderolle(
+            identifier=kunderolle["external_ref"],
+            payload=kunderolle["data"]
         )
 
-        log.info("Updating cache for organisationfunktion")
-        log.info(update_cache)
+    update_cache = cache.update(
+        table="ava_kunderolles",
+        document=kunderolle
+    )
 
-    else:
-        # Update procedure
-        try:
-            # Map
-            kunderolle_crm_id = kunderolle["external_ref"]
-            kunderolle_data = kunderolle["data"]
-
-            # Update
-            crm.update_kunderolle(
-                identifier=kunderolle_crm_id,
-                payload=kunderolle_data
-            )
-
-        # TODO: Define exception type
-        except Exception as error:
-            log.error(error)
+    log.info("Updating cache for organisationfunktion")
+    log.info(update_cache)
 
     # Update account lookup
     if "external_ref" in kunderolle:
