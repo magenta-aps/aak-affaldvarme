@@ -408,10 +408,6 @@ def process(kunderolle):
     if lookup_aftale:
         produkt["data"]["ava_aftale@odata.bind"] = lookup_aftale
 
-    # Utility address
-    # if lookup_billing_address:
-    #     produkt_data["ava_adresse@odata.bind"] = lookup_billing_address
-
     if not produkt["external_ref"]:
         produkt["external_ref"] = crm.store_produkt(produkt["data"])
     else:
