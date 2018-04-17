@@ -345,46 +345,34 @@ def process(kunderolle):
         log.warning("Aftale does not exist")
         return
 
+    aftale_data = aftale["data"]
+
+    if lookup_account:
+        kundeforhold_bind = "ava_kundeforhold@odata.bind"
+        aftale_data[kundeforhold_bind] = lookup_account
+
+    if lookup_billing_address:
+        billing_bind = "ava_faktureringsadresse@odata.bind"
+        aftale_data[billing_bind] = lookup_billing_address
+
+    log.debug("AFTALE DATA CHECK:")
+    log.debug(aftale_data)
+
     if not aftale.get("external_ref"):
-        aftale_data = aftale["data"]
-
-        if lookup_account:
-            kundeforhold_bind = "ava_kundeforhold@odata.bind"
-            aftale_data[kundeforhold_bind] = lookup_account
-
-        if lookup_billing_address:
-            billing_bind = "ava_faktureringsadresse@odata.bind"
-            aftale_data[billing_bind] = lookup_billing_address
-
-        log.debug("AFTALE DATA CHECK:")
-        log.debug(aftale_data)
-
         aftale["external_ref"] = crm.store_aftale(aftale_data)
-
-        update_cache = cache.update(
-            table="ava_aftales",
-            document=aftale
+    else:
+        crm.update_aftale(
+            identifier=aftale["external_ref"],
+            payload=aftale["data"]
         )
 
-        log.info("Updating cache for indsats")
-        log.info(update_cache)
+    update_cache = cache.update(
+        table="ava_aftales",
+        document=aftale
+    )
 
-    else:
-        # Update procedure
-        try:
-            # Map
-            aftale_crm_id = aftale["external_ref"]
-            aftale_data = aftale["data"]
-
-            # Update
-            crm.update_aftale(
-                identifier=aftale_crm_id,
-                payload=aftale_data
-            )
-
-        # TODO: Define exception type
-        except Exception as error:
-            log.error(error)
+    log.info("Updating cache for indsats")
+    log.info(update_cache)
 
     # Aftale external ref fallback
     aftale_external_ref = None
