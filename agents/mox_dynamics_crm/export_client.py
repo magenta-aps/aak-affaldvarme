@@ -190,37 +190,22 @@ def process(kunderolle):
             billing_address["external_ref"] = crm.store_address(
                 billing_address["data"]
             )
-
-            update_cache = cache.update(
-                table="ava_adresses",
-                document=billing_address
-            )
-
-            log.info("Updating cache for billing_address")
-            log.info(update_cache)
-
         else:
-            # Update procedure
-            try:
-                # Map
-                billing_address_crm_id = billing_address["external_ref"]
-                billing_address_data = billing_address["data"]
-
-                # Update
-                crm.update_address(
-                    identifier=billing_address_crm_id,
-                    payload=billing_address_data
-                )
-
-            # TODO: Define exception type
-            except Exception as error:
-                log.error(error)
-
-        # Update address lookup
-        if "external_ref" in billing_address:
-            lookup_billing_address = "/ava_adresses({external_ref})".format(
-                external_ref=billing_address["external_ref"]
+            crm.update_address(
+                identifier=billing_address["external_ref"],
+                payload=billing_address["data"]
             )
+
+        update_cache = cache.update(
+            table="ava_adresses",
+            document=billing_address
+        )
+        log.info("Updating cache for billing_address")
+        log.info(update_cache)
+
+        lookup_billing_address = "/ava_adresses({external_ref})".format(
+            external_ref=billing_address["external_ref"]
+        )
 
     kundeforhold_data = kundeforhold["data"]
     if lookup_billing_address:
