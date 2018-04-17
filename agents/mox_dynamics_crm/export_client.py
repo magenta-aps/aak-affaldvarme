@@ -497,37 +497,26 @@ def process(kunderolle):
     if aftale_external_ref:
         produkt["indsats_ref"] = aftale_external_ref
 
+
+    # Workaround: Just inserting billing address
+    ava_kundenummer = kundeforhold["data"]["ava_kundenummer"]
+    produkt["data"]["ava_kundenummer"] = ava_kundenummer
+
+    if lookup_aftale:
+        produkt["data"]["ava_aftale@odata.bind"] = lookup_aftale
+
+    # Utility address
+    # if lookup_billing_address:
+    #     produkt_data["ava_adresse@odata.bind"] = lookup_billing_address
+
     if not produkt["external_ref"]:
-
-        # Workaround: Just inserting billing address
-        ava_kundenummer = kundeforhold["data"]["ava_kundenummer"]
-        produkt["data"]["ava_kundenummer"] = ava_kundenummer
-
-        if lookup_aftale:
-            produkt["data"]["ava_aftale@odata.bind"] = lookup_aftale
-
-        # Utility address
-        # if lookup_billing_address:
-        #     produkt_data["ava_adresse@odata.bind"] = lookup_billing_address
-
         produkt["external_ref"] = crm.store_produkt(produkt["data"])
-
     else:
-        # Update procedure
-        try:
-            # Map
-            produkt_crm_id = produkt["external_ref"]
-            produkt_data = produkt["data"]
+        crm.update_produkt(
+            identifier=produkt["external_ref"],
+            payload=produkt["data"]
+        )
 
-            # Update
-            crm.update_produkt(
-                identifier=produkt_crm_id,
-                payload=produkt_data
-            )
-
-        # TODO: Define exception type
-        except Exception as error:
-            log.error(error)
 
     # Update cache
     update_cache = cache.update(
