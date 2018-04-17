@@ -102,82 +102,56 @@ def process(kunderolle):
         address = cache.get(table="ava_adresses", uuid=address_ref)
 
     if not address:
+        log.warn(
+            "address {address_ref} not cached, "
+            "skipping contact {contact_ref}".format(**locals())
+        )
         return False
 
     # Export address
     # Depends on: None
     if not address["external_ref"]:
-        address_data = address["data"]
-        address["external_ref"] = crm.store_address(address_data)
-
-        update_cache = cache.update(
-            table="ava_adresses",
-            document=address
-        )
-
-        log.info("Updating cache for klasse")
-        log.info(update_cache)
-
+        address["external_ref"] = crm.store_address(address["data"])
     else:
-        # Update procedure
-        try:
-            # Map
-            address_crm_id = address["external_ref"]
-            address_data = address["data"]
-
-            # Update
-            crm.update_address(
-                identifier=address_crm_id,
-                payload=address_data
-            )
-
-        # TODO: Define exception type
-        except Exception as error:
-            log.error(error)
-
-    # Update address lookup
-    if "external_ref" in address:
-        lookup_address = "/ava_adresses({external_ref})".format(
-            external_ref=address["external_ref"]
+        crm.update_address(
+            identifier=address["external_ref"],
+            payload=address["data"]
         )
+
+    update_cache = cache.update(
+        table="ava_adresses",
+        document=address
+    )
+
+    log.info("Updating cache for contact address")
+    log.info(update_cache)
+
+    lookup_address = "/ava_adresses({external_ref})".format(
+        external_ref=address["external_ref"]
+    )
+    contact["data"]["ava_adresse@odata.bind"] = lookup_address
 
     # Export contact
     # Depends on: address
     if not contact["external_ref"]:
-        contact_data = contact["data"]
-        contact_data["ava_adresse@odata.bind"] = lookup_address
-        contact["external_ref"] = crm.store_contact(contact_data)
-
-        update_cache = cache.update(
-            table="contacts",
-            document=contact
+        contact["external_ref"] = crm.store_contact(contact["data"])
+    else:
+        crm.update_contact(
+            identifier=contact["external_ref"],
+            payload=contact["data"]
         )
 
-        log.info("Updating cache for contact")
-        log.info(update_cache)
-
-    else:
-        # Update procedure
-        try:
-            # Map
-            contact_crm_id = contact["external_ref"]
-            contact_data = contact["data"]
-
-            # Update
-            crm.update_contact(
-                identifier=contact_crm_id,
-                payload=contact_data
-            )
-
-        # TODO: Define exception type
-        except Exception as error:
-            log.error(error)
+    update_cache = cache.update(
+        table="contacts",
+        document=contact
+    )
+    log.info("Updating cache for contact")
+    log.info(update_cache)
 
     # Update contact lookup
-    if "external_ref" in contact:
-        lookup_contact = "/contacts({external_ref})".format(
-            external_ref=contact["external_ref"]
-        )
+    lookup_contact = "/contacts({external_ref})".format(
+        external_ref=contact["external_ref"]
+    )
 
     # Kundeforhold
     kundeforhold = cache.get(
