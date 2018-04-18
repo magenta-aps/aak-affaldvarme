@@ -169,8 +169,8 @@ def get(table, uuid):
         query = r.table(table).get(uuid)
         run = query.run(connection)
 
-        # Info
-        log.info(
+        # Debug
+        log.debug(
             "{table}: {query}".format(
                 table=table,
                 query=run
