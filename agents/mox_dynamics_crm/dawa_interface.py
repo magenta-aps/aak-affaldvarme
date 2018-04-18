@@ -3,6 +3,7 @@
 import re
 import requests
 from logging import getLogger
+import cache_interface as cache
 
 # DAR Service settings
 BASE_URL = "https://dawa.aws.dk"
@@ -273,6 +274,7 @@ def get_all(area_code):
     """
 
     resource = "adresser"
+    table = cache.mapping.get("dawa")
 
     addresses = get_request(
         resource=resource,
@@ -286,9 +288,23 @@ def get_all(area_code):
     # Create empty payload:
     list_of_documents = []
 
+    batch_timestamp = cache.r.now()
+
     # Iterate and append converted documents to the list
     for address in addresses:
         converted = adapter(address)
+
+        # make sure external_ref is not overwritten in import
+        existing = cache.get(
+            table=table,
+            uuid=converted["id"]
+        )
+        if existing and existing.get("external_ref"):
+            converted["external_ref"] = existing["external_ref"]
+
+        # set update time
+        converted["updated"] = batch_timestamp
+
         list_of_documents.append(converted)
 
     return list_of_documents
