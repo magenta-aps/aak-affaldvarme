@@ -403,7 +403,7 @@ def ava_aftale(entity):
     # Map data object
     data = entity["registreringer"][0]
     attributter = data["attributter"]
-    
+
     # relationer = data["relationer"]
     relationer = data.get("relationer")
     # Bail out on no relations, avoiding program crash
@@ -411,7 +411,7 @@ def ava_aftale(entity):
         log.error(
             "Error no relationer for: {0}".format(origin_id)
         )
-        return False # make oio_interface skip
+        return False  # make oio_interface skip
 
     egenskaber = attributter["indsatsegenskaber"][0]
 
