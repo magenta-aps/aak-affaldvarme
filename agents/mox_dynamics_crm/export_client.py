@@ -400,7 +400,6 @@ def process(kunderolle):
     if aftale_external_ref:
         produkt["indsats_ref"] = aftale_external_ref
 
-
     # Workaround: Just inserting billing address
     ava_kundenummer = kundeforhold["data"]["ava_kundenummer"]
     produkt["data"]["ava_kundenummer"] = ava_kundenummer
@@ -415,7 +414,6 @@ def process(kunderolle):
             identifier=produkt["external_ref"],
             payload=produkt["data"]
         )
-
 
     # Update cache
     update_cache = cache.update(
