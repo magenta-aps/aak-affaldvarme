@@ -6,6 +6,8 @@ import ava_adapter as adapter
 from helper import get_config
 from logging import getLogger
 
+import cache_interface as cache
+
 
 # Settings (For compatibility)
 # TODO: Make general use of config (Configparser)
@@ -77,6 +79,7 @@ def batch_generator(resource, list_of_uuids):
 
     # Use switch to determine resource path
     switch = resources.get(resource)
+    table = cache.mapping.get(resource)
 
     resource = switch.get("resource")
     adapter = switch.get("adapter")
@@ -102,6 +105,9 @@ def batch_generator(resource, list_of_uuids):
 
         batch = []
 
+        # Batch timestamp
+        batch_timestamp = cache.r.now()
+
         # Return iterator
         for result in results:
             adapted = adapter(result)
@@ -110,6 +116,17 @@ def batch_generator(resource, list_of_uuids):
                 log.error("One faulty result: ")
                 log.error(result)
                 break
+
+            # make sure external_ref is not overwritten in import
+            existing = cache.get(
+                table=table,
+                uuid=adapted["id"]
+            )
+            if existing and existing.get("external_ref"):
+                adapted["external_ref"] = existing["external_ref"]
+
+            # set update time
+            adapted["updated"] = batch_timestamp
 
             batch.append(adapted)
 
@@ -192,7 +209,7 @@ def get_request(resource, **params):
     #     [ <objects...> ]  <-- This is what we want
     #   ]
     # }
-    
+
     # First, check if the list is empty
     if len(results[0]) <= 0:
         return False
