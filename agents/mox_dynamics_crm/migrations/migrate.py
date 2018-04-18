@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from helper import get_config
 from datetime import datetime
 from logger import start_logging
-from interfaces import mongo_interface as mongo
-from interfaces import rethinkdb_interface as rethink
+
+# Interfaces
+import cache_interface as cache
+from migrations import mongo_interface as mongo
 
 
 # Mapping of database collection/tables
@@ -22,7 +23,7 @@ mapping = {
         "destination": "access"
     },
     "accounts": {
-        "source": "interessefaelleskab",
+        "source": "interessefaellesskab",
         "destination": "accounts"
     },
     "ava_aftales": {
@@ -30,7 +31,7 @@ mapping = {
         "destination": "ava_aftales"
     },
     "ava_kunderolles": {
-        "source": "organisationsfunktion",
+        "source": "organisationfunktion",
         "destination": "ava_kunderolles"
     },
     "ava_installations": {
@@ -42,43 +43,21 @@ mapping = {
 
 def run():
     """
-
-    :return:
+    Run migration from mongodb to rethinkdb
     """
 
     # Init logging
     start_logging(
-        loglevel=20,
-        logfile="logs/migration.log"
+        loglevel=10,
+        logfile="migration.log"
     )
-
-    # Check config
-    config = get_config()
-
-    if not config:
-        print(
-            """
-            Configuration is missing
-            Please create a config.ini file
-            (Alternatively you may run bootstrap.py to autoconfigure)
-            """
-        )
-        return
-
-    if not config["rethinkdb"]:
-        print("Configuration for rethinkdb is missing, exiting")
-        return
-
-    if not config["mongodb"]:
-        print("Configuration for mongodb is missing, exiting")
-        return
 
     # Set starttime
     start_time = datetime.now().replace(microsecond=0)
 
     print("=== Begin migration ===")
 
-    for key in mapping.keys():
+    for key in mapping:
 
         item = mapping[key]
         source = item["source"]
@@ -114,8 +93,10 @@ def process(source, destination):
         item["id"] = item["_id"]
         item.pop("_id", None)
 
-        # Add created and updated fields
+        # Add created timestamp
         item["created"] = str(datetime.now())
+
+        # Add updated timestamp
         item["updated"] = str(datetime.now())
 
         converted_items.append(item)
@@ -128,11 +109,12 @@ def process(source, destination):
         converted_items = converted_items[size:]
 
         try:
-            rethink.insert(destination, batch)
+            cache.insert(
+                table=destination,
+                payload=batch,
+                conflict="update"
+            )
+
         except Exception as error:
             print(batch)
             print(error)
-
-
-if __name__ == "__main__":
-    run()
