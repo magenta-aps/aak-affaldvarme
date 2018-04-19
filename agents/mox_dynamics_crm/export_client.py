@@ -496,6 +496,8 @@ def process(kunderolle):
     # Workaround
     if aftale_external_ref:
         produkt["indsats_ref"] = aftale_external_ref
+        # we need to write - this one gets nulled in import
+        crm_produkt_data = {}  # update cache
 
     # Workaround: Just inserting billing address
     ava_kundenummer = kundeforhold["data"]["ava_kundenummer"]
@@ -506,7 +508,7 @@ def process(kunderolle):
 
     if not produkt["external_ref"]:
         produkt["external_ref"] = crm.store_produkt(produkt["data"])
-        crm_produkt_data = {}
+        crm_produkt_data = {}  # update cache
     elif produkt["data"] != crm_produkt_data:
         crm.update_produkt(
             identifier=produkt["external_ref"],
