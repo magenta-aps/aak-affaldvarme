@@ -50,6 +50,16 @@ def process(kunderolle):
     lookup_address = None
     lookup_billing_address = None
 
+    # skip-if-no-changes references
+    crm_kunderolle_data = dict(kunderolle["data"])
+    crm_contact_data = {}
+    crm_aftale_data = {}
+    crm_billing_address_data = {}
+    crm_utility_address_data = {}
+    crm_contact_address_data = {}
+    crm_kundeforhold_data = {}
+    crm_produkt_data = {}
+
     # May not be needed:
     # lookup_utility_address = None
     # lookup_kunderolle = None
@@ -74,6 +84,9 @@ def process(kunderolle):
         log.error("Contact not found: {}".format(contact_ref))
         log.error(kunderolle)
         return False
+
+    # skip-if-no-changes reference
+    crm_contact_data = dict(contact["data"])
 
     # Set KMDEE email address as primary if primary is null
     secondary_email = contact["data"]["ava_emailkmdee"]
@@ -108,14 +121,24 @@ def process(kunderolle):
         )
         return False
 
+    # this doesn't do that much but look like the others
+    # skip-if-no-changes reference
+    crm_contact_address_data = dict(address["data"])
+
     # Export address
     # Depends on: None
     if not address["external_ref"]:
         address["external_ref"] = crm.store_address(address["data"])
-    else:
+    elif address["data"] != crm_contact_address_data:
         crm.update_address(
             identifier=address["external_ref"],
             payload=address["data"]
+        )
+    else:
+        log.debug("skipping NOP address update for {id}".format(**address))
+        log.debug("{a} == {b}".format(
+            a=address["data"],
+            b=crm_contact_address_data)
         )
 
     update_cache = cache.update(
@@ -135,11 +158,14 @@ def process(kunderolle):
     # Depends on: address
     if not contact["external_ref"]:
         contact["external_ref"] = crm.store_contact(contact["data"])
-    else:
+    elif contact["data"] != crm_contact_data:
         crm.update_contact(
             identifier=contact["external_ref"],
             payload=contact["data"]
         )
+    else:
+        log.debug("skipping NOP contact update for {id}".format(**contact))
+        log.debug("{a} == {b}".format(a=contact["data"], b=crm_contact_data))
 
     update_cache = cache.update(
         table="contacts",
@@ -186,14 +212,26 @@ def process(kunderolle):
 
     if billing_address:
 
+        # this doesn't do that much but look like the others
+        # skip-if-no-changes reference
+        crm_billing_address_data = dict(billing_address["data"])
+
         if not billing_address["external_ref"]:
             billing_address["external_ref"] = crm.store_address(
                 billing_address["data"]
             )
-        else:
+        elif billing_address["data"] != crm_billing_address_data:
             crm.update_address(
                 identifier=billing_address["external_ref"],
                 payload=billing_address["data"]
+            )
+        else:
+            log.debug("skipping NOP billing_address update for {id}".format(
+                **billing_address)
+            )
+            log.debug("{a} == {b}".format(
+                a=billing_address["data"],
+                b=crm_billing_address_data)
             )
 
         update_cache = cache.update(
@@ -208,6 +246,10 @@ def process(kunderolle):
         )
 
     kundeforhold_data = kundeforhold["data"]
+
+    # skip-if-no-changes reference
+    crm_kundeforhold_data = dict(kundeforhold["data"])
+
     if lookup_billing_address:
         kundeforhold_data[
             "ava_adresse@odata.bind"
@@ -215,10 +257,18 @@ def process(kunderolle):
 
     if not kundeforhold["external_ref"]:
         kundeforhold["external_ref"] = crm.store_account(kundeforhold_data)
-    else:
+    elif kundeforhold["data"] != crm_kundeforhold_data:
         crm.update_account(
             identifier=kundeforhold["external_ref"],
             payload=kundeforhold["data"]
+        )
+    else:
+        log.debug("skipping NOP kundeforhold update for {id}".format(
+            **kundeforhold)
+        )
+        log.debug("{a} == {b}".format(
+            a=kundeforhold["data"],
+            b=crm_kundeforhold_data)
         )
 
     update_cache = cache.update(
@@ -251,10 +301,18 @@ def process(kunderolle):
         kunderolle["external_ref"] = crm.store_kunderolle(
             kunderolle_data
         )
-    else:
+    elif kunderolle["data"] != crm_kunderolle_data:
         crm.update_kunderolle(
             identifier=kunderolle["external_ref"],
             payload=kunderolle["data"]
+        )
+    else:
+        log.debug("skipping NOP kunderolle update for {id}".format(
+            **kunderolle)
+        )
+        log.debug("{a} == {b}".format(
+            a=kunderolle["data"],
+            b=crm_kunderolle_data)
         )
 
     update_cache = cache.update(
@@ -278,6 +336,9 @@ def process(kunderolle):
         log.warning("Aftale does not exist")
         return
 
+    # skip-if-no-changes reference
+    crm_aftale_data = dict(aftale["data"])
+
     aftale_data = aftale["data"]
 
     if lookup_account:
@@ -293,11 +354,14 @@ def process(kunderolle):
 
     if not aftale.get("external_ref"):
         aftale["external_ref"] = crm.store_aftale(aftale_data)
-    else:
+    elif aftale["data"] != crm_aftale_data:
         crm.update_aftale(
             identifier=aftale["external_ref"],
             payload=aftale["data"]
         )
+    else:
+        log.debug("skipping NOP aftale update for {id}".format(**aftale))
+        log.debug("{a} == {b}".format(a=aftale["data"], b=crm_aftale_data))
 
     update_cache = cache.update(
         table="ava_aftales",
@@ -337,6 +401,9 @@ def process(kunderolle):
         log.warning("Produkt does not exist")
         return
 
+    # skip-if-no-changes reference
+    crm_produkt_data = dict(produkt["data"])
+
     # TODO: utility address must be added here
     # Utility address fallback
 
@@ -373,14 +440,26 @@ def process(kunderolle):
 
     if utility_address:
 
+        # this doesn't do that much but look like the others
+        # skip-if-no-changes reference
+        crm_utility_address_data = dict(utility_address["data"])
+
         if not utility_address["external_ref"]:
             utility_address["external_ref"] = crm.store_address(
                 utility_address["data"]
             )
-        else:
+        elif utility_address["data"] != crm_utility_address_data:
             crm.update_address(
                 identifier=utility_address["external_ref"],
                 payload=utility_address["data"]
+            )
+        else:
+            log.debug("skipping NOP utility address update for {id}".format(
+                **utility_address)
+            )
+            log.debug("{a} == {b}".format(
+                a=utility_address["data"],
+                b=crm_utility_address_data)
             )
 
         # Store in cache
@@ -409,11 +488,14 @@ def process(kunderolle):
 
     if not produkt["external_ref"]:
         produkt["external_ref"] = crm.store_produkt(produkt["data"])
-    else:
+    elif produkt["data"] != crm_produkt_data:
         crm.update_produkt(
             identifier=produkt["external_ref"],
             payload=produkt["data"]
         )
+    else:
+        log.debug("skipping NOP produkt update for {id}".format(**produkt))
+        log.debug("{a} == {b}".format(a=produkt["data"], b=crm_produkt_data))
 
     # Update cache
     update_cache = cache.update(
