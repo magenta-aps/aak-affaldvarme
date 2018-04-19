@@ -43,6 +43,8 @@ def process(kunderolle):
     :return:
     """
 
+    log.info("export kunderolle {id}".format(**kunderolle))
+
     # Prepare lookup reference fallback
     lookup_contact = None
     lookup_account = None
@@ -129,6 +131,7 @@ def process(kunderolle):
     # Depends on: None
     if not address["external_ref"]:
         address["external_ref"] = crm.store_address(address["data"])
+        contact_address_data = {}  # update cache
     elif address["data"] != crm_contact_address_data:
         crm.update_address(
             identifier=address["external_ref"],
@@ -141,13 +144,13 @@ def process(kunderolle):
             b=crm_contact_address_data)
         )
 
-    update_cache = cache.update(
-        table="ava_adresses",
-        document=address
-    )
-
-    log.info("Updating cache for contact address")
-    log.info(update_cache)
+    if address["data"] != crm_contact_address_data:
+        update_cache = cache.update(
+            table="ava_adresses",
+            document=address
+        )
+        log.info("Updating cache for contact address")
+        log.info(update_cache)
 
     lookup_address = "/ava_adresses({external_ref})".format(
         external_ref=address["external_ref"]
@@ -158,6 +161,7 @@ def process(kunderolle):
     # Depends on: address
     if not contact["external_ref"]:
         contact["external_ref"] = crm.store_contact(contact["data"])
+        crm_contact_data = {}  # update cache
     elif contact["data"] != crm_contact_data:
         crm.update_contact(
             identifier=contact["external_ref"],
@@ -167,12 +171,13 @@ def process(kunderolle):
         log.debug("skipping NOP contact update for {id}".format(**contact))
         log.debug("{a} == {b}".format(a=contact["data"], b=crm_contact_data))
 
-    update_cache = cache.update(
-        table="contacts",
-        document=contact
-    )
-    log.info("Updating cache for contact")
-    log.info(update_cache)
+    if contact["data"] != crm_contact_data:
+        update_cache = cache.update(
+            table="contacts",
+            document=contact
+        )
+        log.info("Updating cache for contact")
+        log.info(update_cache)
 
     # Update contact lookup
     lookup_contact = "/contacts({external_ref})".format(
@@ -220,6 +225,7 @@ def process(kunderolle):
             billing_address["external_ref"] = crm.store_address(
                 billing_address["data"]
             )
+            crm_billing_address_data = {}  # update cache
         elif billing_address["data"] != crm_billing_address_data:
             crm.update_address(
                 identifier=billing_address["external_ref"],
@@ -234,12 +240,13 @@ def process(kunderolle):
                 b=crm_billing_address_data)
             )
 
-        update_cache = cache.update(
-            table="ava_adresses",
-            document=billing_address
-        )
-        log.info("Updating cache for billing_address")
-        log.info(update_cache)
+        if billing_address["data"] != crm_billing_address_data:
+            update_cache = cache.update(
+                table="ava_adresses",
+                document=billing_address
+            )
+            log.info("Updating cache for billing_address")
+            log.info(update_cache)
 
         lookup_billing_address = "/ava_adresses({external_ref})".format(
             external_ref=billing_address["external_ref"]
@@ -257,6 +264,7 @@ def process(kunderolle):
 
     if not kundeforhold["external_ref"]:
         kundeforhold["external_ref"] = crm.store_account(kundeforhold_data)
+        crm_kundeforhold_data = {}  # update cache
     elif kundeforhold["data"] != crm_kundeforhold_data:
         crm.update_account(
             identifier=kundeforhold["external_ref"],
@@ -271,13 +279,13 @@ def process(kunderolle):
             b=crm_kundeforhold_data)
         )
 
-    update_cache = cache.update(
-        table="accounts",
-        document=kundeforhold
-    )
-
-    log.info("Updating cache for kundeforhold")
-    log.info(update_cache)
+    if kundeforhold["data"] != crm_kundeforhold_data:
+        update_cache = cache.update(
+            table="accounts",
+            document=kundeforhold
+        )
+        log.info("Updating cache for kundeforhold")
+        log.info(update_cache)
 
     # Update account lookup
     lookup_account = "/accounts({external_ref})".format(
@@ -301,6 +309,7 @@ def process(kunderolle):
         kunderolle["external_ref"] = crm.store_kunderolle(
             kunderolle_data
         )
+        crm_kunderolle_data = {}  # update cache
     elif kunderolle["data"] != crm_kunderolle_data:
         crm.update_kunderolle(
             identifier=kunderolle["external_ref"],
@@ -315,13 +324,13 @@ def process(kunderolle):
             b=crm_kunderolle_data)
         )
 
-    update_cache = cache.update(
-        table="ava_kunderolles",
-        document=kunderolle
-    )
-
-    log.info("Updating cache for organisationfunktion")
-    log.info(update_cache)
+    if kunderolle["data"] != crm_kunderolle_data:
+        update_cache = cache.update(
+            table="ava_kunderolles",
+            document=kunderolle
+        )
+        log.info("Updating cache for organisationfunktion")
+        log.info(update_cache)
 
     # Update account lookup
     if "external_ref" in kunderolle:
@@ -354,6 +363,7 @@ def process(kunderolle):
 
     if not aftale.get("external_ref"):
         aftale["external_ref"] = crm.store_aftale(aftale_data)
+        crm_aftale_data = {}  # update cache
     elif aftale["data"] != crm_aftale_data:
         crm.update_aftale(
             identifier=aftale["external_ref"],
@@ -363,13 +373,13 @@ def process(kunderolle):
         log.debug("skipping NOP aftale update for {id}".format(**aftale))
         log.debug("{a} == {b}".format(a=aftale["data"], b=crm_aftale_data))
 
-    update_cache = cache.update(
-        table="ava_aftales",
-        document=aftale
-    )
-
-    log.info("Updating cache for indsats")
-    log.info(update_cache)
+    if aftale["data"] != crm_aftale_data:
+        update_cache = cache.update(
+            table="ava_aftales",
+            document=aftale
+        )
+        log.info("Updating cache for indsats")
+        log.info(update_cache)
 
     # Update aftale lookup
     aftale_external_ref = aftale["external_ref"]
@@ -378,11 +388,17 @@ def process(kunderolle):
         external_ref=aftale["external_ref"]
     )
 
-    # Create link between aftale and contact
-    crm.contact_and_aftale_link(
-        contact_guid=contact_external_ref,
-        aftale_guid=aftale_external_ref
-    )
+    if (
+        contact["data"] == crm_contact_data and
+        aftale["data"] == crm_aftale_data
+    ):
+        log.debug("skipping NOP contact-aftale link creation")
+    else:
+        # Create link between aftale and contact
+        crm.contact_and_aftale_link(
+            contact_guid=contact_external_ref,
+            aftale_guid=aftale_external_ref
+        )
 
     # Installation
     klasse_ref = aftale["klasse_ref"]
@@ -448,6 +464,7 @@ def process(kunderolle):
             utility_address["external_ref"] = crm.store_address(
                 utility_address["data"]
             )
+            crm_utility_address_data = {}
         elif utility_address["data"] != crm_utility_address_data:
             crm.update_address(
                 identifier=utility_address["external_ref"],
@@ -462,11 +479,12 @@ def process(kunderolle):
                 b=crm_utility_address_data)
             )
 
-        # Store in cache
-        cache.store(
-            resource="dawa_access",
-            payload=utility_address
-        )
+        if utility_address["data"] != crm_utility_address_data:
+            # Store in cache
+            cache.store(
+                resource="dawa_access",
+                payload=utility_address
+            )
 
         # Update utility address lookup
         lookup_utility_address = "/ava_adresses({reference})".format(
@@ -488,6 +506,7 @@ def process(kunderolle):
 
     if not produkt["external_ref"]:
         produkt["external_ref"] = crm.store_produkt(produkt["data"])
+        crm_produkt_data = {}
     elif produkt["data"] != crm_produkt_data:
         crm.update_produkt(
             identifier=produkt["external_ref"],
@@ -498,13 +517,13 @@ def process(kunderolle):
         log.debug("{a} == {b}".format(a=produkt["data"], b=crm_produkt_data))
 
     # Update cache
-    update_cache = cache.update(
-        table="ava_installations",
-        document=produkt
-    )
-
-    log.info("Updating cache for produkt")
-    log.info(update_cache)
+    if produkt["data"] != crm_produkt_data:
+        update_cache = cache.update(
+            table="ava_installations",
+            document=produkt
+        )
+        log.info("Updating cache for produkt")
+        log.info(update_cache)
 
 
 def update_all_installations():
