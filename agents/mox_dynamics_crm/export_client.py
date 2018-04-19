@@ -496,8 +496,6 @@ def process(kunderolle):
     # Workaround
     if aftale_external_ref:
         produkt["indsats_ref"] = aftale_external_ref
-        # we need to write - this one gets nulled in import
-        crm_produkt_data = {}  # update cache
 
     # Workaround: Just inserting billing address
     ava_kundenummer = kundeforhold["data"]["ava_kundenummer"]
@@ -518,8 +516,8 @@ def process(kunderolle):
         log.debug("skipping NOP produkt update for {id}".format(**produkt))
         log.debug("{a} == {b}".format(a=produkt["data"], b=crm_produkt_data))
 
-    # Update cache
-    if produkt["data"] != crm_produkt_data:
+    # Update cache unconfitionally - this one gets nulled in import
+    if True:  # produkt["data"] != crm_produkt_data:
         update_cache = cache.update(
             table="ava_installations",
             document=produkt
