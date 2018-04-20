@@ -103,6 +103,13 @@ def batch_generator(resource, list_of_uuids):
             log.error(uuid_batch)
             return False
 
+        existing_adapted = {
+            d["id"]: d
+            for d in cache.r.table(
+                table
+                ).get_all(*uuid_batch).run(cache.connect())
+        }
+
         batch = []
 
         # Batch timestamp
@@ -110,20 +117,12 @@ def batch_generator(resource, list_of_uuids):
 
         # Return iterator
         for result in results:
-            adapted = adapter(result)
+            adapted = adapter(result, existing_adapted.get(result["id"], {}))
 
             if not adapted:
                 log.error("One faulty result: ")
                 log.error(result)
                 break
-
-            # make sure external_ref is not overwritten in import
-            existing = cache.get(
-                table=table,
-                uuid=adapted["id"]
-            )
-            if existing and existing.get("external_ref"):
-                adapted["external_ref"] = existing["external_ref"]
 
             # set update time
             adapted["updated"] = batch_timestamp
