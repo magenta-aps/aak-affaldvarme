@@ -271,10 +271,9 @@ def find_indsats(uuid):
     :param uuid:    Document identifier (Type: uuid)
     :return:        Returns either empty list or list of documents
     """
-
-    documents = filter(table=mapping.get("indsats"),
-                       interessefaellesskab_ref=uuid)
-
+    documents = r.table("ava_aftales").get_all(
+        uuid, index="interessefaellesskab_ref"
+        ).run(connect())
     for d in documents:
         return d
 
