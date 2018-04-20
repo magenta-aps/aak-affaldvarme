@@ -449,7 +449,7 @@ def update_address(identifier, payload):
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error updating address in CRM")
+        log.error("Error updating address in CRM for resource: {resource}".format(**locals()))
         log.error(response.text)
         return False
 
@@ -530,7 +530,7 @@ def update_contact(identifier, payload):
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error updating contact in CRM")
+        log.error("Error updating contact in CRM for resource: {resource}".format(**locals()))
         log.error(response.text)
         return False
 
@@ -612,7 +612,7 @@ def update_kunderolle(identifier, payload):
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error updating CRM kunderolle")
+        log.error("Error updating CRM kunderolle for resource: {resource}".format(**locals()))
         log.error(response.text)
         return False
 
@@ -690,7 +690,7 @@ def update_account(identifier, payload):
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error updating CRM account")
+        log.error("Error updating CRM account for resource: {resource}".format(**locals()))
         log.error(response.text)
         return False
 
@@ -765,7 +765,7 @@ def update_aftale(identifier, payload):
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error updating CRM aftale")
+        log.error("Error updating CRM aftale for resource: {resource} ".format(**locals()))
         log.error(response.text)
         return False
 
@@ -840,7 +840,7 @@ def update_produkt(identifier, payload):
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error updating produkt in CRM")
+        log.error("Error updating CRM produkt for resource: {resource} ".format(**locals()))
         log.error(response.text)
         return False
 
@@ -880,7 +880,10 @@ def contact_and_aftale_link(aftale_guid, contact_guid):
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error creating link between contact and aftale")
+        log.error(
+            "Error creating link between contact and aftale"
+            " for resource: {resource} with payload: {payload}".format(**locals())
+        )
         log.error(response.text)
         return False
 
