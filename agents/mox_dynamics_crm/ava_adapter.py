@@ -6,7 +6,7 @@ from logging import getLogger
 log = getLogger(__name__)
 
 
-def ava_bruger(entity):
+def ava_bruger(entity, old_adapted):
     """
     Adapter to convert (LORA) bruger object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -128,7 +128,7 @@ def ava_bruger(entity):
     # Cache layer compliant document
     document = {
         "id": origin_id,
-        "external_ref": None,
+        "external_ref": old_adapted.get("external_ref"),
         "dawa_ref": dawa_address,
         "data": {
             "firstname": firstname,
@@ -156,7 +156,7 @@ def ava_bruger(entity):
     return document
 
 
-def ava_organisation(entity):
+def ava_organisation(entity, old_adapted):
     """
     Adapter to convert (LORA) object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -224,7 +224,7 @@ def ava_organisation(entity):
     # Cache layer compliant document
     document = {
         "id": origin_id,
-        "external_ref": None,
+        "external_ref": old_adapted.get("external_ref"),
         "dawa_ref": dawa_address,
         "data": {
             "firstname": organisationsnavn,
@@ -250,7 +250,7 @@ def ava_organisation(entity):
     return document
 
 
-def ava_kunderolle(entity):
+def ava_kunderolle(entity, old_adapted):
     """
     Adapter to convert (LORA) object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -308,7 +308,7 @@ def ava_kunderolle(entity):
     # Cache layer compliant document
     document = {
         "id": origin_id,
-        "external_ref": None,
+        "external_ref": old_adapted.get("external_ref"),
         "contact_ref": customer_ref,
         "interessefaellesskab_ref": ava_kundeforhold,
         "data": {
@@ -319,7 +319,7 @@ def ava_kunderolle(entity):
     return document
 
 
-def ava_account(entity):
+def ava_account(entity, old_adapted):
     """
     Adapter to convert (LORA) object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -370,7 +370,7 @@ def ava_account(entity):
     # Cache layer compliant document
     document = {
         "id": origin_id,
-        "external_ref": None,
+        "external_ref": old_adapted.get("external_ref"),
         "dawa_ref": ava_adresse,
         "data": {
             "name": account_name,
@@ -382,7 +382,7 @@ def ava_account(entity):
     return document
 
 
-def ava_aftale(entity):
+def ava_aftale(entity, old_adapted):
     """
     Adapter to convert (LORA) object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -462,8 +462,9 @@ def ava_aftale(entity):
     # Cache layer compliant document
     document = {
         "id": origin_id,
-        "external_ref": None,
+        "external_ref": old_adapted.get("external_ref"),
         "interessefaellesskab_ref": ava_kundeforhold,
+        "contact_ref_link": old_adapted.get("contact_ref_link"),
         "dawa_ref": ava_faktureringsgrad,
         "klasse_ref": ava_produkter,
         "data": {
@@ -478,7 +479,7 @@ def ava_aftale(entity):
     return document
 
 
-def ava_installation(entity):
+def ava_installation(entity, old_adapted):
     """
     Adapter to convert (LORA) object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -536,7 +537,8 @@ def ava_installation(entity):
     # Referenced by other entities
 
     # Entity: Lora (Aftale/Indsats)
-    ava_aftale = None
+    # ava_aftale used to be nulled - below we take it from old_adapted
+    # ava_aftale = None
 
     # Entity: Lora (Account/Interessefaellesskab)
     ava_kundenummer = None
@@ -547,8 +549,8 @@ def ava_installation(entity):
     # Cache layer compliant document
     document = {
         "id": origin_id,
-        "external_ref": None,
-        "indsats_ref": ava_aftale,
+        "external_ref": old_adapted.get("external_ref"),
+        "indsats_ref": old_adapted.get("indsats_ref"),
         "dawa_ref": ava_adresse,
         "data": {
             "ava_name": ava_name,
