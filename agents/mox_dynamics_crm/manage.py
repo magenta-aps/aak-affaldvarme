@@ -31,8 +31,24 @@ if config.getboolean("do_disable_ssl_warnings", "yes"):
 if config.getboolean("do_run_in_test_mode", "yes"):
     LOG_FILE = "debug.log"
 
+def create_indexes(connection, table, ixlist=[]):
+    existing_indexes = cache.r.table(table).index_list().run(connection)
+    for ix in ixlist:
+        if not ix in existing_indexes:
+            cache.r.table(table).index_create(ix)
+    # await all indexes to be ready on this table
+    cache.r.table(table).index_wait().run(connection)
+
+
 # Set logging
 log = start_logging(config.getint("loglevel", fallback=20), LOG_FILE)
+
+# wait for indexes to be ready
+create_indexes(
+    cache.connect(), 
+    "ava_aftales", 
+    ["interessefaellesskab_ref"]
+)
 
 
 @click.group()
