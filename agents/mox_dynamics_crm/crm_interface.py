@@ -449,7 +449,10 @@ def update_address(identifier, payload):
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error updating address in CRM for resource: {resource}".format(**locals()))
+        log.error(
+            "Error updating address in CRM for"
+            " resource: {resource}".format(**locals())
+        )
         log.error(response.text)
         return False
 
@@ -530,7 +533,10 @@ def update_contact(identifier, payload):
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error updating contact in CRM for resource: {resource}".format(**locals()))
+        log.error(
+            "Error updating contact in CRM"
+            " for resource: {resource}".format(**locals())
+        )
         log.error(response.text)
         return False
 
@@ -612,7 +618,10 @@ def update_kunderolle(identifier, payload):
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error updating CRM kunderolle for resource: {resource}".format(**locals()))
+        log.error(
+            "Error updating CRM kunderolle for"
+            " resource: {resource}".format(**locals())
+        )
         log.error(response.text)
         return False
 
@@ -690,7 +699,10 @@ def update_account(identifier, payload):
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error updating CRM account for resource: {resource}".format(**locals()))
+        log.error(
+            "Error updating CRM account for"
+            " resource: {resource}".format(**locals())
+        )
         log.error(response.text)
         return False
 
@@ -765,7 +777,10 @@ def update_aftale(identifier, payload):
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error updating CRM aftale for resource: {resource} ".format(**locals()))
+        log.error(
+            "Error updating CRM aftale for"
+            " resource: {resource} ".format(**locals())
+        )
         log.error(response.text)
         return False
 
@@ -840,7 +855,10 @@ def update_produkt(identifier, payload):
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error updating CRM produkt for resource: {resource} ".format(**locals()))
+        log.error(
+            "Error updating CRM produkt for"
+            " resource: {resource} ".format(**locals())
+        )
         log.error(response.text)
         return False
 
@@ -848,7 +866,7 @@ def update_produkt(identifier, payload):
     return response
 
 
-def contact_and_aftale_link(aftale_guid, contact_guid):
+def DEPRECATED_contact_and_aftale_link(aftale_guid, contact_guid):
     """
     Temporary solution to create a link between contact and aftale
     NOTES: This should be replaced by the cache functionality
@@ -882,9 +900,72 @@ def contact_and_aftale_link(aftale_guid, contact_guid):
     if response.status_code != 200:
         log.error(
             "Error creating link between contact and aftale"
-            " for resource: {resource} with payload: {payload}".format(**locals())
+            " for resource: {resource} with"
+            " payload: {payload}".format(**locals())
         )
         log.error(response.text)
         return False
 
     return True
+
+
+def mend_contact_and_aftale_link(contact, aftale):
+    """ link from aftale to contact - aftale has it cached
+        if new link is in aftale and it is unchanged:
+            leave it
+        if it is different (or non existing):
+            try to update
+        if it does not update:
+            insert
+    """
+
+    resource = "ava_aftales({guid})/ava_aktoerens_aftaler/$ref".format(
+        guid=aftale["external_ref"]
+    )
+
+    # the new link is absolute (server-specific)
+    contact_ref_link = "{base}/contacts({guid})".format(
+        base=base_endpoint,
+        guid=contact["external_ref"]
+    )
+
+    if contact_ref_link == aftale.get("contact_ref_link"):
+        # this one is unchanged - leave it
+        requestors = []
+    else:
+        # be safe - try to update, if that does not work, insert
+        requestors = [patch_request, post_request]
+        aftale["contact_ref_link"] = contact_ref_link
+
+    payload = {
+        "@odata.id": contact_ref_link
+    }
+
+    if DO_WRITE and len(requestors):
+        for req in requestors:
+            response = req(resource, payload)
+            if response.status_code == 200:
+                log.info(
+                    "Success updating/inserting link ({req})"
+                    " from aftale to contact"
+                    " for resource: {resource} with"
+                    " payload: {payload}".format(**locals())
+                )
+                break
+            else:
+                log.error(
+                    "Error updating/inserting link ({req})"
+                    " from aftale to contact"
+                    " for resource: {resource} with"
+                    " payload: {payload}".format(**locals())
+                )
+    elif len(requestors):
+        log.info(
+            "Pretended updating link with"
+            " {requestors} from aftale to contact"
+            " for resource: {resource} with payload:"
+            " {payload}".format(**locals())
+        )
+
+    # return whether or not something was done
+    return len(requestors) > 0
