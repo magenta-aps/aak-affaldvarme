@@ -177,7 +177,7 @@ def get_address(uuid):
     return adapter(data)
 
 
-def adapter(data):
+def adapter(data, old_adapted):
     """
     Adapter to convert an address object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -240,7 +240,7 @@ def adapter(data):
     # Cache layer compliant document
     document = {
         "id": adresseid,
-        "external_ref": None,
+        "external_ref": old_adapted.get("external_ref"),
         "data": {
             "ava_dawaadgangsadresseid": adgangsadresseid,
             "ava_name": search,
@@ -285,6 +285,14 @@ def get_all(area_code):
     if not addresses:
         return
 
+    # cache all previous addresses in memory dict
+    existing_adapted = {
+        d["id"]: d
+        for d in cache.r.table(
+            table
+            ).get_all(*[a["id"] for a in addresses]).run(cache.connect())
+    }
+
     # Create empty payload:
     list_of_documents = []
 
@@ -292,15 +300,7 @@ def get_all(area_code):
 
     # Iterate and append converted documents to the list
     for address in addresses:
-        converted = adapter(address)
-
-        # make sure external_ref is not overwritten in import
-        existing = cache.get(
-            table=table,
-            uuid=converted["id"]
-        )
-        if existing and existing.get("external_ref"):
-            converted["external_ref"] = existing["external_ref"]
+        converted = adapter(address, existing_adapted.get(address["id"], {}))
 
         # set update time
         converted["updated"] = batch_timestamp
