@@ -54,7 +54,9 @@ def process(kunderolle):
 
     # skip-if-no-changes references
     # False: Everything is updated - or at least tried
-    SINC = config.getboolean("skip-if-no-changes",fallback=True)
+    # DO NOT USE for other purpose than indicators of change
+    # if You want something to update, just set to {}
+    SINC = config.getboolean("skip-if-no-changes", fallback=True)
     if SINC:
         crm_kunderolle_data = dict(kunderolle["data"])
     else:
@@ -67,7 +69,6 @@ def process(kunderolle):
     crm_contact_address_data = {}
     crm_kundeforhold_data = {}
     crm_produkt_data = {}
-
 
     # May not be needed:
     # lookup_utility_address = None
@@ -133,7 +134,7 @@ def process(kunderolle):
     # this doesn't do that much but look like the others
     # skip-if-no-changes reference
     if SINC:
-    	crm_contact_address_data = dict(address["data"])
+        crm_contact_address_data = dict(address["data"])
 
     # Export address
     # Depends on: None
@@ -342,12 +343,13 @@ def process(kunderolle):
         log.info("Updating cache for organisationfunktion")
         log.info(update_cache)
 
-    #why update account-lookup, when reference is to a kunderolle?
+    # why update account-lookup, when reference is to a kunderolle?
+    # old error?
     # Update account lookup
-    #if "external_ref" in kunderolle:
-    #    lookup_account = "/accounts({external_ref})".format(
-    #        external_ref=kunderolle["external_ref"]
-    #    )
+    # if "external_ref" in kunderolle:
+    #     lookup_account = "/accounts({external_ref})".format(
+    #         external_ref=kunderolle["external_ref"]
+    #     )
 
     # Aftale
     aftale = cache.find_indsats(interessefaellesskab_ref)
@@ -385,6 +387,10 @@ def process(kunderolle):
         log.debug("skipping NOP aftale update for {id}".format(**aftale))
         log.debug("{a} == {b}".format(a=aftale["data"], b=crm_aftale_data))
 
+    # Create / replace link between aftale and contact
+    if crm.mend_contact_and_aftale_link(contact, aftale):
+        crm_aftale_data = {}  # update cache
+
     if aftale["data"] != crm_aftale_data:
         update_cache = cache.update(
             table="ava_aftales",
@@ -399,18 +405,6 @@ def process(kunderolle):
     lookup_aftale = "/ava_aftales({external_ref})".format(
         external_ref=aftale["external_ref"]
     )
-
-    if (
-        contact["data"] == crm_contact_data and
-        aftale["data"] == crm_aftale_data
-    ):
-        log.debug("skipping NOP contact-aftale link creation")
-    else:
-        # Create link between aftale and contact
-        crm.contact_and_aftale_link(
-            contact_guid=contact["external_ref"],
-            aftale_guid=aftale["external_ref"]
-        )
 
     # Installation
     klasse_ref = aftale["klasse_ref"]
