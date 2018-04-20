@@ -31,24 +31,33 @@ if config.getboolean("do_disable_ssl_warnings", "yes"):
 if config.getboolean("do_run_in_test_mode", "yes"):
     LOG_FILE = "debug.log"
 
+
 def create_indexes(connection, table, ixlist=[]):
     existing_indexes = cache.r.table(table).index_list().run(connection)
+    log.info(
+        "existing_indexes on table: {table}"
+        " {existing_indexes}".format(**locals())
+    )
     for ix in ixlist:
-        if not ix in existing_indexes:
-            cache.r.table(table).index_create(ix)
-    # await all indexes to be ready on this table
-    cache.r.table(table).index_wait().run(connection)
+        cache.r.table(table).index_create(ix)
+        log.info("creating {ix}".format(**locals()))
+        cache.r.table(table).index_wait(ix).run(connection)
 
+    # await all indexes to be ready on this table
+    existing_indexes = cache.r.table(table).index_list().run(connection)
+    log.info(
+        "existing_indexes after create"
+        " {existing_indexes}".format(**locals())
+    )
+
+
+def await_indexes_ready():
+    create_indexes(
+        cache.connect(), "ava_aftales", ["interessefaellesskab_ref"]
+    )
 
 # Set logging
 log = start_logging(config.getint("loglevel", fallback=20), LOG_FILE)
-
-# wait for indexes to be ready
-create_indexes(
-    cache.connect(), 
-    "ava_aftales", 
-    ["interessefaellesskab_ref"]
-)
 
 
 @click.group()
@@ -93,6 +102,7 @@ def import_from_lora():
     Import all OIO entities to the cache layer.
     For further information, please see the 'import_client'.
     """
+    await_indexes_ready()
 
     # Message user
     click.echo("Begin import from OIO to cache")
@@ -112,6 +122,7 @@ def export_to_crm(dry_run):
     Build relations and export all objects to CRM
     For further information, please see the 'export_client'.
     """
+    await_indexes_ready()
 
     crm.DO_WRITE = not dry_run
 
