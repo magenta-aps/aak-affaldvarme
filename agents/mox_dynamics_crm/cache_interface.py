@@ -274,6 +274,7 @@ def find_indsats(uuid):
     documents = r.table("ava_aftales").get_all(
         uuid, index="interessefaellesskab_ref"
         ).run(connect())
+
     for d in documents:
         return d
 
