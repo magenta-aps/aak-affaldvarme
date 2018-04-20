@@ -53,7 +53,13 @@ def process(kunderolle):
     lookup_billing_address = None
 
     # skip-if-no-changes references
-    crm_kunderolle_data = dict(kunderolle["data"])
+    # False: Everything is updated - or at least tried
+    SINC = config.getboolean("skip-if-no-changes",fallback=True)
+    if SINC:
+        crm_kunderolle_data = dict(kunderolle["data"])
+    else:
+        crm_kunderolle_data = {}
+
     crm_contact_data = {}
     crm_aftale_data = {}
     crm_billing_address_data = {}
@@ -61,6 +67,7 @@ def process(kunderolle):
     crm_contact_address_data = {}
     crm_kundeforhold_data = {}
     crm_produkt_data = {}
+
 
     # May not be needed:
     # lookup_utility_address = None
@@ -108,13 +115,13 @@ def process(kunderolle):
     address = cache.get(table="ava_adresses", uuid=address_ref)
 
     if not address:
+
         dawa_address = dawa.get_address(address_ref)
-
-        # Store address in the cache layer
-        cache.store(resource="dawa", payload=dawa_address)
-
-        # Get from cache once more
-        address = cache.get(table="ava_adresses", uuid=address_ref)
+        if dawa_address:
+            # Store address in the cache layer
+            cache.store(resource="dawa", payload=dawa_address)
+            # Get from cache once more
+            address = cache.get(table="ava_adresses", uuid=address_ref)
 
     if not address:
         log.warn(
@@ -125,7 +132,8 @@ def process(kunderolle):
 
     # this doesn't do that much but look like the others
     # skip-if-no-changes reference
-    crm_contact_address_data = dict(address["data"])
+    if SINC:
+    	crm_contact_address_data = dict(address["data"])
 
     # Export address
     # Depends on: None
@@ -219,7 +227,8 @@ def process(kunderolle):
 
         # this doesn't do that much but look like the others
         # skip-if-no-changes reference
-        crm_billing_address_data = dict(billing_address["data"])
+        if SINC:
+            crm_billing_address_data = dict(billing_address["data"])
 
         if not billing_address["external_ref"]:
             billing_address["external_ref"] = crm.store_address(
@@ -255,7 +264,8 @@ def process(kunderolle):
     kundeforhold_data = kundeforhold["data"]
 
     # skip-if-no-changes reference
-    crm_kundeforhold_data = dict(kundeforhold["data"])
+    if SINC:
+        crm_kundeforhold_data = dict(kundeforhold["data"])
 
     if lookup_billing_address:
         kundeforhold_data[
@@ -332,11 +342,12 @@ def process(kunderolle):
         log.info("Updating cache for organisationfunktion")
         log.info(update_cache)
 
+    #why update account-lookup, when reference is to a kunderolle?
     # Update account lookup
-    if "external_ref" in kunderolle:
-        lookup_account = "/accounts({external_ref})".format(
-            external_ref=kunderolle["external_ref"]
-        )
+    #if "external_ref" in kunderolle:
+    #    lookup_account = "/accounts({external_ref})".format(
+    #        external_ref=kunderolle["external_ref"]
+    #    )
 
     # Aftale
     aftale = cache.find_indsats(interessefaellesskab_ref)
@@ -346,7 +357,8 @@ def process(kunderolle):
         return
 
     # skip-if-no-changes reference
-    crm_aftale_data = dict(aftale["data"])
+    if SINC:
+        crm_aftale_data = dict(aftale["data"])
 
     aftale_data = aftale["data"]
 
@@ -396,8 +408,8 @@ def process(kunderolle):
     else:
         # Create link between aftale and contact
         crm.contact_and_aftale_link(
-            contact_guid=contact_external_ref,
-            aftale_guid=aftale_external_ref
+            contact_guid=contact["external_ref"],
+            aftale_guid=aftale["external_ref"]
         )
 
     # Installation
@@ -418,7 +430,8 @@ def process(kunderolle):
         return
 
     # skip-if-no-changes reference
-    crm_produkt_data = dict(produkt["data"])
+    if SINC:
+        crm_produkt_data = dict(produkt["data"])
 
     # TODO: utility address must be added here
     # Utility address fallback
@@ -458,7 +471,8 @@ def process(kunderolle):
 
         # this doesn't do that much but look like the others
         # skip-if-no-changes reference
-        crm_utility_address_data = dict(utility_address["data"])
+        if SINC:
+            crm_utility_address_data = dict(utility_address["data"])
 
         if not utility_address["external_ref"]:
             utility_address["external_ref"] = crm.store_address(
@@ -517,7 +531,7 @@ def process(kunderolle):
         log.debug("{a} == {b}".format(a=produkt["data"], b=crm_produkt_data))
 
     # Update cache unconfitionally - this one gets nulled in import
-    if True:  # produkt["data"] != crm_produkt_data:
+    if produkt["data"] != crm_produkt_data:
         update_cache = cache.update(
             table="ava_installations",
             document=produkt
