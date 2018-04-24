@@ -5,6 +5,7 @@ import time
 import json
 import adal
 import requests
+import re
 
 from logging import getLogger
 from helper import get_config
@@ -866,29 +867,53 @@ def update_produkt(identifier, payload):
     return response
 
 
-def DEPRECATED_contact_and_aftale_link(aftale_guid, contact_guid):
-    """
-    Temporary solution to create a link between contact and aftale
-    NOTES: This should be replaced by the cache functionality
-
-    :param aftale_guid:     CRM identifier (GUID) for entity: ava_aftale
-    :param contact_guid:    CRM identifier (GUID) for entity: contact
-
-    :return:                Nothing is returned from CRM,
-                            returning True when request is successfull
+def mend_contact_and_aftale_link(contact, aftale, skip_if_no_changes=True):
+    """ link from aftale to contact - aftale has it cached
     """
 
     resource = "ava_aftales({guid})/ava_aktoerens_aftaler/$ref".format(
-        guid=aftale_guid
+        guid=aftale["external_ref"]
     )
 
-    odata_id = "{base}/contacts({guid})".format(
+    # the new link is absolute (server-specific)
+
+    contact_ref_link = "{base}/contacts({guid})".format(
         base=base_endpoint,
-        guid=contact_guid
+        guid=contact["external_ref"]
     )
+
+    # get or setget existing contact external_refs in aftale
+    # we don't cache the links directly as they are instance-bound
+    # instead we store the external_refs of the linked contacts
+
+    if not aftale.get("contact_refs"):
+        # Not existing, None or empty
+        response = get_request(resource)
+        if response.status_code == 200:
+            aftale["contact_refs"] = [
+                re.findall("\((.*)\)", v["@odata.id"])[0]
+                for v in response.json()["value"]
+            ]
+
+    # see if the new link is already stored
+
+    if (
+        # aftale.get because get_request above may have been <> 200
+        # and then we just try to insert
+        skip_if_no_changes and
+        contact["external_ref"] in aftale.get("contact_refs", [])
+    ):
+        log.debug(
+            "skipping linking contact:{contact_id} to this aftale:{id}"
+            " as it is already in contact_refs:{contact_refs}".format(
+                contact_id=contact["external_ref"],
+                **aftale
+            )
+        )
+        return True
 
     payload = {
-        "@odata.id": odata_id
+        "@odata.id": contact_ref_link
     }
 
     if DO_WRITE:
@@ -899,73 +924,22 @@ def DEPRECATED_contact_and_aftale_link(aftale_guid, contact_guid):
     # Return False if not created
     if response.status_code != 200:
         log.error(
-            "Error creating link between contact and aftale"
-            " for resource: {resource} with"
-            " payload: {payload}".format(**locals())
+            "Error creating link between contact:{contact}"
+            " and aftale:{aftale} for resource:{resource} with"
+            " payload:{payload}".format(**locals())
         )
+
         log.error(response.text)
+
+        if (
+            not skip_if_no_changes and
+            "matching key values already exists" in response.text
+        ):
+            # we asked for this behaviour - thus it is not an error
+            return True
         return False
 
+    # link has been successfully inserted in crm, cache it
+    aftale.setdefault("contact_refs", []).append(contact["external_ref"])
+
     return True
-
-
-def mend_contact_and_aftale_link(contact, aftale):
-    """ link from aftale to contact - aftale has it cached
-        if new link is in aftale and it is unchanged:
-            leave it
-        if it is different (or non existing):
-            try to update
-        if it does not update:
-            insert
-    """
-
-    resource = "ava_aftales({guid})/ava_aktoerens_aftaler/$ref".format(
-        guid=aftale["external_ref"]
-    )
-
-    # the new link is absolute (server-specific)
-    contact_ref_link = "{base}/contacts({guid})".format(
-        base=base_endpoint,
-        guid=contact["external_ref"]
-    )
-
-    if contact_ref_link == aftale.get("contact_ref_link"):
-        # this one is unchanged - leave it
-        requestors = []
-    else:
-        # be safe - try to update, if that does not work, insert
-        requestors = [patch_request, post_request]
-        aftale["contact_ref_link"] = contact_ref_link
-
-    payload = {
-        "@odata.id": contact_ref_link
-    }
-
-    if DO_WRITE and len(requestors):
-        for req in requestors:
-            response = req(resource, payload)
-            if response.status_code == 200:
-                log.info(
-                    "Success updating/inserting link ({req})"
-                    " from aftale to contact"
-                    " for resource: {resource} with"
-                    " payload: {payload}".format(**locals())
-                )
-                break
-            else:
-                log.error(
-                    "Error updating/inserting link ({req})"
-                    " from aftale to contact"
-                    " for resource: {resource} with"
-                    " payload: {payload}".format(**locals())
-                )
-    elif len(requestors):
-        log.info(
-            "Pretended updating link with"
-            " {requestors} from aftale to contact"
-            " for resource: {resource} with payload:"
-            " {payload}".format(**locals())
-        )
-
-    # return whether or not something was done
-    return len(requestors) > 0
