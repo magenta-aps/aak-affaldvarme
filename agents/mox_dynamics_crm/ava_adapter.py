@@ -464,7 +464,7 @@ def ava_aftale(entity, old_adapted):
         "id": origin_id,
         "external_ref": old_adapted.get("external_ref"),
         "interessefaellesskab_ref": ava_kundeforhold,
-        "contact_ref_link": old_adapted.get("contact_ref_link"),
+        "contact_refs": old_adapted.get("contact_refs", []),
         "dawa_ref": ava_faktureringsgrad,
         "klasse_ref": ava_produkter,
         "data": {
