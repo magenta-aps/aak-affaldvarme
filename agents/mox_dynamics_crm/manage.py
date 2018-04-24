@@ -56,6 +56,7 @@ def await_indexes_ready():
         cache.connect(), "ava_aftales", ["interessefaellesskab_ref"]
     )
 
+
 # Set logging
 log = start_logging(config.getint("loglevel", fallback=20), LOG_FILE)
 
@@ -124,7 +125,7 @@ def export_to_crm(dry_run):
     """
     await_indexes_ready()
 
-    crm.DO_WRITE = not dry_run
+    crm.DO_WRITE = cache.DO_WRITE = not dry_run
 
     # Message user
     click.echo("Begin export from cache to CRM")
