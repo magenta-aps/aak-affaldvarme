@@ -6,6 +6,7 @@ import dawa_interface as dawa
 
 from helper import get_config
 from logging import getLogger
+import copy
 
 
 # Init logging
@@ -43,8 +44,6 @@ def process(kunderolle):
     :return:
     """
 
-    log.info("export kunderolle {id}".format(**kunderolle))
-
     # Prepare lookup reference fallback
     lookup_contact = None
     lookup_account = None
@@ -53,22 +52,23 @@ def process(kunderolle):
     lookup_billing_address = None
 
     # skip-if-no-changes references
-    # False: Everything is updated - or at least tried
     # DO NOT USE for other purpose than indicators of change
-    # if You want something to update, just set to {}
     SINC = config.getboolean("skip-if-no-changes", fallback=True)
     if SINC:
-        crm_kunderolle_data = dict(kunderolle["data"])
+        kunderolle_cached = copy.deepcopy(kunderolle)
     else:
-        crm_kunderolle_data = {}
+        kunderolle_cached = {}
 
-    crm_contact_data = {}
-    crm_aftale_data = {}
-    crm_billing_address_data = {}
-    crm_utility_address_data = {}
-    crm_contact_address_data = {}
-    crm_kundeforhold_data = {}
-    crm_produkt_data = {}
+    contact_cached = {}
+    aftale_cached = {}
+    billing_address_cached = {}
+    utility_address_cached = {}
+    contact_address_cached = {}
+    kundeforhold_cached = {}
+    produkt_cached = {}
+
+    # progress - which was transferred
+    progress_log = {}
 
     # May not be needed:
     # lookup_utility_address = None
@@ -96,7 +96,7 @@ def process(kunderolle):
         return False
 
     # skip-if-no-changes reference
-    crm_contact_data = dict(contact["data"])
+    contact_cached = copy.deepcopy(contact)
 
     # Set KMDEE email address as primary if primary is null
     secondary_email = contact["data"]["ava_emailkmdee"]
@@ -134,14 +134,13 @@ def process(kunderolle):
     # this doesn't do that much but look like the others
     # skip-if-no-changes reference
     if SINC:
-        crm_contact_address_data = dict(address["data"])
+        contact_address_cached = copy.deepcopy(address)
 
     # Export address
     # Depends on: None
     if not address["external_ref"]:
         address["external_ref"] = crm.store_address(address["data"])
-        contact_address_data = {}  # update cache
-    elif address["data"] != crm_contact_address_data:
+    elif address != contact_address_cached:
         crm.update_address(
             identifier=address["external_ref"],
             payload=address["data"]
@@ -149,11 +148,11 @@ def process(kunderolle):
     else:
         log.debug("skipping NOP address update for {id}".format(**address))
         log.debug("{a} == {b}".format(
-            a=address["data"],
-            b=crm_contact_address_data)
+            a=address,
+            b=contact_address_cached)
         )
 
-    if address["data"] != crm_contact_address_data:
+    if address != contact_address_cached:
         update_cache = cache.update(
             table="ava_adresses",
             document=address
@@ -170,17 +169,16 @@ def process(kunderolle):
     # Depends on: address
     if not contact["external_ref"]:
         contact["external_ref"] = crm.store_contact(contact["data"])
-        crm_contact_data = {}  # update cache
-    elif contact["data"] != crm_contact_data:
+    elif contact != contact_cached:
         crm.update_contact(
             identifier=contact["external_ref"],
             payload=contact["data"]
         )
     else:
         log.debug("skipping NOP contact update for {id}".format(**contact))
-        log.debug("{a} == {b}".format(a=contact["data"], b=crm_contact_data))
+        log.debug("{a} == {b}".format(a=contact, b=contact_cached))
 
-    if contact["data"] != crm_contact_data:
+    if contact != contact_cached:
         update_cache = cache.update(
             table="contacts",
             document=contact
@@ -198,6 +196,17 @@ def process(kunderolle):
         table="accounts",
         uuid=interessefaellesskab_ref
     )
+
+    progress_log.update({
+        "type": "cvr" if contact["data"].get("ava_cvr_nummer") else "cpr",
+        "lora_ref": contact["id"],
+        "contact_ref": contact["external_ref"],
+        "firstname": contact["data"].get("firstname", ""),
+        "lastname": contact["data"].get("lastname", ""),
+        "mobil": contact["data"]["ava_mobilkmdee"],
+        "email": contact["data"]["ava_emailkmdee"],
+        "adresse": address["data"]["ava_name"]
+    })
 
     # Billing address
     billing_address_ref = kundeforhold.get("dawa_ref")
@@ -229,14 +238,13 @@ def process(kunderolle):
         # this doesn't do that much but look like the others
         # skip-if-no-changes reference
         if SINC:
-            crm_billing_address_data = dict(billing_address["data"])
+            billing_address_cached = copy.deepcopy(billing_address)
 
         if not billing_address["external_ref"]:
             billing_address["external_ref"] = crm.store_address(
                 billing_address["data"]
             )
-            crm_billing_address_data = {}  # update cache
-        elif billing_address["data"] != crm_billing_address_data:
+        elif billing_address != billing_address_cached:
             crm.update_address(
                 identifier=billing_address["external_ref"],
                 payload=billing_address["data"]
@@ -246,11 +254,11 @@ def process(kunderolle):
                 **billing_address)
             )
             log.debug("{a} == {b}".format(
-                a=billing_address["data"],
-                b=crm_billing_address_data)
+                a=billing_address,
+                b=billing_address_cached)
             )
 
-        if billing_address["data"] != crm_billing_address_data:
+        if billing_address != billing_address_cached:
             update_cache = cache.update(
                 table="ava_adresses",
                 document=billing_address
@@ -266,7 +274,7 @@ def process(kunderolle):
 
     # skip-if-no-changes reference
     if SINC:
-        crm_kundeforhold_data = dict(kundeforhold["data"])
+        kundeforhold_cached = copy.deepcopy(kundeforhold)
 
     if lookup_billing_address:
         kundeforhold_data[
@@ -275,8 +283,7 @@ def process(kunderolle):
 
     if not kundeforhold["external_ref"]:
         kundeforhold["external_ref"] = crm.store_account(kundeforhold_data)
-        crm_kundeforhold_data = {}  # update cache
-    elif kundeforhold["data"] != crm_kundeforhold_data:
+    elif kundeforhold != kundeforhold_cached:
         crm.update_account(
             identifier=kundeforhold["external_ref"],
             payload=kundeforhold["data"]
@@ -286,11 +293,11 @@ def process(kunderolle):
             **kundeforhold)
         )
         log.debug("{a} == {b}".format(
-            a=kundeforhold["data"],
-            b=crm_kundeforhold_data)
+            a=kundeforhold,
+            b=kundeforhold_cached)
         )
 
-    if kundeforhold["data"] != crm_kundeforhold_data:
+    if kundeforhold != kundeforhold_cached:
         update_cache = cache.update(
             table="accounts",
             document=kundeforhold
@@ -320,8 +327,7 @@ def process(kunderolle):
         kunderolle["external_ref"] = crm.store_kunderolle(
             kunderolle_data
         )
-        crm_kunderolle_data = {}  # update cache
-    elif kunderolle["data"] != crm_kunderolle_data:
+    elif kunderolle != kunderolle_cached:
         crm.update_kunderolle(
             identifier=kunderolle["external_ref"],
             payload=kunderolle["data"]
@@ -332,10 +338,10 @@ def process(kunderolle):
         )
         log.debug("{a} == {b}".format(
             a=kunderolle["data"],
-            b=crm_kunderolle_data)
+            b=kunderolle_cached)
         )
 
-    if kunderolle["data"] != crm_kunderolle_data:
+    if kunderolle != kunderolle_cached:
         update_cache = cache.update(
             table="ava_kunderolles",
             document=kunderolle
@@ -360,7 +366,7 @@ def process(kunderolle):
 
     # skip-if-no-changes reference
     if SINC:
-        crm_aftale_data = dict(aftale["data"])
+        aftale_cached = copy.deepcopy(aftale)
 
     aftale_data = aftale["data"]
 
@@ -377,21 +383,37 @@ def process(kunderolle):
 
     if not aftale.get("external_ref"):
         aftale["external_ref"] = crm.store_aftale(aftale_data)
-        crm_aftale_data = {}  # update cache
-    elif aftale["data"] != crm_aftale_data:
+    elif aftale != aftale_cached:
         crm.update_aftale(
             identifier=aftale["external_ref"],
             payload=aftale["data"]
         )
     else:
         log.debug("skipping NOP aftale update for {id}".format(**aftale))
-        log.debug("{a} == {b}".format(a=aftale["data"], b=crm_aftale_data))
+        log.debug("{a} == {b}".format(a=aftale, b=aftale_cached))
 
     # Create / replace link between aftale and contact
-    if crm.mend_contact_and_aftale_link(contact, aftale):
-        crm_aftale_data = {}  # update cache
+    if crm.mend_contact_and_aftale_link(contact, aftale, SINC):
 
-    if aftale["data"] != crm_aftale_data:
+        # only progress log if successfull
+        if False:
+            log.info(
+                "Overført {type}: {firstname} {lastname},"
+                " {adresse}, mobil:{mobil}, email:{email}"
+                " crm:{contact_ref}, lora:{lora_ref}".format(
+                    **progress_log
+                )
+            )
+        else:
+            log.info(
+                "Overført {type}: xxxx,"
+                " {adresse}, mobil:xxxx, email:xxxx"
+                " crm:{contact_ref}, lora:{lora_ref}".format(
+                    **progress_log
+                )
+            )
+
+    if aftale != aftale_cached:
         update_cache = cache.update(
             table="ava_aftales",
             document=aftale
@@ -425,7 +447,7 @@ def process(kunderolle):
 
     # skip-if-no-changes reference
     if SINC:
-        crm_produkt_data = dict(produkt["data"])
+        produkt_cached = copy.deepcopy(produkt)
 
     # TODO: utility address must be added here
     # Utility address fallback
@@ -466,14 +488,13 @@ def process(kunderolle):
         # this doesn't do that much but look like the others
         # skip-if-no-changes reference
         if SINC:
-            crm_utility_address_data = dict(utility_address["data"])
+            utility_address_cached = copy.deepcopy(utility_address)
 
         if not utility_address["external_ref"]:
             utility_address["external_ref"] = crm.store_address(
                 utility_address["data"]
             )
-            crm_utility_address_data = {}
-        elif utility_address["data"] != crm_utility_address_data:
+        elif utility_address != utility_address_cached:
             crm.update_address(
                 identifier=utility_address["external_ref"],
                 payload=utility_address["data"]
@@ -483,11 +504,11 @@ def process(kunderolle):
                 **utility_address)
             )
             log.debug("{a} == {b}".format(
-                a=utility_address["data"],
-                b=crm_utility_address_data)
+                a=utility_address,
+                b=utility_address_cached)
             )
 
-        if utility_address["data"] != crm_utility_address_data:
+        if utility_address != utility_address_cached:
             # Store in cache
             cache.store(
                 resource="dawa_access",
@@ -514,18 +535,16 @@ def process(kunderolle):
 
     if not produkt["external_ref"]:
         produkt["external_ref"] = crm.store_produkt(produkt["data"])
-        crm_produkt_data = {}  # update cache
-    elif produkt["data"] != crm_produkt_data:
+    elif produkt != produkt_cached:
         crm.update_produkt(
             identifier=produkt["external_ref"],
             payload=produkt["data"]
         )
     else:
         log.debug("skipping NOP produkt update for {id}".format(**produkt))
-        log.debug("{a} == {b}".format(a=produkt["data"], b=crm_produkt_data))
+        log.debug("{a} == {b}".format(a=produkt, b=produkt_cached))
 
-    # Update cache unconfitionally - this one gets nulled in import
-    if produkt["data"] != crm_produkt_data:
+    if produkt != produkt_cached:
         update_cache = cache.update(
             table="ava_installations",
             document=produkt
