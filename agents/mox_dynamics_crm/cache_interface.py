@@ -20,6 +20,8 @@ mapping = {
 # Init logger
 log = getLogger(__name__)
 
+DO_WRITE = True
+
 
 def connect():
     """
@@ -88,6 +90,9 @@ def insert(table, payload, conflict="error"):
     # Debug
     log.debug(payload)
 
+    if not DO_WRITE:
+        return {"errors": ["dry run"], "first_error": "dry run"}
+
     with connect() as connection:
         query = r.table(table).insert(payload, conflict=conflict)
         run = query.run(connection)
@@ -129,6 +134,9 @@ def update(table, document):
     log.debug(document)
 
     identifier = document["id"]
+
+    if not DO_WRITE:
+        return {"errors": ["dry run"], "first_error": "dry run"}
 
     with connect() as connection:
         query = r.table(table).get(identifier)
