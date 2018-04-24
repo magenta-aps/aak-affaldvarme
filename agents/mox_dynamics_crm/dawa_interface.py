@@ -82,6 +82,8 @@ def get_access_address(uuid):
 
 
 def access_adapter(data):
+    # no old_adapted here, as these do not seem to be imported
+    # thus an already cached external_ref is not overwritten
     """
     Adapter to convert an access address object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -177,7 +179,10 @@ def get_address(uuid):
     return adapter(data)
 
 
-def adapter(data, old_adapted):
+def adapter(data, old_adapted={}):
+    # old_adapted is defaulted because the call can also stem from
+    # export_client, but this happens only when address is not cached
+    # and in that case the document would be empty anyway
     """
     Adapter to convert an address object to cache layer document.
     The document contains both transport meta data and the original content.
