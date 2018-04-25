@@ -44,6 +44,13 @@ def process(kunderolle):
     :return:
     """
 
+    # calls to store an entity in crm may fail and thus cause the value False
+    # to be inserted as external_ref. It should maybe have been Null, but the 
+    # False value is nice - it can be used to check in the cache layer which
+    # entities failed when inserting into crm. The False value will cause
+    # a retry next time the program is run
+    #
+
     # Prepare lookup reference fallback
     lookup_contact = None
     lookup_account = None
