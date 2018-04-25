@@ -5,6 +5,7 @@ from logging import getLogger
 
 log = getLogger(__name__)
 
+CRM_FIRSTNAME_LIMIT = 50  # issue 22298 not yet resolved
 
 def ava_bruger(entity, old_adapted):
     """
@@ -131,7 +132,7 @@ def ava_bruger(entity, old_adapted):
         "external_ref": old_adapted.get("external_ref"),
         "dawa_ref": dawa_address,
         "data": {
-            "firstname": firstname,
+            "firstname": firstname[:CRM_FIRSTNAME_LIMIT],
             "middlename": middlename,
             "lastname": lastname,
             "ava_eradressebeskyttet": ava_eradressebeskyttet,
@@ -227,7 +228,7 @@ def ava_organisation(entity, old_adapted):
         "external_ref": old_adapted.get("external_ref"),
         "dawa_ref": dawa_address,
         "data": {
-            "firstname": organisationsnavn,
+            "firstname": organisationsnavn[:CRM_FIRSTNAME_LIMIT],
             "ava_eradressebeskyttet": ava_eradressebeskyttet,
             "ava_modtag_sms_notifikation": ava_modtag_sms_notifikation,
             "ava_cvr_nummer": ava_cvr_id,
