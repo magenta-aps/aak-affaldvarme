@@ -5,7 +5,11 @@ from logging import getLogger
 
 log = getLogger(__name__)
 
-CRM_FIRSTNAME_LIMIT = 50  # issue 22298 not yet resolved
+CRM_FIRSTNAME_LIMIT = 150  # issue 22298 lifted to 150
+CRM_LASTNAME_LIMIT = 100  # issue 22298 lifted to 100
+CRM_MIDDLENAME_LIMIT = 80  # issue 22298 lifted to 80
+CRM_FULLNAME_LIMIT = 260  # issue 22298 N/A
+
 
 def ava_bruger(entity, old_adapted):
     """
@@ -132,9 +136,18 @@ def ava_bruger(entity, old_adapted):
         "external_ref": old_adapted.get("external_ref"),
         "dawa_ref": dawa_address,
         "data": {
-            "firstname": firstname[:CRM_FIRSTNAME_LIMIT],
-            "middlename": middlename,
-            "lastname": lastname,
+            "firstname": (
+                firstname[:CRM_FIRSTNAME_LIMIT]
+                if firstname else None
+            ),
+            "middlename": (
+                middlename[:CRM_MIDDLENAME_LIMIT]
+                if middlename else None
+            ),
+            "lastname": (
+                lastname[:CRM_LASTNAME_LIMIT]
+                if lastname else None
+            ),
             "ava_eradressebeskyttet": ava_eradressebeskyttet,
             "ava_modtag_sms_notifikation": ava_modtag_sms_notifikation,
             "ava_cpr_nummer": ava_cpr_id,
