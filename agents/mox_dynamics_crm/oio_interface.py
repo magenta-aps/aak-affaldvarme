@@ -85,7 +85,7 @@ def batch_generator(resource, list_of_uuids):
     adapter = switch.get("adapter")
 
     # Amount of chuncks a batch contains
-    chunck = 50
+    chunck = 150
 
     # Generate batches until done
     while len(list_of_uuids) > 0:
