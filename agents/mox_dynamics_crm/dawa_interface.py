@@ -306,6 +306,10 @@ def get_all(area_code):
     # Iterate and append converted documents to the list
     for address in addresses:
         converted = adapter(address, existing_adapted.get(address["id"], {}))
+        old_data = existing_adapted.get(address["id"], {}).get("data")
+        if converted["data"] != old_data:
+            # change this back after export
+            converted["import_changed"] = True
 
         # set update time
         converted["updated"] = batch_timestamp
