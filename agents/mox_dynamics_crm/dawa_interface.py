@@ -246,26 +246,29 @@ def adapter(data, old_adapted={}):
     document = {
         "id": adresseid,
         "external_ref": old_adapted.get("external_ref"),
-        "data": {
-            "ava_dawaadgangsadresseid": adgangsadresseid,
-            "ava_name": search,
-            "ava_gadenavn": vejnavn,
-            "ava_husnummer": husnr_nr,
-            "ava_bogstav": husnr_bogstav,
-            "ava_etage": etage,
-            "ava_doer": doer,
-            "ava_postnummer": postnr,
-            "ava_kommunenummer": kommunekode,
-            "ava_by": postnrnavn,
-            "ava_land": land,
-            "ava_kvhx": kvhx,
-            "ava_vejkode": vejkode,
-            "ava_koordinat_nord": str(koordinat_nord),
-            "ava_koordinat_oest": str(koordinat_oest),
-            "ava_laengdegrad": str(laengdegrad),
-            "ava_breddegrad": str(breddegrad)
-        }
+        "data": dict(old_adapted.get("data",{}))
     }
+
+    document["data"].update({
+        "ava_dawaadgangsadresseid": adgangsadresseid,
+        "ava_name": search,
+        "ava_gadenavn": vejnavn,
+        "ava_husnummer": husnr_nr,
+        "ava_bogstav": husnr_bogstav,
+        "ava_etage": etage,
+        "ava_doer": doer,
+        "ava_postnummer": postnr,
+        "ava_kommunenummer": kommunekode,
+        "ava_by": postnrnavn,
+        "ava_land": land,
+        "ava_kvhx": kvhx,
+        "ava_vejkode": vejkode,
+        "ava_koordinat_nord": str(koordinat_nord),
+        "ava_koordinat_oest": str(koordinat_oest),
+        "ava_laengdegrad": str(laengdegrad),
+        "ava_breddegrad": str(breddegrad)
+    })
+
     return document
 
 
