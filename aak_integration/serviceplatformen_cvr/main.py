@@ -12,7 +12,7 @@ import requests
 from .sp_adapter import CVRAdapter
 
 # Settings
-RUN_IN_PROD_MODE = False
+RUN_IN_PROD_MODE = True
 DAWA_SERVICE_URL = 'https://dawa.aws.dk/adresser'
 
 
