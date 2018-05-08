@@ -119,14 +119,15 @@ def batch_generator(resource, list_of_uuids):
         for result in results:
             adapted = adapter(result, existing_adapted.get(result["id"], {}))
             old_data = existing_adapted.get(result["id"], {}).get("data")
-            if adapted["data"] != old_data:
-                # change this back after export
-                adapted["import_changed"] = True
 
             if not adapted:
                 log.error("One faulty result: ")
                 log.error(result)
                 break
+
+            if adapted["data"] != old_data:
+                # change this back after export
+                adapted["import_changed"] = True
 
             # set update time
             adapted["updated"] = batch_timestamp
