@@ -131,28 +131,30 @@ def ava_bruger(entity, old_adapted):
         "id": origin_id,
         "external_ref": old_adapted.get("external_ref"),
         "dawa_ref": dawa_address,
-        "data": {
-            "firstname": firstname[:CRM_FIRSTNAME_LIMIT],
-            "middlename": middlename,
-            "lastname": lastname,
-            "ava_eradressebeskyttet": ava_eradressebeskyttet,
-            "ava_modtag_sms_notifikation": ava_modtag_sms_notifikation,
-            "ava_cpr_nummer": ava_cpr_id,
-            "gendercode":  gendercode,
-
-            # KMD EE
-            "ava_kmdeemasterid": ava_kmdeemasterid,
-            "ava_mobilkmdee": kmd_ee.get("mobile"),
-            "ava_fastnetkmdee": kmd_ee.get("landline"),
-            "ava_emailkmdee": kmd_ee.get("email"),
-
-            # Arosia fields (Not supported by CRM)
-            # "telephone1": None,
-            # "emailaddress1": None
-            # "arosia_telephone": None,
-            # "ava_arosiaid": None
-        }
+        "data": dict(old_adapted.get("data",{}))
     }
+
+    document["data"].update({
+        "firstname": firstname[:CRM_FIRSTNAME_LIMIT],
+        "middlename": middlename,
+        "lastname": lastname,
+        "ava_eradressebeskyttet": ava_eradressebeskyttet,
+        "ava_modtag_sms_notifikation": ava_modtag_sms_notifikation,
+        "ava_cpr_nummer": ava_cpr_id,
+        "gendercode":  gendercode,
+
+        # KMD EE
+        "ava_kmdeemasterid": ava_kmdeemasterid,
+        "ava_mobilkmdee": kmd_ee.get("mobile"),
+        "ava_fastnetkmdee": kmd_ee.get("landline"),
+        "ava_emailkmdee": kmd_ee.get("email"),
+
+        # Arosia fields (Not supported by CRM)
+        # "telephone1": None,
+        # "emailaddress1": None
+        # "arosia_telephone": None,
+        # "ava_arosiaid": None
+    })
 
     return document
 
@@ -227,26 +229,28 @@ def ava_organisation(entity, old_adapted):
         "id": origin_id,
         "external_ref": old_adapted.get("external_ref"),
         "dawa_ref": dawa_address,
-        "data": {
-            "firstname": organisationsnavn[:CRM_FIRSTNAME_LIMIT],
-            "ava_eradressebeskyttet": ava_eradressebeskyttet,
-            "ava_modtag_sms_notifikation": ava_modtag_sms_notifikation,
-            "ava_cvr_nummer": ava_cvr_id,
-            "ava_virksomhedsform": ava_virksomhedsform,
-
-            # KMD EE
-            "ava_kmdeemasterid": ava_kmdeemasterid,
-            "ava_mobilkmdee": kmd_ee.get("mobile"),
-            "ava_fastnetkmdee": kmd_ee.get("landline"),
-            "ava_emailkmdee": kmd_ee.get("email"),
-
-            # Arosia
-            # "telephone1": None,
-            # "emailaddress1": None
-            # "arosia_telephone": None,
-            # "ava_arosiaid": None,
-        }
+        "data": dict(old_adapted.get("data",{}))
     }
+
+    document["data"].update({
+        "firstname": organisationsnavn[:CRM_FIRSTNAME_LIMIT],
+        "ava_eradressebeskyttet": ava_eradressebeskyttet,
+        "ava_modtag_sms_notifikation": ava_modtag_sms_notifikation,
+        "ava_cvr_nummer": ava_cvr_id,
+        "ava_virksomhedsform": ava_virksomhedsform,
+
+        # KMD EE
+        "ava_kmdeemasterid": ava_kmdeemasterid,
+        "ava_mobilkmdee": kmd_ee.get("mobile"),
+        "ava_fastnetkmdee": kmd_ee.get("landline"),
+        "ava_emailkmdee": kmd_ee.get("email"),
+
+        # Arosia
+        # "telephone1": None,
+        # "emailaddress1": None
+        # "arosia_telephone": None,
+        # "ava_arosiaid": None,
+    })
 
     return document
 
@@ -312,10 +316,12 @@ def ava_kunderolle(entity, old_adapted):
         "external_ref": old_adapted.get("external_ref"),
         "contact_ref": customer_ref,
         "interessefaellesskab_ref": ava_kundeforhold,
-        "data": {
-            "ava_rolle": ava_rolle
-        }
+        "data": dict(old_adapted.get("data",{}))
     }
+
+    document["data"].update({
+        "ava_rolle": ava_rolle
+    })
 
     return document
 
@@ -373,12 +379,14 @@ def ava_account(entity, old_adapted):
         "id": origin_id,
         "external_ref": old_adapted.get("external_ref"),
         "dawa_ref": ava_adresse,
-        "data": {
-            "name": account_name,
-            "ava_kundenummer": ava_kundenummer,
-            "ava_kundetype": ava_kundetype
-        }
+        "data": dict(old_adapted.get("data",{}))
     }
+
+    document["data"].update({
+        "name": account_name,
+        "ava_kundenummer": ava_kundenummer,
+        "ava_kundetype": ava_kundetype
+    })
 
     return document
 
@@ -468,14 +476,16 @@ def ava_aftale(entity, old_adapted):
         "contact_refs": old_adapted.get("contact_refs", []),
         "dawa_ref": ava_faktureringsgrad,
         "klasse_ref": ava_produkter,
-        "data": {
-            "ava_name": ava_name,
-            "ava_aftaletype": ava_aftaletype,
-            "ava_antal_produkter": ava_antal_produkter,
-            "ava_startdato": ava_startdato,
-            "ava_slutdato": ava_slutdato
-        }
+        "data": dict(old_adapted.get("data",{}))
     }
+
+    document["data"].update({
+        "ava_name": ava_name,
+        "ava_aftaletype": ava_aftaletype,
+        "ava_antal_produkter": ava_antal_produkter,
+        "ava_startdato": ava_startdato,
+        "ava_slutdato": ava_slutdato
+    })
 
     return document
 
@@ -553,14 +563,18 @@ def ava_installation(entity, old_adapted):
         "external_ref": old_adapted.get("external_ref"),
         "indsats_ref": old_adapted.get("indsats_ref"),
         "dawa_ref": ava_adresse,
-        "data": {
-            "ava_name": ava_name,
-            "ava_identifikation": ava_identifikation,
-            "ava_installationstype": ava_installationstype,
-            "ava_maalernummer": ava_maalernummer,
-            "ava_maalertype": ava_maalertype,
-            "ava_kundenummer": ava_kundenummer
-        }
+        "data": dict(old_adapted.get("data",{}))
     }
+    
+    document["data"].update({
+        "ava_name": ava_name,
+        "ava_identifikation": ava_identifikation,
+        "ava_installationstype": ava_installationstype,
+        "ava_maalernummer": ava_maalernummer,
+        "ava_maalertype": ava_maalertype,
+        "ava_kundenummer": ava_kundenummer
+    })
+
+
 
     return document
