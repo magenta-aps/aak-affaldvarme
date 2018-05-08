@@ -147,7 +147,7 @@ def process(kunderolle):
     # Depends on: None
     if not address["external_ref"]:
         address["external_ref"] = crm.store_address(address["data"])
-    elif address != contact_address_cached:
+    elif address != contact_address_cached or address.get("import_changed"):
         crm.update_address(
             identifier=address["external_ref"],
             payload=address["data"]
@@ -159,6 +159,7 @@ def process(kunderolle):
             b=contact_address_cached)
         )
 
+    address["import_changed"] = False
     if address != contact_address_cached:
         update_cache = cache.update(
             table="ava_adresses",
@@ -176,7 +177,7 @@ def process(kunderolle):
     # Depends on: address
     if not contact["external_ref"]:
         contact["external_ref"] = crm.store_contact(contact["data"])
-    elif contact != contact_cached:
+    elif contact != contact_cached or contact.get("import_changed") :
         crm.update_contact(
             identifier=contact["external_ref"],
             payload=contact["data"]
@@ -185,6 +186,7 @@ def process(kunderolle):
         log.debug("skipping NOP contact update for {id}".format(**contact))
         log.debug("{a} == {b}".format(a=contact, b=contact_cached))
 
+    contact["import_changed"] = False
     if contact != contact_cached:
         update_cache = cache.update(
             table="contacts",
@@ -251,7 +253,7 @@ def process(kunderolle):
             billing_address["external_ref"] = crm.store_address(
                 billing_address["data"]
             )
-        elif billing_address != billing_address_cached:
+        elif billing_address != billing_address_cached or billing_address.get("import_changed"):
             crm.update_address(
                 identifier=billing_address["external_ref"],
                 payload=billing_address["data"]
@@ -265,6 +267,7 @@ def process(kunderolle):
                 b=billing_address_cached)
             )
 
+        billing_address["import_changed"] = False
         if billing_address != billing_address_cached:
             update_cache = cache.update(
                 table="ava_adresses",
@@ -290,7 +293,7 @@ def process(kunderolle):
 
     if not kundeforhold["external_ref"]:
         kundeforhold["external_ref"] = crm.store_account(kundeforhold_data)
-    elif kundeforhold != kundeforhold_cached:
+    elif kundeforhold != kundeforhold_cached or kundeforhold.get("import_changed"):
         crm.update_account(
             identifier=kundeforhold["external_ref"],
             payload=kundeforhold["data"]
@@ -304,6 +307,7 @@ def process(kunderolle):
             b=kundeforhold_cached)
         )
 
+    kundeforhold["import_changed"] = False
     if kundeforhold != kundeforhold_cached:
         update_cache = cache.update(
             table="accounts",
@@ -334,7 +338,7 @@ def process(kunderolle):
         kunderolle["external_ref"] = crm.store_kunderolle(
             kunderolle_data
         )
-    elif kunderolle != kunderolle_cached:
+    elif kunderolle != kunderolle_cached or kunderolle.get("import_changed"):
         crm.update_kunderolle(
             identifier=kunderolle["external_ref"],
             payload=kunderolle["data"]
@@ -348,6 +352,7 @@ def process(kunderolle):
             b=kunderolle_cached)
         )
 
+    kunderolle["import_changed"] = False
     if kunderolle != kunderolle_cached:
         update_cache = cache.update(
             table="ava_kunderolles",
@@ -390,7 +395,7 @@ def process(kunderolle):
 
     if not aftale.get("external_ref"):
         aftale["external_ref"] = crm.store_aftale(aftale_data)
-    elif aftale != aftale_cached:
+    elif aftale != aftale_cached or aftale.get("import_changed"):
         crm.update_aftale(
             identifier=aftale["external_ref"],
             payload=aftale["data"]
@@ -420,6 +425,7 @@ def process(kunderolle):
                 )
             )
 
+    aftale["import_changed"] = False
     if aftale != aftale_cached:
         update_cache = cache.update(
             table="ava_aftales",
@@ -501,7 +507,7 @@ def process(kunderolle):
             utility_address["external_ref"] = crm.store_address(
                 utility_address["data"]
             )
-        elif utility_address != utility_address_cached:
+        elif utility_address != utility_address_cached or utility_address.get("import_changed"):
             crm.update_address(
                 identifier=utility_address["external_ref"],
                 payload=utility_address["data"]
@@ -515,6 +521,7 @@ def process(kunderolle):
                 b=utility_address_cached)
             )
 
+        utility_address["import_changed"] = False
         if utility_address != utility_address_cached:
             # Store in cache
             cache.store(
@@ -542,7 +549,7 @@ def process(kunderolle):
 
     if not produkt["external_ref"]:
         produkt["external_ref"] = crm.store_produkt(produkt["data"])
-    elif produkt != produkt_cached:
+    elif produkt != produkt_cached or produkt.get("import_changed"):
         crm.update_produkt(
             identifier=produkt["external_ref"],
             payload=produkt["data"]
@@ -551,6 +558,7 @@ def process(kunderolle):
         log.debug("skipping NOP produkt update for {id}".format(**produkt))
         log.debug("{a} == {b}".format(a=produkt, b=produkt_cached))
 
+    produkt["import_changed"] = False
     if produkt != produkt_cached:
         update_cache = cache.update(
             table="ava_installations",
