@@ -60,6 +60,7 @@ def process(kunderolle):
 
     # skip-if-no-changes references
     # DO NOT USE for other purpose than indicators of change
+    kunderolle_ref = kunderolle["id"]
     SINC = config.getboolean("skip-if-no-changes", fallback=True)
     if SINC:
         kunderolle_cached = copy.deepcopy(kunderolle)
@@ -91,6 +92,19 @@ def process(kunderolle):
     contact_ref = kunderolle["contact_ref"]
     interessefaellesskab_ref = kunderolle["interessefaellesskab_ref"]
 
+    # Kundeforhold - moved here for logging purposes
+    kundeforhold = cache.get(
+        table="accounts",
+        uuid=interessefaellesskab_ref
+    )
+    if kundeforhold:
+        ava_kundenummer = kundeforhold["data"]["ava_kundenummer"]
+    else:
+        log.error("Kundeforhold not found: {}".format(interessefaellesskab_ref))
+        log.error(kunderolle)
+        return
+
+   
     # Customer/Contact
     if contact_ref:
         contact = cache.get(table="contacts", uuid=contact_ref)
@@ -100,6 +114,13 @@ def process(kunderolle):
     if not contact:
         log.error("Contact not found: {}".format(contact_ref))
         log.error(kunderolle)
+        log.error(
+            "ee-ref kundenummer {0} "
+            "contact ikke fundet på reference {1} i kunderolle {2}" .format(
+            ava_kundenummer,
+            contact_ref,
+            kunderolle_ref
+        ))
         return False
 
     # skip-if-no-changes reference
@@ -118,6 +139,12 @@ def process(kunderolle):
         log.info("No address reference found, skipping")
         log.debug("Kunderolle: {0}".format(kunderolle.get("_id")))
         log.debug("Contact: {0}".format(contact.get("_id")))
+        log.error(
+            "ee-ref kundenummer {0} "
+            "har ingen adresse på contact {1}".format(
+            ava_kundenummer,
+            contact_ref
+        ))
         return False
 
     address = cache.get(table="ava_adresses", uuid=address_ref)
@@ -136,6 +163,13 @@ def process(kunderolle):
             "address {address_ref} not cached, "
             "skipping contact {contact_ref}".format(**locals())
         )
+        log.error(
+            "ee-ref kundenummer {0} "
+            "adresse ikke fundet på reference {1} i contact {2}".format(
+            ava_kundenummer,
+            address_ref,
+            contact_ref
+        ))
         return False
 
     # this doesn't do that much but look like the others
@@ -200,11 +234,6 @@ def process(kunderolle):
         external_ref=contact["external_ref"]
     )
 
-    # Kundeforhold
-    kundeforhold = cache.get(
-        table="accounts",
-        uuid=interessefaellesskab_ref
-    )
 
     progress_log.update({
         "type": "cvr" if contact["data"].get("ava_cvr_nummer") else "cpr",
@@ -241,6 +270,15 @@ def process(kunderolle):
                     table="ava_adresses",
                     uuid=billing_address_ref
                 )
+        if not billing_address:
+            log.error(
+                "ee-ref kundenummer {0} "
+                "faktureringsadresse kunne ikke slås op "
+                "på reference {1} i account {2}".format(
+                ava_kundenummer,
+                billing_address_ref,
+                interessefaellesskab_ref
+            ))
 
     if billing_address:
 
@@ -374,6 +412,13 @@ def process(kunderolle):
 
     if not aftale:
         log.warning("Aftale does not exist")
+        log.error(
+            "ee-ref kundenummer {0} "
+            "aftale ikke fundet på reference {1} i kunderolle {2}".format(
+            ava_kundenummer,
+            interessefaellesskab_ref,
+            kunderolle_ref
+        ))
         return
 
     # skip-if-no-changes reference
@@ -450,12 +495,25 @@ def process(kunderolle):
                 internal=aftale.get("id"),
             )
         )
+        log.error(
+            "ee-ref kundenummer {0} "
+            "klasse-ref mangler på aftale {1}".format(
+            ava_kundenummer,
+            aftale["id"],
+        ))
         return
 
     produkt = cache.get(table="ava_installations", uuid=klasse_ref)
 
     if not produkt:
         log.warning("Produkt does not exist")
+        log.error(
+            "ee-ref kundenummer {0} "
+            "Produkt for aftale {1} kunne ikke findes på reference {2}".format(
+            ava_kundenummer,
+            aftale["id"],
+            klasse_ref
+        ))
         return
 
     # skip-if-no-changes reference
@@ -495,6 +553,16 @@ def process(kunderolle):
 
             # Debug
             log.debug("Utility address: {0}".format(utility_address))
+
+        if not utility_address:
+
+            log.error(
+                "ee-ref installationsnummer {0} "
+                "utility-addresse kunne ikke slås op på reference {1} for produkt {2}".format(
+                ava_installationsnummer,
+                utility_ref,
+                klasse_ref,
+            ))
 
     if utility_address:
 
@@ -541,7 +609,6 @@ def process(kunderolle):
         produkt["indsats_ref"] = aftale_external_ref
 
     # Workaround: Just inserting billing address
-    ava_kundenummer = kundeforhold["data"]["ava_kundenummer"]
     produkt["data"]["ava_kundenummer"] = ava_kundenummer
 
     if lookup_aftale:
