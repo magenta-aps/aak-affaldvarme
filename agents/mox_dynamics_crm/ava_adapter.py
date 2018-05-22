@@ -469,11 +469,11 @@ def ava_aftale(entity, old_adapted):
     ava_slutdato = egenskaber.get("sluttidspunkt").split(" ")[0]
 
     # Billing
-    ava_faktureringsgrad = None
+    ava_billing_address = None
 
     try:
         indsatsdokument = relationer.get("indsatsdokument")[0]
-        ava_faktureringsgrad = indsatsdokument.get("uuid")
+        ava_billing_address = indsatsdokument.get("uuid")
     except Exception as error:
         log.error(
             "Error getting address for: {0}".format(origin_id)
@@ -487,7 +487,7 @@ def ava_aftale(entity, old_adapted):
         "external_ref": old_adapted.get("external_ref"),
         "interessefaellesskab_ref": ava_kundeforhold,
         "contact_refs": old_adapted.get("contact_refs", []),
-        "dawa_ref": ava_faktureringsgrad,
+        "dawa_ref": ava_billing_address,
         "klasse_ref": ava_produkter,
         "data": dict(old_adapted.get("data",{}))
     }
@@ -565,7 +565,7 @@ def ava_installation(entity, old_adapted):
     # ava_aftale = None
 
     # Entity: Lora (Account/Interessefaellesskab)
-    ava_kundenummer = None
+    ava_kundenummer = old_adapted.get("data",{}).get("ava_kundenummer")
 
     # Arosia not yet implemented
     # ava_arosiaid = None
