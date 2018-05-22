@@ -118,6 +118,17 @@ def get_forbrugssted_address_uuid(row):
             address_uuid = fuzzy_address_uuid(address_string)
         except Exception as e:
             address_uuid = None
+
+    if address_uuid is None:
+        try:
+            address_uuid = access_address_uuid({
+                "vejnavn": vejnavn,
+                "husnr": husnummer.upper() or '',
+                "postnr": postnr
+            })
+        except Exception as e:
+            address_uuid = None
+
     return (address_string, address_uuid)
 
 
