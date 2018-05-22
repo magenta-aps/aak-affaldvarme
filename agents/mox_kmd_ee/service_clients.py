@@ -91,7 +91,10 @@ def fuzzy_address_uuid(addr_str):
     if result:
         addrs = result.json()['resultater']
         if len(addrs) == 1:
-            return addrs[0]['adresse']['id']
+            if addrs[0]['adresse']['status'] in [2,4]:
+                return addrs[0]['adresse']['adgangsadresseid']
+            else: 
+                return addrs[0]['adresse']['id']
         elif len(addrs) > 1:
             # print("Adresses found:")
             # print(addrs)
