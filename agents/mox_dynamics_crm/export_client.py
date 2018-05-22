@@ -271,7 +271,7 @@ def process(kunderolle):
                     uuid=utility_address_ref
                 )
         if utility_address:
-            utility_address_table="ava_adreses"
+            utility_address_table="ava_adresses"
 
         if not utility_address:
             utility_address = cache.get(
