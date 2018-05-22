@@ -35,6 +35,9 @@ from ee_data import read_customer_records, store_customer_records
 from ee_data import retrieve_customer_records, read_installation_records
 from ee_data import store_installation_records, retrieve_installation_records
 from ee_data import has_customer_records
+from ee_data import get_crm_failed_customer_numbers
+from ee_data import get_crm_failed_installation_numbers
+
 
 from service_clients import report_error, fuzzy_address_uuid
 
@@ -392,11 +395,14 @@ def main():
     # Build a mapping between customer numbers and
     # dictionaries containing only the changed values.
 
+    crm_failed = get_crm_failed_customer_numbers()
     changed_records = {
         k: {
             f: v for f, v in new_values[k].items() if
-            new_values[k][f] != old_values[k][f]
-          } for k in common_keys if new_values[k] != old_values[k]
+            new_values[k][f] != old_values[k][f] or k in crm_failed
+          } for k in common_keys if (
+              new_values[k] != old_values[k] or k in crm_failed
+          )
     }
 
     say("Number of changed customer records:", len(changed_records))
@@ -468,12 +474,17 @@ def main():
     say("lost installations:", len(lost_installation_keys))
     say("existing installations:", len(common_installation_keys))
 
+    crm_failed = get_crm_failed_installation_numbers()
     changed_installation_records = {
         k: {
-            f: v for f, v in new_installation_values[k].items() if
-            new_installation_values[k][f] != old_installation_values[k][f]
-          } for k in common_installation_keys if
-        new_installation_values[k] != old_installation_values[k]
+            f: v for f, v in new_installation_values[k].items() if (
+                new_installation_values[k][f] != old_installation_values[k][f]
+                or k in crm_failed
+            )
+          } for k in common_installation_keys if (
+            new_installation_values[k] != old_installation_values[k]
+            or k in crm_failed
+          )
     }
 
     say("Number of changed installation records:", len(changed_records))
