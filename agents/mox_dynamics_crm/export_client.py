@@ -79,7 +79,7 @@ def process(kunderolle):
     progress_log = {}
 
     # May not be needed:
-    # lookup_utility_address = None
+    lookup_utility_address = None
     # lookup_kunderolle = None
 
     # Hotfix:
@@ -246,76 +246,97 @@ def process(kunderolle):
         "adresse": address["data"]["ava_name"]
     })
 
-    # Billing address
-    billing_address_ref = kundeforhold.get("dawa_ref")
+    # Utility address
+    utility_address_ref = kundeforhold.get("dawa_ref")
 
     # Fallback
-    billing_address = None
+    utility_address = None
+    utility_address_table=None
 
-    if billing_address_ref:
-        billing_address = cache.get(
+    if utility_address_ref:
+
+        utility_address = cache.get(
             table="ava_adresses",
-            uuid=billing_address_ref
-        )
-
-        if not billing_address:
-            log.info("Address does not exist in the cache layer, importing")
-            dawa_address = dawa.get_address(billing_address_ref)
-            if dawa_address:
+            uuid=utility_address_ref
+        ) 
+        if not utility_address:
+            utility_address = dawa.get_address(utility_address_ref)
+            if utility_address:
+                log.info("storing new utility_address from dawa")
                 # Store address in cache layer
-                cache.store(resource="dawa", payload=dawa_address)
-
+                cache.store(resource="dawa", payload=utility_address)
                 # Get newly stored address
-                billing_address = cache.get(
+                utility_address = cache.get(
                     table="ava_adresses",
-                    uuid=billing_address_ref
+                    uuid=utility_address_ref
                 )
-        if not billing_address:
-            log.error(
-                "ee-ref kundenummer {0} "
-                "faktureringsadresse kunne ikke slås op "
-                "på reference {1} i account {2}".format(
-                ava_kundenummer,
-                billing_address_ref,
-                interessefaellesskab_ref
-            ))
+        if utility_address:
+            utility_address_table="ava_adreses"
 
-    if billing_address:
-
-        # this doesn't do that much but look like the others
-        # skip-if-no-changes reference
-        if SINC:
-            billing_address_cached = copy.deepcopy(billing_address)
-
-        if not billing_address["external_ref"]:
-            billing_address["external_ref"] = crm.store_address(
-                billing_address["data"]
+        if not utility_address:
+            utility_address = cache.get(
+                table="access",
+                uuid=utility_address_ref
             )
-        elif billing_address != billing_address_cached or billing_address.get("import_changed"):
+            if not utility_address:
+                utility_address = dawa.get_access_address(utility_address_ref)
+                if utility_address:
+                    log.info("storing new utility_address from dawa_access")
+                    # Store address in cache layer
+                    cache.store(resource="dawa_access", payload=utility_address)
+                    # Get newly stored address
+                    utility_address = cache.get(
+                        table="access",
+                        uuid=utility_address_ref
+                    )
+            if utility_address:
+                utility_address_table="access"
+
+
+    if not utility_address:
+        log.error(
+            "ee-ref kundenummer {0} "
+            "adgangsadresse kunne ikke slås op "
+            "på reference {1} i account {2}".format(
+            ava_kundenummer,
+            utility_address_ref,
+            interessefaellesskab_ref
+        ))
+
+    if utility_address:
+
+        if SINC:
+            utility_address_cached = copy.deepcopy(utility_address)
+
+        if not utility_address["external_ref"]:
+            utility_address["external_ref"] = crm.store_address(
+                utility_address["data"]
+            )
+        elif utility_address != utility_address_cached or utility_address.get("import_changed"):
             crm.update_address(
-                identifier=billing_address["external_ref"],
-                payload=billing_address["data"]
+                identifier=utility_address["external_ref"],
+                payload=utility_address["data"]
             )
         else:
-            log.debug("skipping NOP billing_address update for {id}".format(
-                **billing_address)
+            log.debug("skipping NOP utility_address update for {id}".format(
+                **utility_address)
             )
             log.debug("{a} == {b}".format(
-                a=billing_address,
-                b=billing_address_cached)
+                a=utility_address,
+                b=utility_address_cached)
             )
 
-        billing_address["import_changed"] = False
-        if billing_address != billing_address_cached:
+        utility_address["import_changed"] = False
+        if utility_address != utility_address_cached:
             update_cache = cache.update(
-                table="ava_adresses",
-                document=billing_address
+                table=utility_address_table,
+                document=utility_address
             )
-            log.info("Updating cache for billing_address")
+            log.info("Updating cache for utility_address")
             log.info(update_cache)
 
-        lookup_billing_address = "/ava_adresses({external_ref})".format(
-            external_ref=billing_address["external_ref"]
+        lookup_utility_address = "/ava_adresses({external_ref})".format(
+            external_ref=utility_address["external_ref"]
         )
 
     kundeforhold_data = kundeforhold["data"]
@@ -324,10 +345,10 @@ def process(kunderolle):
     if SINC:
         kundeforhold_cached = copy.deepcopy(kundeforhold)
 
-    if lookup_billing_address:
+    if lookup_utility_address:
         kundeforhold_data[
             "ava_adresse@odata.bind"
-        ] = lookup_billing_address
+        ] = lookup_utility_address
 
     if not kundeforhold["external_ref"]:
         kundeforhold["external_ref"] = crm.store_account(kundeforhold_data)
@@ -344,6 +365,8 @@ def process(kunderolle):
             a=kundeforhold,
             b=kundeforhold_cached)
         )
+
+
 
     kundeforhold["import_changed"] = False
     if kundeforhold != kundeforhold_cached:
@@ -424,6 +447,78 @@ def process(kunderolle):
     # skip-if-no-changes reference
     if SINC:
         aftale_cached = copy.deepcopy(aftale)
+
+    # Billing address
+    billing_address_ref = aftale.get("dawa_ref")
+
+    # Fallback
+    billing_address = None
+
+    if billing_address_ref:
+        billing_address = cache.get(
+            table="ava_adresses",
+            uuid=billing_address_ref
+        )
+
+        if not billing_address:
+            log.info("Address does not exist in the cache layer, importing")
+            dawa_address = dawa.get_address(billing_address_ref)
+            if dawa_address:
+                # Store address in cache layer
+                cache.store(resource="dawa", payload=dawa_address)
+
+                # Get newly stored address
+                billing_address = cache.get(
+                    table="ava_adresses",
+                    uuid=billing_address_ref
+                )
+        if not billing_address:
+            log.error(
+                "ee-ref kundenummer {0} "
+                "faktureringsadresse kunne ikke slås op "
+                "på reference {1} i aftale {2}".format(
+                ava_kundenummer,
+                billing_address_ref,
+                interessefaellesskab_ref
+            ))
+
+    if billing_address:
+
+        # this doesn't do that much but look like the others
+        # skip-if-no-changes reference
+        if SINC:
+            billing_address_cached = copy.deepcopy(billing_address)
+
+        if not billing_address["external_ref"]:
+            billing_address["external_ref"] = crm.store_address(
+                billing_address["data"]
+            )
+        elif billing_address != billing_address_cached or billing_address.get("import_changed"):
+            crm.update_address(
+                identifier=billing_address["external_ref"],
+                payload=billing_address["data"]
+            )
+        else:
+            log.debug("skipping NOP billing_address update for {id}".format(
+                **billing_address)
+            )
+            log.debug("{a} == {b}".format(
+                a=billing_address,
+                b=billing_address_cached)
+            )
+
+        billing_address["import_changed"] = False
+        if billing_address != billing_address_cached:
+            update_cache = cache.update(
+                table="ava_adresses",
+                document=billing_address
+            )
+            log.info("Updating cache for billing_address")
+            log.info(update_cache)
+
+        lookup_billing_address = "/ava_adresses({external_ref})".format(
+            external_ref=billing_address["external_ref"]
+        )
 
     aftale_data = aftale["data"]
 
