@@ -10,6 +10,7 @@ Functions starting with "store" write to files on disk, and files starting with
 
 import pickle
 import os
+import re
 
 from ee_sql import CUSTOMER_SQL, RELEVANT_TREF_INSTALLATIONS_SQL
 from ee_utils import int_str
@@ -17,6 +18,8 @@ from ee_utils import int_str
 
 CUSTOMER_RELATIONS_FILE = 'var/customer_relations'
 INSTALLATIONS_FILE = 'var/installations'
+CRM_FAILED_CUSTOMER_NUMBERS_FILE = "var/kundenumre.txt"
+CRM_FAILED_INSTALLATION_NUMBERS_FILE = "var/installationsnumre.txt"
 
 """ CUSTOMER RECORDS """
 
@@ -59,6 +62,14 @@ def retrieve_customer_records():
         return {}
 
 
+def get_crm_failed_customer_numbers():
+    if os.path.exists(CRM_FAILED_CUSTOMER_NUMBERS_FILE):
+        with open(CRM_FAILED_CUSTOMER_NUMBERS_FILE) as f:
+            return set(re.findall("[0-9]+", f.read()))
+    else:
+        return set()
+
+
 """ INSTALLATION RECORDS """
 
 
@@ -87,3 +98,11 @@ def retrieve_installation_records():
             return pickle.load(f)
     except FileNotFoundError:
         return {}
+
+
+def get_crm_failed_installation_numbers():
+    if os.path.exists(CRM_FAILED_INSTALLATION_NUMBERS_FILE):
+        with open(CRM_FAILED_INSTALLATION_NUMBERS_FILE) as f:
+            return set(re.findall("[0-9]+", f.read()))
+    else:
+        return set()
