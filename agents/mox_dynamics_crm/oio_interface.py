@@ -85,7 +85,8 @@ def batch_generator(resource, list_of_uuids):
     adapter = switch.get("adapter")
 
     # Amount of chuncks a batch contains
-    chunck = 150
+    # max 96 uuids for new lora
+    chunck = 90
 
     # Generate batches until done
     while len(list_of_uuids) > 0:
