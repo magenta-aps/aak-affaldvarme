@@ -8,7 +8,7 @@
 #
 
 from unittest import TestCase
-from .utils import get_test_data
+from utils import get_test_data
 
 # Testing import
 from helper import create_virkning
