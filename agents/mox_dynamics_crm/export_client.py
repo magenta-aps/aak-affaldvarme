@@ -697,7 +697,8 @@ def process(kunderolle):
             reference=utility_address["external_ref"]
         )
 
-        produkt["data"]["ava_adresse@odata.bind"] = lookup_utility_address
+    # this utility address can be a fall through from kundeforhold
+    produkt["data"]["ava_adresse@odata.bind"] = lookup_utility_address
 
     # Workaround
     if aftale_external_ref:
