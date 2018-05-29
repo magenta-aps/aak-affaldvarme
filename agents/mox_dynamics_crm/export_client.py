@@ -100,11 +100,12 @@ def process(kunderolle):
     if kundeforhold:
         ava_kundenummer = kundeforhold["data"]["ava_kundenummer"]
     else:
-        log.error("Kundeforhold not found: {}".format(interessefaellesskab_ref))
+        log.error("Kundeforhold not found: {}".format(
+            interessefaellesskab_ref)
+        )
         log.error(kunderolle)
         return
 
-   
     # Customer/Contact
     if contact_ref:
         contact = cache.get(table="contacts", uuid=contact_ref)
@@ -117,10 +118,11 @@ def process(kunderolle):
         log.error(
             "ee-ref kundenummer {0} "
             "contact ikke fundet på reference {1} i kunderolle {2}" .format(
-            ava_kundenummer,
-            contact_ref,
-            kunderolle_ref
-        ))
+                ava_kundenummer,
+                contact_ref,
+                kunderolle_ref
+            )
+        )
         return False
 
     # skip-if-no-changes reference
@@ -142,9 +144,10 @@ def process(kunderolle):
         log.error(
             "ee-ref kundenummer {0} "
             "har ingen adresse på contact {1}".format(
-            ava_kundenummer,
-            contact_ref
-        ))
+                ava_kundenummer,
+                contact_ref
+            )
+        )
         return False
 
     address = cache.get(table="ava_adresses", uuid=address_ref)
@@ -166,10 +169,11 @@ def process(kunderolle):
         log.error(
             "ee-ref kundenummer {0} "
             "adresse ikke fundet på reference {1} i contact {2}".format(
-            ava_kundenummer,
-            address_ref,
-            contact_ref
-        ))
+                ava_kundenummer,
+                address_ref,
+                contact_ref
+            )
+        )
         return False
 
     # this doesn't do that much but look like the others
@@ -211,7 +215,7 @@ def process(kunderolle):
     # Depends on: address
     if not contact["external_ref"]:
         contact["external_ref"] = crm.store_contact(contact["data"])
-    elif contact != contact_cached or contact.get("import_changed") :
+    elif contact != contact_cached or contact.get("import_changed"):
         crm.update_contact(
             identifier=contact["external_ref"],
             payload=contact["data"]
@@ -234,7 +238,6 @@ def process(kunderolle):
         external_ref=contact["external_ref"]
     )
 
-
     progress_log.update({
         "type": "cvr" if contact["data"].get("ava_cvr_nummer") else "cpr",
         "lora_ref": contact["id"],
@@ -251,14 +254,14 @@ def process(kunderolle):
 
     # Fallback
     utility_address = None
-    utility_address_table=None
+    utility_address_table = None
 
     if utility_address_ref:
 
         utility_address = cache.get(
             table="ava_adresses",
             uuid=utility_address_ref
-        ) 
+        )
         if not utility_address:
             utility_address = dawa.get_address(utility_address_ref)
             if utility_address:
@@ -271,7 +274,7 @@ def process(kunderolle):
                     uuid=utility_address_ref
                 )
         if utility_address:
-            utility_address_table="ava_adresses"
+            utility_address_table = "ava_adresses"
 
         if not utility_address:
             utility_address = cache.get(
@@ -283,25 +286,28 @@ def process(kunderolle):
                 if utility_address:
                     log.info("storing new utility_address from dawa_access")
                     # Store address in cache layer
-                    cache.store(resource="dawa_access", payload=utility_address)
+                    cache.store(
+                        resource="dawa_access",
+                        payload=utility_address
+                    )
                     # Get newly stored address
                     utility_address = cache.get(
                         table="access",
                         uuid=utility_address_ref
                     )
             if utility_address:
-                utility_address_table="access"
-
+                utility_address_table = "access"
 
     if not utility_address:
         log.error(
             "ee-ref kundenummer {0} "
             "adgangsadresse kunne ikke slås op "
             "på reference {1} i account {2}".format(
-            ava_kundenummer,
-            utility_address_ref,
-            interessefaellesskab_ref
-        ))
+                ava_kundenummer,
+                utility_address_ref,
+                interessefaellesskab_ref
+            )
+        )
 
     if utility_address:
 
@@ -312,7 +318,10 @@ def process(kunderolle):
             utility_address["external_ref"] = crm.store_address(
                 utility_address["data"]
             )
-        elif utility_address != utility_address_cached or utility_address.get("import_changed"):
+        elif (
+                utility_address != utility_address_cached
+                or utility_address.get("import_changed")
+               ):
             crm.update_address(
                 identifier=utility_address["external_ref"],
                 payload=utility_address["data"]
@@ -352,7 +361,10 @@ def process(kunderolle):
 
     if not kundeforhold["external_ref"]:
         kundeforhold["external_ref"] = crm.store_account(kundeforhold_data)
-    elif kundeforhold != kundeforhold_cached or kundeforhold.get("import_changed"):
+    elif (
+            kundeforhold != kundeforhold_cached
+            or kundeforhold.get("import_changed")
+            ):
         crm.update_account(
             identifier=kundeforhold["external_ref"],
             payload=kundeforhold["data"]
@@ -365,8 +377,6 @@ def process(kunderolle):
             a=kundeforhold,
             b=kundeforhold_cached)
         )
-
-
 
     kundeforhold["import_changed"] = False
     if kundeforhold != kundeforhold_cached:
@@ -438,10 +448,11 @@ def process(kunderolle):
         log.error(
             "ee-ref kundenummer {0} "
             "aftale ikke fundet på reference {1} i kunderolle {2}".format(
-            ava_kundenummer,
-            interessefaellesskab_ref,
-            kunderolle_ref
-        ))
+                ava_kundenummer,
+                interessefaellesskab_ref,
+                kunderolle_ref
+            )
+        )
         return
 
     # skip-if-no-changes reference
@@ -477,10 +488,11 @@ def process(kunderolle):
                 "ee-ref kundenummer {0} "
                 "faktureringsadresse kunne ikke slås op "
                 "på reference {1} i aftale {2}".format(
-                ava_kundenummer,
-                billing_address_ref,
-                interessefaellesskab_ref
-            ))
+                    ava_kundenummer,
+                    billing_address_ref,
+                    interessefaellesskab_ref
+                )
+            )
 
     if billing_address:
 
@@ -493,7 +505,10 @@ def process(kunderolle):
             billing_address["external_ref"] = crm.store_address(
                 billing_address["data"]
             )
-        elif billing_address != billing_address_cached or billing_address.get("import_changed"):
+        elif (
+                billing_address != billing_address_cached
+                or billing_address.get("import_changed")
+                ):
             crm.update_address(
                 identifier=billing_address["external_ref"],
                 payload=billing_address["data"]
@@ -593,9 +608,10 @@ def process(kunderolle):
         log.error(
             "ee-ref kundenummer {0} "
             "klasse-ref mangler på aftale {1}".format(
-            ava_kundenummer,
-            aftale["id"],
-        ))
+                ava_kundenummer,
+                aftale["id"],
+            )
+        )
         return
 
     produkt = cache.get(table="ava_installations", uuid=klasse_ref)
@@ -605,10 +621,11 @@ def process(kunderolle):
         log.error(
             "ee-ref kundenummer {0} "
             "Produkt for aftale {1} kunne ikke findes på reference {2}".format(
-            ava_kundenummer,
-            aftale["id"],
-            klasse_ref
-        ))
+                ava_kundenummer,
+                aftale["id"],
+                klasse_ref
+            )
+        )
         return
 
     # skip-if-no-changes reference
@@ -653,11 +670,13 @@ def process(kunderolle):
 
             log.error(
                 "ee-ref installationsnummer {0} "
-                "utility-addresse kunne ikke slås op på reference {1} for produkt {2}".format(
-                ava_installationsnummer,
-                utility_ref,
-                klasse_ref,
-            ))
+                "utility-addresse kunne ikke slås op "
+                "på reference {1} for produkt {2}".format(
+                    produkt["data"]["ava_maalernummer"],
+                    utility_ref,
+                    klasse_ref,
+                )
+            )
 
     if utility_address:
 
@@ -670,7 +689,10 @@ def process(kunderolle):
             utility_address["external_ref"] = crm.store_address(
                 utility_address["data"]
             )
-        elif utility_address != utility_address_cached or utility_address.get("import_changed"):
+        elif (
+                utility_address != utility_address_cached
+                or utility_address.get("import_changed")
+                ):
             crm.update_address(
                 identifier=utility_address["external_ref"],
                 payload=utility_address["data"]
