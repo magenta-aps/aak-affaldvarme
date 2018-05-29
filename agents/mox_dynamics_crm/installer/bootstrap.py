@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
 import logging
 from configparser import ConfigParser
 from uuid import uuid4
@@ -75,7 +74,7 @@ def auto_configure(config_file="configtest.ini"):
         config["rethinkdb"] = generate_section_rethinkdb()
 
     if "ms_dynamics_crm" not in config:
-        config["ms_dynamics_crm"]= generate_section_ms_dynamics_crm()
+        config["ms_dynamics_crm"] = generate_section_ms_dynamics_crm()
 
     # Superseed default config filename
     # If passed in as an environment variable
@@ -235,7 +234,8 @@ def auto_setup_cache():
         "accounts",
         "ava_aftales",
         "ava_installations",
-        "ava_kunderolles"
+        "ava_kunderolles",
+        "imports"
     ]
 
     try:
