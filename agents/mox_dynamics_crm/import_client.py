@@ -129,8 +129,15 @@ def run_import():
     """
     Wrapper to run full import.
 
-    :return:
+    records start and finish in a table 'imports'
     """
+
+    import_start = cache.r.now().run(cache.connect())
+    new_import = {
+        "id": import_start.strftime("%Y%m%dT%H%M%S"),
+        "started": import_start,
+        "ended": None
+    }
 
     # Begin
     log.info("Begin import (all) procedure")
@@ -148,3 +155,7 @@ def run_import():
 
     # Done
     log.info("Import procedure completed - Exiting")
+
+    new_import["ended"] = cache.r.now().run(cache.connect())
+    query = cache.r.table("imports").insert(new_import, conflict="update")
+    query.run(cache.connect())
