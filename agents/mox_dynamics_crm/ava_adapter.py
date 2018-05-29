@@ -135,7 +135,7 @@ def ava_bruger(entity, old_adapted):
         "id": origin_id,
         "external_ref": old_adapted.get("external_ref"),
         "dawa_ref": dawa_address,
-        "data": dict(old_adapted.get("data",{}))
+        "data": dict(old_adapted.get("data", {}))
     }
 
     document["data"].update({
@@ -242,7 +242,7 @@ def ava_organisation(entity, old_adapted):
         "id": origin_id,
         "external_ref": old_adapted.get("external_ref"),
         "dawa_ref": dawa_address,
-        "data": dict(old_adapted.get("data",{}))
+        "data": dict(old_adapted.get("data", {}))
     }
 
     document["data"].update({
@@ -329,7 +329,7 @@ def ava_kunderolle(entity, old_adapted):
         "external_ref": old_adapted.get("external_ref"),
         "contact_ref": customer_ref,
         "interessefaellesskab_ref": ava_kundeforhold,
-        "data": dict(old_adapted.get("data",{}))
+        "data": dict(old_adapted.get("data", {}))
     }
 
     document["data"].update({
@@ -392,7 +392,7 @@ def ava_account(entity, old_adapted):
         "id": origin_id,
         "external_ref": old_adapted.get("external_ref"),
         "dawa_ref": ava_adresse,
-        "data": dict(old_adapted.get("data",{}))
+        "data": dict(old_adapted.get("data", {}))
     }
 
     document["data"].update({
@@ -489,7 +489,7 @@ def ava_aftale(entity, old_adapted):
         "contact_refs": old_adapted.get("contact_refs", []),
         "dawa_ref": ava_billing_address,
         "klasse_ref": ava_produkter,
-        "data": dict(old_adapted.get("data",{}))
+        "data": dict(old_adapted.get("data", {}))
     }
 
     document["data"].update({
@@ -565,7 +565,7 @@ def ava_installation(entity, old_adapted):
     # ava_aftale = None
 
     # Entity: Lora (Account/Interessefaellesskab)
-    ava_kundenummer = old_adapted.get("data",{}).get("ava_kundenummer")
+    ava_kundenummer = old_adapted.get("data", {}).get("ava_kundenummer")
 
     # Arosia not yet implemented
     # ava_arosiaid = None
@@ -576,9 +576,9 @@ def ava_installation(entity, old_adapted):
         "external_ref": old_adapted.get("external_ref"),
         "indsats_ref": old_adapted.get("indsats_ref"),
         "dawa_ref": ava_adresse,
-        "data": dict(old_adapted.get("data",{}))
+        "data": dict(old_adapted.get("data", {}))
     }
-    
+
     document["data"].update({
         "ava_name": ava_name,
         "ava_identifikation": ava_identifikation,
@@ -587,7 +587,5 @@ def ava_installation(entity, old_adapted):
         "ava_maalertype": ava_maalertype,
         "ava_kundenummer": ava_kundenummer
     })
-
-
 
     return document
