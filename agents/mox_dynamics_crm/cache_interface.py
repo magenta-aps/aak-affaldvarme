@@ -5,6 +5,8 @@ import rethinkdb as r
 from helper import get_config
 from logging import getLogger
 
+import datetime
+
 # Temporary mapping
 mapping = {
     "bruger": "contacts",
@@ -15,6 +17,7 @@ mapping = {
     "indsats": "ava_aftales",
     "organisationfunktion": "ava_kunderolles",
     "klasse": "ava_installations",
+    "imports": "imports",
 }
 
 # Init logger
@@ -163,6 +166,24 @@ def update(table, document):
         return run
 
 
+def delete(table, uuid):
+    """ delete an entry from cache
+    """
+    with connect() as connection:
+        query = r.table(table).get(uuid).delete()
+        run = query.run(connection)
+
+        # Debug
+        log.debug(
+            "{table}: {query}".format(
+                table=table,
+                query=run
+            )
+        )
+
+        return run
+
+
 def get(table, uuid):
     """
     Parent function to retrieve a specific document by 'id'.
@@ -218,6 +239,49 @@ def filter(table, **params):
         )
 
         return result
+
+
+def get_latest_import_interval():
+    _import = list(r.table("imports").order_by(
+        index=r.desc("id")
+    ).limit(1).run(connect()))[0]
+    if not _import["ended"]:
+        raise ValueError("Latest import is not finished")
+    else:
+        return _import["started"], _import["ended"]
+
+
+def all_obsolete(table):
+    """
+        only return the objects that were not
+        refreshed during the latest import
+        isinstance datetime because really
+        obsolete objects has updated be a string
+    """
+    started, ended = get_latest_import_interval()
+    return [
+        x for x in all(table)
+        if (
+            not isinstance(x["updated"], datetime.datetime)
+            or x["updated"] < started
+        )
+    ]
+
+
+def all_current(table):
+    """  only return the objects that were
+         refreshed during the latest import
+         isinstance datetime because really
+         obsolete objects has updated be a string
+    """
+    started, ended = get_latest_import_interval()
+    return [
+        x for x in all(table)
+        if (
+            isinstance(x["updated"], datetime.datetime)
+            and x["updated"] > started
+        )
+    ]
 
 
 def all(table):
