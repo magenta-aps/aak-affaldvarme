@@ -10,6 +10,7 @@ import json
 import click
 import import_client
 import export_client
+import purge_client
 import cache_interface as cache
 import crm_interface as crm
 import installer
@@ -171,6 +172,18 @@ def token(generate):
     click.echo("--- begin token ---")
     click.echo(token)
     click.echo("--- end token ---")
+
+
+@cli.command(name="purge")
+def purge_from_crm():
+    """
+    Purge entities from crm if deleted in lora
+    """
+    # Message user
+    click.echo("Begin purge from crm according to lora delete status")
+
+    # Run purge
+    purge_client.run_purge()
 
 
 if __name__ == "__main__":
