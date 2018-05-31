@@ -72,12 +72,17 @@ def connect(server, database, username, password):
     return cnxn
 
 
-def get_products_for_location(forbrugssted):
+def get_products_for_location(forbrugssted, lastrun_dict):
     """Get locations for this customer ID from the Forbrugssted table."""
     from mssql_config import username, password, server, database
     connection = connect(server, database, username, password)
     cursor = connection.cursor(as_dict=True)
-    cursor.execute(TREFINSTALLATION_SQL.format(forbrugssted))
+    cursor.execute(TREFINSTALLATION_SQL.format(
+        forbrugssted=forbrugssted,
+        last_year=lastrun_dict["last_run"].year,
+        last_month=lastrun_dict["last_run"].month,
+        last_day=lastrun_dict["last_run"].day
+    ))
     rows = cursor.fetchall()
     connection.close()
     return rows
