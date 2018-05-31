@@ -186,6 +186,11 @@ def import_customer_record(fields):
     product_uuids = []
 
     for p in products:
+        product_uuid = lookup_product(p['InstalNummer'])
+        if product_uuid:
+            product_uuids.append(product_uuid)
+            continue
+
         meter_number = p['Målernr']
         meter_type = p['MaalerTypeBetegnel']
         product_uuid = create_product(
@@ -260,10 +265,15 @@ def delete_customer_record(customer_number):
             products = lookup_products(agreement_uuid=agreement_uuid)
 
             for p in products:
-                delete_product(p)
-
+                # delete_product(p)
+                # temporary logging
+                say("releasing customer %r from product %s" % (
+                    customer_number,
+                    p
+                ))
             delete_agreement(agreement_uuid)
         # Now go ahead and delete the customer relation
+
         delete_customer_relation(cr_uuid)
 
 
@@ -495,6 +505,7 @@ def main():
         len(lost_installation_keys)
     ))
     for k in lost_installation_keys:
+        say("deleting product %s" % k)
         delete_installation_record(k)
     say("... done")
 
