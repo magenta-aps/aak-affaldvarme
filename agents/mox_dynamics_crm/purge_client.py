@@ -13,7 +13,9 @@ import crm_interface as crm
 
 from logging import getLogger
 
-DO_WRITE = True
+# customer does not want this yet
+# just print what would happen
+DO_WRITE = False
 
 # Init logging
 log = getLogger(__name__)
