@@ -37,6 +37,7 @@ from ee_data import store_installation_records, retrieve_installation_records
 from ee_data import has_customer_records
 from ee_data import get_crm_failed_customer_numbers
 from ee_data import get_crm_failed_installation_numbers
+from ee_data import read_lastrun_dict, write_lastrun_dict
 
 
 from service_clients import report_error, fuzzy_address_uuid
@@ -88,7 +89,7 @@ def import_customer(id_and_fields):
             return
 
 
-def import_customer_record(fields):
+def import_customer_record(fields, lastrun_dict):
     """Import a new customer record including relation, agreement, products.
 
     Assume customers themselves have already been imported.
@@ -179,7 +180,7 @@ def import_customer_record(fields):
 
     forbrugssted = fields['ForbrugsstedID']
 
-    products = get_products_for_location(forbrugssted)
+    products = get_products_for_location(forbrugssted, lastrun_dict)
 
     no_of_products = len(products)
 
@@ -381,11 +382,14 @@ def main():
     initial_import = not has_customer_records()
     say("Initial import: {}".format("YES" if initial_import else "NO"))
 
+    # last ran when (defaults to today)
+    lastrun_dict = read_lastrun_dict()
+
     """CUSTOMERS AND CUSTOMER RELATIONS"""
     connection = connect(server, database, username, password)
     cursor = connection.cursor(as_dict=True)
-    new_values = read_customer_records(cursor)
-    new_installation_values = read_installation_records(cursor)
+    new_values = read_customer_records(cursor, lastrun_dict)
+    new_installation_values = read_installation_records(cursor, lastrun_dict)
     old_installation_values = retrieve_installation_records()
     connection.close()
 
@@ -450,7 +454,11 @@ def main():
             len(new_keys)
         ))
         p = Pool(10)
-        p.map(import_customer_record, [new_values[k] for k in new_keys])
+        p.map(
+            import_customer_record,
+            [new_values[k] for k in new_keys],
+            lastrun_dict
+        )
         p.close()
         p.join()
         say("... done")
@@ -533,6 +541,7 @@ def main():
     # All's well that ends well
     store_customer_records(new_values)
     store_installation_records(new_installation_values)
+    write_lastrun_dict(lastrun_dict)
 
 
 if __name__ == '__main__':
