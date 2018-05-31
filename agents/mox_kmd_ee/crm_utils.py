@@ -537,7 +537,7 @@ def update_agreement(fields, new_values):
     """Update agreement based on the changed fields."""
     address_fields = ['Vejnavn', 'Postdistrikt']
     date_fields = ['Tilflytningsdato', 'Fraflytningsdato']
-    date_properties = ['startdato', 'slutdato']
+    date_properties = ['starttidspunkt', 'sluttidspunkt']
     new_fields = {**fields, **new_values}
 
     # Look up agreement, we know we're going to need this.
