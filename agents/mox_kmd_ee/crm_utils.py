@@ -123,7 +123,9 @@ def lookup_products(agreement_uuid):
     # and have an AVA specific relation from Klasse to Indsats.
     agreement = read_agreement(agreement_uuid)
     indsatskvalitet = agreement['relationer'].get('indsatskvalitet', [])
-    product_uuids = [r['uuid'] for r in indsatskvalitet]
+    product_uuids = [r['uuid'] for r in indsatskvalitet if 'uuid' in r]
+    if len(product_uuids) != len(indsatskvalitet):
+        say("indsatskvalitet uden uuid: %s" % agreement_uuid)
 
     return product_uuids
 
