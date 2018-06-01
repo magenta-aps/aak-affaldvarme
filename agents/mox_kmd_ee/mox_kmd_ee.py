@@ -8,6 +8,7 @@
 #
 
 import sys
+import functools
 
 from multiprocessing.dummy import Pool
 
@@ -89,7 +90,7 @@ def import_customer(id_and_fields):
             return
 
 
-def import_customer_record(fields, lastrun_dict):
+def _import_customer_record(fields, lastrun_dict={}):
     """Import a new customer record including relation, agreement, products.
 
     Assume customers themselves have already been imported.
@@ -218,6 +219,10 @@ def import_customer_record(fields, lastrun_dict):
         product_uuids
     )
     assert(agreement_uuid)
+
+import_customer_record = functools.partial(
+    _import_customer_record, lastrun_dict=read_lastrun_dict()
+)
 
 
 def update_customer_record(fields, changed_fields):
@@ -456,8 +461,7 @@ def main():
         p = Pool(10)
         p.map(
             import_customer_record,
-            [new_values[k] for k in new_keys],
-            lastrun_dict
+            [new_values[k] for k in new_keys]
         )
         p.close()
         p.join()
