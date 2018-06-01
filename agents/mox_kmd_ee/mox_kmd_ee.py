@@ -188,17 +188,19 @@ def _import_customer_record(fields, lastrun_dict={}):
     product_uuids = []
 
     for p in products:
+
+        meter_number = p['Målernr']
+        meter_type = p['MaalerTypeBetegnel']
+        name="{0}, {1} {2}".format(
+            meter_number, p['Målertypefabrikat'], meter_type
+        )
+        
         product_uuid = lookup_product(p['InstalNummer'])
         if product_uuid:
             product_uuids.append(product_uuid)
             continue
-
-        meter_number = p['Målernr']
-        meter_type = p['MaalerTypeBetegnel']
         product_uuid = create_product(
-            name="{0}, {1} {2}".format(
-                meter_number, p['Målertypefabrikat'], meter_type
-            ),
+            name=name,
             identification=p['InstalNummer'],
             installation_type=VARME,
             meter_number=meter_number,
