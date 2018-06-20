@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/PR-SVG-20010719/DTD/svg10.dtd">
+<svg width="34cm" height="30cm" viewBox="303 -606 661 597" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="379.294" y="-313.84">
+    <tspan x="379.294" y="-313.84"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="726.5" y="-374.4">
+    <tspan x="726.5" y="-374.4"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="379.294" y="-372.33">
+    <tspan x="379.294" y="-372.33"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="379.294" y="-372.33">
+    <tspan x="379.294" y="-372.33"></tspan>
+  </text>
+  <g>
+    <rect style="fill: #ffffff" x="555.888" y="-298.062" width="25.1" height="14.9"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="555.888" y="-286.162">
+      <tspan x="555.888" y="-286.162"> Nej</tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="593.052" y="-390.4">
+    <tspan x="593.052" y="-390.4"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:end;font-family:sans-serif;font-style:normal;font-weight:normal" x="429.982" y="-195.188">
+    <tspan x="429.982" y="-195.188">Ja </tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="1512.21" y="311.58">
+    <tspan x="1512.21" y="311.58"></tspan>
+  </text>
+  <g>
+    <rect style="fill: #d8e5e5" x="309" y="-547.5" width="242.188" height="54"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="309" y="-547.5" width="242.188" height="54"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.094" y="-524.6">
+      <tspan x="430.094" y="-524.6">hent brugers addresse-uuid</tspan>
+      <tspan x="430.094" y="-508.6">fra lora</tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="544.424" y="-248.42">
+    <tspan x="544.424" y="-248.42"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.094" y="-520.5">
+    <tspan x="430.094" y="-520.5"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="828.752" y="-500.15">
+    <tspan x="828.752" y="-500.15"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="593.052" y="-390.4">
+    <tspan x="593.052" y="-390.4"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="620.052" y="-422.4">
+    <tspan x="620.052" y="-422.4"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="728" y="-329.25">
+    <tspan x="728" y="-329.25"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="731" y="-334.25">
+    <tspan x="731" y="-334.25"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="492" y="-332.25">
+    <tspan x="492" y="-332.25"></tspan>
+  </text>
+  <g>
+    <polygon style="fill: #ffeca1" points="429.983,-359.238 555.887,-283.162 429.983,-207.086 304.078,-283.162 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="429.983,-359.238 555.887,-283.162 429.983,-207.086 304.078,-283.162 "/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="429.983" y="-295.262">
+      <tspan x="429.983" y="-295.262">er LoRa-adresse-uuid</tspan>
+      <tspan x="429.983" y="-279.262">forskellig fra</tspan>
+      <tspan x="429.983" y="-263.262">SP-relateret adresse-uuid</tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="429.982" y="-283.162">
+    <tspan x="429.982" y="-283.162"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="429.982" y="-283.162">
+    <tspan x="429.982" y="-283.162"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="1509" y="-75.5">
+    <tspan x="1509" y="-75.5"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="1517" y="330.5">
+    <tspan x="1517" y="330.5"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="429.982" y="-283.162">
+    <tspan x="429.982" y="-283.162"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.094" y="-520.5">
+    <tspan x="430.094" y="-520.5"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.094" y="-520.5">
+    <tspan x="430.094" y="-520.5"></tspan>
+  </text>
+  <g>
+    <rect style="fill: #d8e5e5" x="434.474" y="-604.25" width="115.526" height="38"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="434.474" y="-604.25" width="115.526" height="38"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="492.237" y="-581.35">
+      <tspan x="492.237" y="-581.35">start</tspan>
+    </text>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="434.474,-585.25 369.547,-585.25 369.547,-557.236 "/>
+    <polygon style="fill: #000000" points="369.547,-549.736 364.547,-559.736 369.547,-557.236 374.547,-559.736 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="369.547,-549.736 364.547,-559.736 369.547,-557.236 374.547,-559.736 "/>
+  </g>
+  <g>
+    <rect style="fill: #d8e5e5" x="320.4" y="-447.15" width="220" height="63.9"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="320.4" y="-447.15" width="220" height="63.9"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.4" y="-419.3">
+      <tspan x="430.4" y="-419.3">slå brugers addresse-uuid op i </tspan>
+      <tspan x="430.4" y="-403.3">SP udfra cpr-data </tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.4" y="-415.2">
+    <tspan x="430.4" y="-415.2"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.4" y="-415.2">
+    <tspan x="430.4" y="-415.2"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.4" y="-415.2">
+    <tspan x="430.4" y="-415.2"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="429.982" y="-283.162">
+    <tspan x="429.982" y="-283.162"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="429.982" y="-283.162">
+    <tspan x="429.982" y="-283.162"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="628.376" y="-517.15">
+    <tspan x="628.376" y="-517.15"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.094" y="-520.5">
+    <tspan x="430.094" y="-520.5"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.4" y="-415.2">
+    <tspan x="430.4" y="-415.2"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.4" y="-415.2">
+    <tspan x="430.4" y="-415.2"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.094" y="-520.5">
+    <tspan x="430.094" y="-520.5"></tspan>
+  </text>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="430.094,-493.5 430.094,-470.325 430.4,-470.325 430.4,-456.886 "/>
+    <polygon style="fill: #000000" points="430.4,-449.386 425.4,-459.386 430.4,-456.886 435.4,-459.386 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="430.4,-449.386 425.4,-459.386 430.4,-456.886 435.4,-459.386 "/>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.094" y="-520.5">
+    <tspan x="430.094" y="-520.5"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.094" y="-520.5">
+    <tspan x="430.094" y="-520.5"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.4" y="-415.2">
+    <tspan x="430.4" y="-415.2"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="413.4" y="-416.2">
+    <tspan x="413.4" y="-416.2"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="429.982" y="-283.162">
+    <tspan x="429.982" y="-283.162"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="430.094" y="-520.5">
+    <tspan x="430.094" y="-520.5"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="429.982" y="-283.162">
+    <tspan x="429.982" y="-283.162"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="492.238" y="-585.25">
+    <tspan x="492.238" y="-585.25"></tspan>
+  </text>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="430.4,-383.25 430.4,-366.846 429.982,-366.846 429.982,-368.974 "/>
+    <polygon style="fill: #000000" points="429.982,-361.474 424.982,-371.474 429.982,-368.974 434.982,-371.474 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="429.982,-361.474 424.982,-371.474 429.982,-368.974 434.982,-371.474 "/>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="492.238" y="-585.25">
+    <tspan x="492.238" y="-585.25"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="492.238" y="-585.25">
+    <tspan x="492.238" y="-585.25"></tspan>
+  </text>
+  <g>
+    <rect style="fill: #d8e5e5" x="319.5" y="-171.15" width="220" height="63.9"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="319.5" y="-171.15" width="220" height="63.9"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="429.5" y="-135.3">
+      <tspan x="429.5" y="-135.3">opdater i LoRa</tspan>
+    </text>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="429.982,-207.088 429.982,-197.25 429.5,-197.25 429.5,-180.886 "/>
+    <polygon style="fill: #000000" points="429.5,-173.386 424.5,-183.386 429.5,-180.886 434.5,-183.386 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="429.5,-173.386 424.5,-183.386 429.5,-180.886 434.5,-183.386 "/>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="429.5" y="-139.2">
+    <tspan x="429.5" y="-139.2"></tspan>
+  </text>
+  <g>
+    <rect style="fill: #d8e5e5" x="682.5" y="-549.4" width="242.188" height="54"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="682.5" y="-549.4" width="242.188" height="54"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="803.594" y="-526.5">
+      <tspan x="803.594" y="-526.5">hent brugers navn/køn/civilstand</tspan>
+      <tspan x="803.594" y="-510.5">fra LoRa</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #d8e5e5" x="683.2" y="-451.05" width="241.4" height="63.9"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="683.2" y="-451.05" width="241.4" height="63.9"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="803.9" y="-423.2">
+      <tspan x="803.9" y="-423.2">hent brugers navn/køn/civilstand</tspan>
+      <tspan x="803.9" y="-407.2">fra SP </tspan>
+    </text>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="803.594,-495.4 803.594,-473.225 803.9,-473.225 803.9,-460.786 "/>
+    <polygon style="fill: #000000" points="803.9,-453.286 798.9,-463.286 803.9,-460.786 808.9,-463.286 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="803.9,-453.286 798.9,-463.286 803.9,-460.786 808.9,-463.286 "/>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="803.594" y="-522.4">
+    <tspan x="803.594" y="-522.4"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="803.9" y="-419.1">
+    <tspan x="803.9" y="-419.1"></tspan>
+  </text>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="540.507,-139.2 611.503,-139.2 611.503,-508.9 672.764,-508.9 "/>
+    <polygon style="fill: #000000" points="680.264,-508.9 670.264,-503.9 672.764,-508.9 670.264,-513.9 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="680.264,-508.9 670.264,-503.9 672.764,-508.9 670.264,-513.9 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="555.888,-283.162 589.04,-283.162 589.04,-535.9 672.764,-535.9 "/>
+    <polygon style="fill: #000000" points="680.264,-535.9 670.264,-530.9 672.764,-535.9 670.264,-540.9 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="680.264,-535.9 670.264,-530.9 672.764,-535.9 670.264,-540.9 "/>
+  </g>
+  <g>
+    <polygon style="fill: #ffeca1" points="803.679,-352.114 917.65,-279.921 803.679,-207.728 689.708,-279.921 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="803.679,-352.114 917.65,-279.921 803.679,-207.728 689.708,-279.921 "/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="803.679" y="-292.021">
+      <tspan x="803.679" y="-292.021">er navn/køn/civilstand</tspan>
+      <tspan x="803.679" y="-276.021">den samme som i</tspan>
+      <tspan x="803.679" y="-260.021">SP</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #d8e5e5" x="693.74" y="-175.108" width="220" height="63.9"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="693.74" y="-175.108" width="220" height="63.9"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="803.74" y="-139.258">
+      <tspan x="803.74" y="-139.258">opdater i LoRa</tspan>
+    </text>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="803.68,-207.726 803.68,-202.208 803.74,-202.208 803.74,-184.844 "/>
+    <polygon style="fill: #000000" points="803.74,-177.344 798.74,-187.344 803.74,-184.844 808.74,-187.344 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="803.74,-177.344 798.74,-187.344 803.74,-184.844 808.74,-187.344 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="917.65,-279.92 962.28,-279.92 962.28,-41.7 923.236,-41.7 "/>
+    <polygon style="fill: #000000" points="915.736,-41.7 925.736,-46.7 923.236,-41.7 925.736,-36.7 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="915.736,-41.7 925.736,-46.7 923.236,-41.7 925.736,-36.7 "/>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="429.982" y="-283.162">
+    <tspan x="429.982" y="-283.162"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="429.982" y="-283.162">
+    <tspan x="429.982" y="-283.162"></tspan>
+  </text>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="803.9,-387.15 803.9,-369.14 803.68,-369.14 803.68,-361.85 "/>
+    <polygon style="fill: #000000" points="803.68,-354.35 798.68,-364.35 803.68,-361.85 808.68,-364.35 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="803.68,-354.35 798.68,-364.35 803.68,-361.85 808.68,-364.35 "/>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="803.68" y="-279.92">
+    <tspan x="803.68" y="-279.92"></tspan>
+  </text>
+  <g>
+    <rect style="fill: #d8e5e5" x="693.5" y="-73.65" width="220" height="63.9"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="693.5" y="-73.65" width="220" height="63.9"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="803.5" y="-37.8">
+      <tspan x="803.5" y="-37.8">færdig</tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="803.5" y="-41.7">
+    <tspan x="803.5" y="-41.7"></tspan>
+  </text>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="803.74,-111.208 803.74,-92.429 803.5,-92.429 803.5,-83.3861 "/>
+    <polygon style="fill: #000000" points="803.5,-75.8861 798.5,-85.8861 803.5,-83.3861 808.5,-85.8861 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="803.5,-75.8861 798.5,-85.8861 803.5,-83.3861 808.5,-85.8861 "/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="917.65" y="-294.82" width="25.1" height="14.9"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="917.65" y="-282.92">
+      <tspan x="917.65" y="-282.92"> Nej</tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:end;font-family:sans-serif;font-style:normal;font-weight:normal" x="803.68" y="-195.826">
+    <tspan x="803.68" y="-195.826">Ja </tspan>
+  </text>
+</svg>
