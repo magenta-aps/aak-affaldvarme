@@ -12,6 +12,7 @@ Welcome to the AVA LoRa documentation
    :maxdepth: 1
    :caption: Contents:
 
+   overview/index.rst
    mox_kmd_ee/index.rst
    mox_dynamics_crm/index.rst
    mox_sp_notifications/index.rst
