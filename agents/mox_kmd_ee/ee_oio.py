@@ -236,6 +236,8 @@ def create_object_dict(oio_class, properties, relations, note,
             ] for name, rels in relations.items()
         }
     }
+    if len(relations) == 0:
+        del object_dict["relationer"]
     return object_dict
 
 

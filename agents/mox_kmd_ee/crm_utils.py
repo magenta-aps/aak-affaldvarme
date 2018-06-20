@@ -123,7 +123,9 @@ def lookup_products(agreement_uuid):
     # and have an AVA specific relation from Klasse to Indsats.
     agreement = read_agreement(agreement_uuid)
     indsatskvalitet = agreement['relationer'].get('indsatskvalitet', [])
-    product_uuids = [r['uuid'] for r in indsatskvalitet]
+    product_uuids = [r['uuid'] for r in indsatskvalitet if 'uuid' in r]
+    if len(product_uuids) != len(indsatskvalitet):
+        say("indsatskvalitet uden uuid: %s" % agreement_uuid)
 
     return product_uuids
 
@@ -537,7 +539,7 @@ def update_agreement(fields, new_values):
     """Update agreement based on the changed fields."""
     address_fields = ['Vejnavn', 'Postdistrikt']
     date_fields = ['Tilflytningsdato', 'Fraflytningsdato']
-    date_properties = ['startdato', 'slutdato']
+    date_properties = ['starttidspunkt', 'sluttidspunkt']
     new_fields = {**fields, **new_values}
 
     # Look up agreement, we know we're going to need this.

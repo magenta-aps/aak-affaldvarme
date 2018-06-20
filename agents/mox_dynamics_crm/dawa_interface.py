@@ -246,7 +246,7 @@ def adapter(data, old_adapted={}):
     document = {
         "id": adresseid,
         "external_ref": old_adapted.get("external_ref"),
-        "data": dict(old_adapted.get("data",{}))
+        "data": dict(old_adapted.get("data", {}))
     }
 
     document["data"].update({

@@ -8,6 +8,7 @@
 #
 
 import sys
+import functools
 
 from multiprocessing.dummy import Pool
 
@@ -37,6 +38,7 @@ from ee_data import store_installation_records, retrieve_installation_records
 from ee_data import has_customer_records
 from ee_data import get_crm_failed_customer_numbers
 from ee_data import get_crm_failed_installation_numbers
+from ee_data import read_lastrun_dict, write_lastrun_dict
 
 
 from service_clients import report_error, fuzzy_address_uuid
@@ -88,7 +90,7 @@ def import_customer(id_and_fields):
             return
 
 
-def import_customer_record(fields):
+def _import_customer_record(fields, lastrun_dict={}):
     """Import a new customer record including relation, agreement, products.
 
     Assume customers themselves have already been imported.
@@ -179,19 +181,26 @@ def import_customer_record(fields):
 
     forbrugssted = fields['ForbrugsstedID']
 
-    products = get_products_for_location(forbrugssted)
+    products = get_products_for_location(forbrugssted, lastrun_dict)
 
     no_of_products = len(products)
 
     product_uuids = []
 
     for p in products:
+
         meter_number = p['Målernr']
         meter_type = p['MaalerTypeBetegnel']
+        name="{0}, {1} {2}".format(
+            meter_number, p['Målertypefabrikat'], meter_type
+        )
+        
+        product_uuid = lookup_product(p['InstalNummer'])
+        if product_uuid:
+            product_uuids.append(product_uuid)
+            continue
         product_uuid = create_product(
-            name="{0}, {1} {2}".format(
-                meter_number, p['Målertypefabrikat'], meter_type
-            ),
+            name=name,
             identification=p['InstalNummer'],
             installation_type=VARME,
             meter_number=meter_number,
@@ -212,6 +221,10 @@ def import_customer_record(fields):
         product_uuids
     )
     assert(agreement_uuid)
+
+import_customer_record = functools.partial(
+    _import_customer_record, lastrun_dict=read_lastrun_dict()
+)
 
 
 def update_customer_record(fields, changed_fields):
@@ -260,10 +273,15 @@ def delete_customer_record(customer_number):
             products = lookup_products(agreement_uuid=agreement_uuid)
 
             for p in products:
-                delete_product(p)
-
+                # delete_product(p)
+                # temporary logging
+                say("releasing customer %r from product %s" % (
+                    customer_number,
+                    p
+                ))
             delete_agreement(agreement_uuid)
         # Now go ahead and delete the customer relation
+
         delete_customer_relation(cr_uuid)
 
 
@@ -371,11 +389,14 @@ def main():
     initial_import = not has_customer_records()
     say("Initial import: {}".format("YES" if initial_import else "NO"))
 
+    # last ran when (defaults to today)
+    lastrun_dict = read_lastrun_dict()
+
     """CUSTOMERS AND CUSTOMER RELATIONS"""
     connection = connect(server, database, username, password)
     cursor = connection.cursor(as_dict=True)
-    new_values = read_customer_records(cursor)
-    new_installation_values = read_installation_records(cursor)
+    new_values = read_customer_records(cursor, lastrun_dict)
+    new_installation_values = read_installation_records(cursor, lastrun_dict)
     old_installation_values = retrieve_installation_records()
     connection.close()
 
@@ -440,7 +461,10 @@ def main():
             len(new_keys)
         ))
         p = Pool(10)
-        p.map(import_customer_record, [new_values[k] for k in new_keys])
+        p.map(
+            import_customer_record,
+            [new_values[k] for k in new_keys]
+        )
         p.close()
         p.join()
         say("... done")
@@ -495,6 +519,7 @@ def main():
         len(lost_installation_keys)
     ))
     for k in lost_installation_keys:
+        say("deleting product %s" % k)
         delete_installation_record(k)
     say("... done")
 
@@ -522,6 +547,7 @@ def main():
     # All's well that ends well
     store_customer_records(new_values)
     store_installation_records(new_installation_values)
+    write_lastrun_dict(lastrun_dict)
 
 
 if __name__ == '__main__':
