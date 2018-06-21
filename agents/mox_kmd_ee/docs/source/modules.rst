@@ -11,3 +11,4 @@ Modules
    ee_utils
    mox_kmd_ee
    service_clients
+   cprcompletion
