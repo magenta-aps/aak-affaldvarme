@@ -39,9 +39,8 @@ from ee_data import has_customer_records
 from ee_data import get_crm_failed_customer_numbers
 from ee_data import get_crm_failed_installation_numbers
 from ee_data import read_lastrun_dict, write_lastrun_dict
-
-
 from service_clients import report_error, fuzzy_address_uuid
+from cprcompletion import complete_cprs_in_custdict
 
 
 """CUSTOMER RELATED FUNCTIONS.
@@ -219,6 +218,7 @@ def _import_customer_record(fields, lastrun_dict={}):
         product_uuids
     )
     assert(agreement_uuid)
+
 
 import_customer_record = functools.partial(
     _import_customer_record, lastrun_dict=read_lastrun_dict()
@@ -399,6 +399,13 @@ def main():
     connection.close()
 
     old_values = retrieve_customer_records()
+
+    # restore already found cpr_numbers in read values,
+    # alternatively, if they miss the last four, find them
+    for k, fields in list(new_values.items()):
+        if not complete_cprs_in_custdict(fields, old_values.get(k)):
+            new_values.pop(k)
+            continue
 
     say('Comparison, new_values == old_values:', new_values == old_values)
 
