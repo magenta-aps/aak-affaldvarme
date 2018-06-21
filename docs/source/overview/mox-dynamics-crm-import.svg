@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/PR-SVG-20010719/DTD/svg10.dtd">
+<svg width="26cm" height="22cm" viewBox="45 -465 519 437" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="47.684" y="-288.434">
+    <tspan x="47.684" y="-288.434"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="563.462" y="-151.912">
+    <tspan x="563.462" y="-151.912"></tspan>
+  </text>
+  <g>
+    <rect style="fill: #d8e5e5" x="390.862" y="-463.754" width="167.6" height="70"/>
+    <path style="fill: #d8e5e5" d="M 390.862,-463.754 A 4,4 0 0 0 386.862,-459.754 L 390.862,-459.754 z"/>
+    <path style="fill: #d8e5e5" d="M 562.462,-459.754 A 4,4 0 0 0 558.462,-463.754 L 558.462,-459.754 z"/>
+    <rect style="fill: #d8e5e5" x="386.862" y="-459.754" width="175.6" height="62"/>
+    <path style="fill: #d8e5e5" d="M 386.862,-397.754 A 4,4 0 0 0 390.862,-393.754 L 390.862,-397.754 z"/>
+    <path style="fill: #d8e5e5" d="M 558.462,-393.754 A 4,4 0 0 0 562.462,-397.754 L 558.462,-397.754 z"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="390.862" y1="-463.754" x2="558.462" y2="-463.754"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="390.862" y1="-393.754" x2="558.462" y2="-393.754"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 390.862,-463.754 A 4,4 0 0 0 386.862,-459.754"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 562.462,-459.754 A 4,4 0 0 0 558.462,-463.754"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="386.862" y1="-459.754" x2="386.862" y2="-397.754"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="562.462" y1="-459.754" x2="562.462" y2="-397.754"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 386.862,-397.754 A 4,4 0 0 0 390.862,-393.754"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 558.462,-393.754 A 4,4 0 0 0 562.462,-397.754"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="474.662" y="-440.854">
+      <tspan x="474.662" y="-440.854">Alle addresser for Århus</tspan>
+      <tspan x="474.662" y="-424.854">til cached ava_adresses</tspan>
+      <tspan x="474.662" y="-408.854"></tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="474.662" y="-428.754">
+    <tspan x="474.662" y="-428.754"></tspan>
+  </text>
+  <g>
+    <rect style="fill: #d8e5e5" x="46.5124" y="-450.5" width="158.5" height="44"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="46.5124" y="-450.5" width="158.5" height="44"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="125.762" y="-424.6">
+      <tspan x="125.762" y="-424.6">start import</tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="563.462" y="-27.9706">
+    <tspan x="563.462" y="-27.9706"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="563.462" y="-294.952">
+    <tspan x="563.462" y="-294.952"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="828.75" y="-500.15">
+    <tspan x="828.75" y="-500.15"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="474.662" y="-428.754">
+    <tspan x="474.662" y="-428.754"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="474.662" y="-428.754">
+    <tspan x="474.662" y="-428.754"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="46.5124" y="-304.764">
+    <tspan x="46.5124" y="-304.764"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="317.362" y="-305.274">
+    <tspan x="317.362" y="-305.274"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="563.462" y="-285.402">
+    <tspan x="563.462" y="-285.402"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="474.662" y="-428.754">
+    <tspan x="474.662" y="-428.754"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="474.662" y="-428.754">
+    <tspan x="474.662" y="-428.754"></tspan>
+  </text>
+  <g>
+    <rect style="fill: #d8e5e5" x="50.5124" y="-357.264" width="204.4" height="70"/>
+    <path style="fill: #d8e5e5" d="M 50.5124,-357.264 A 4,4 0 0 0 46.5124,-353.264 L 50.5124,-353.264 z"/>
+    <path style="fill: #d8e5e5" d="M 258.912,-353.264 A 4,4 0 0 0 254.912,-357.264 L 254.912,-353.264 z"/>
+    <rect style="fill: #d8e5e5" x="46.5124" y="-353.264" width="212.4" height="62"/>
+    <path style="fill: #d8e5e5" d="M 46.5124,-291.264 A 4,4 0 0 0 50.5124,-287.264 L 50.5124,-291.264 z"/>
+    <path style="fill: #d8e5e5" d="M 254.912,-287.264 A 4,4 0 0 0 258.912,-291.264 L 254.912,-291.264 z"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="50.5124" y1="-357.264" x2="254.912" y2="-357.264"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="50.5124" y1="-287.264" x2="254.912" y2="-287.264"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 50.5124,-357.264 A 4,4 0 0 0 46.5124,-353.264"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 258.912,-353.264 A 4,4 0 0 0 254.912,-357.264"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="46.5124" y1="-353.264" x2="46.5124" y2="-291.264"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="258.912" y1="-353.264" x2="258.912" y2="-291.264"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 46.5124,-291.264 A 4,4 0 0 0 50.5124,-287.264"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 254.912,-287.264 A 4,4 0 0 0 258.912,-291.264"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="152.712" y="-334.364">
+      <tspan x="152.712" y="-334.364">Importer organisation/bruger </tspan>
+      <tspan x="152.712" y="-318.364">til cached contacts</tspan>
+      <tspan x="152.712" y="-302.364"></tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="152.712" y="-322.264">
+    <tspan x="152.712" y="-322.264"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="152.712" y="-322.264">
+    <tspan x="152.712" y="-322.264"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="152.712" y="-322.264">
+    <tspan x="152.712" y="-322.264"></tspan>
+  </text>
+  <g>
+    <rect style="fill: #d8e5e5" x="321.362" y="-357.774" width="237.1" height="70"/>
+    <path style="fill: #d8e5e5" d="M 321.362,-357.774 A 4,4 0 0 0 317.362,-353.774 L 321.362,-353.774 z"/>
+    <path style="fill: #d8e5e5" d="M 562.462,-353.774 A 4,4 0 0 0 558.462,-357.774 L 558.462,-353.774 z"/>
+    <rect style="fill: #d8e5e5" x="317.362" y="-353.774" width="245.1" height="62"/>
+    <path style="fill: #d8e5e5" d="M 317.362,-291.774 A 4,4 0 0 0 321.362,-287.774 L 321.362,-291.774 z"/>
+    <path style="fill: #d8e5e5" d="M 558.462,-287.774 A 4,4 0 0 0 562.462,-291.774 L 558.462,-291.774 z"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="321.362" y1="-357.774" x2="558.462" y2="-357.774"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="321.362" y1="-287.774" x2="558.462" y2="-287.774"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 321.362,-357.774 A 4,4 0 0 0 317.362,-353.774"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 562.462,-353.774 A 4,4 0 0 0 558.462,-357.774"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="317.362" y1="-353.774" x2="317.362" y2="-291.774"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="562.462" y1="-353.774" x2="562.462" y2="-291.774"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 317.362,-291.774 A 4,4 0 0 0 321.362,-287.774"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 558.462,-287.774 A 4,4 0 0 0 562.462,-291.774"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="439.912" y="-334.874">
+      <tspan x="439.912" y="-334.874">Importer organisation/organisation</tspan>
+      <tspan x="439.912" y="-318.874">til cached ava_organisations</tspan>
+      <tspan x="439.912" y="-302.874"></tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="439.912" y="-322.774">
+    <tspan x="439.912" y="-322.774"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="474.662" y="-428.754">
+    <tspan x="474.662" y="-428.754"></tspan>
+  </text>
+  <g>
+    <rect style="fill: #d8e5e5" x="50.5124" y="-243.576" width="230" height="86"/>
+    <path style="fill: #d8e5e5" d="M 50.5124,-243.576 A 4,4 0 0 0 46.5124,-239.576 L 50.5124,-239.576 z"/>
+    <path style="fill: #d8e5e5" d="M 284.512,-239.576 A 4,4 0 0 0 280.512,-243.576 L 280.512,-239.576 z"/>
+    <rect style="fill: #d8e5e5" x="46.5124" y="-239.576" width="238" height="78"/>
+    <path style="fill: #d8e5e5" d="M 46.5124,-161.576 A 4,4 0 0 0 50.5124,-157.576 L 50.5124,-161.576 z"/>
+    <path style="fill: #d8e5e5" d="M 280.512,-157.576 A 4,4 0 0 0 284.512,-161.576 L 280.512,-161.576 z"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="50.5124" y1="-243.576" x2="280.512" y2="-243.576"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="50.5124" y1="-157.576" x2="280.512" y2="-157.576"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 50.5124,-243.576 A 4,4 0 0 0 46.5124,-239.576"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 284.512,-239.576 A 4,4 0 0 0 280.512,-243.576"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="46.5124" y1="-239.576" x2="46.5124" y2="-161.576"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="284.512" y1="-239.576" x2="284.512" y2="-161.576"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 46.5124,-161.576 A 4,4 0 0 0 50.5124,-157.576"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 280.512,-157.576 A 4,4 0 0 0 284.512,-161.576"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="165.512" y="-220.676">
+      <tspan x="165.512" y="-220.676">Importer</tspan>
+      <tspan x="165.512" y="-204.676">organisation/organisationfunktion</tspan>
+      <tspan x="165.512" y="-188.676">til cached ava_kunderolles</tspan>
+      <tspan x="165.512" y="-172.676"></tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="165.512" y="-200.576">
+    <tspan x="165.512" y="-200.576"></tspan>
+  </text>
+  <g>
+    <rect style="fill: #d8e5e5" x="389.562" y="-235.378" width="169.9" height="70"/>
+    <path style="fill: #d8e5e5" d="M 389.562,-235.378 A 4,4 0 0 0 385.562,-231.378 L 389.562,-231.378 z"/>
+    <path style="fill: #d8e5e5" d="M 563.462,-231.378 A 4,4 0 0 0 559.462,-235.378 L 559.462,-231.378 z"/>
+    <rect style="fill: #d8e5e5" x="385.562" y="-231.378" width="177.9" height="62"/>
+    <path style="fill: #d8e5e5" d="M 385.562,-169.378 A 4,4 0 0 0 389.562,-165.378 L 389.562,-169.378 z"/>
+    <path style="fill: #d8e5e5" d="M 559.462,-165.378 A 4,4 0 0 0 563.462,-169.378 L 559.462,-169.378 z"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="389.562" y1="-235.378" x2="559.462" y2="-235.378"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="389.562" y1="-165.378" x2="559.462" y2="-165.378"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 389.562,-235.378 A 4,4 0 0 0 385.562,-231.378"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 563.462,-231.378 A 4,4 0 0 0 559.462,-235.378"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="385.562" y1="-231.378" x2="385.562" y2="-169.378"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="563.462" y1="-231.378" x2="563.462" y2="-169.378"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 385.562,-169.378 A 4,4 0 0 0 389.562,-165.378"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 559.462,-165.378 A 4,4 0 0 0 563.462,-169.378"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="474.512" y="-212.478">
+      <tspan x="474.512" y="-212.478">Importer indsats/indsats</tspan>
+      <tspan x="474.512" y="-196.478">til cached ava_aftales</tspan>
+      <tspan x="474.512" y="-180.478"></tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #d8e5e5" x="50.5124" y="-115.729" width="228.2" height="86"/>
+    <path style="fill: #d8e5e5" d="M 50.5124,-115.729 A 4,4 0 0 0 46.5124,-111.729 L 50.5124,-111.729 z"/>
+    <path style="fill: #d8e5e5" d="M 282.712,-111.729 A 4,4 0 0 0 278.712,-115.729 L 278.712,-111.729 z"/>
+    <rect style="fill: #d8e5e5" x="46.5124" y="-111.729" width="236.2" height="78"/>
+    <path style="fill: #d8e5e5" d="M 46.5124,-33.7292 A 4,4 0 0 0 50.5124,-29.7292 L 50.5124,-33.7292 z"/>
+    <path style="fill: #d8e5e5" d="M 278.712,-29.7292 A 4,4 0 0 0 282.712,-33.7292 L 278.712,-33.7292 z"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="50.5124" y1="-115.729" x2="278.712" y2="-115.729"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="50.5124" y1="-29.7292" x2="278.712" y2="-29.7292"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 50.5124,-115.729 A 4,4 0 0 0 46.5124,-111.729"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 282.712,-111.729 A 4,4 0 0 0 278.712,-115.729"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="46.5124" y1="-111.729" x2="46.5124" y2="-33.7292"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="282.712" y1="-111.729" x2="282.712" y2="-33.7292"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 46.5124,-33.7292 A 4,4 0 0 0 50.5124,-29.7292"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 278.712,-29.7292 A 4,4 0 0 0 282.712,-33.7292"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="164.612" y="-92.8292">
+      <tspan x="164.612" y="-92.8292">Importer </tspan>
+      <tspan x="164.612" y="-76.8292">organisation/interessefaellesskab</tspan>
+      <tspan x="164.612" y="-60.8292">til cached ava_accounts</tspan>
+      <tspan x="164.612" y="-44.8292"></tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="164.612" y="-72.7292">
+    <tspan x="164.612" y="-72.7292"></tspan>
+  </text>
+  <g>
+    <rect style="fill: #d8e5e5" x="357.212" y="-107.532" width="201.25" height="70"/>
+    <path style="fill: #d8e5e5" d="M 357.212,-107.532 A 4,4 0 0 0 353.212,-103.532 L 357.212,-103.532 z"/>
+    <path style="fill: #d8e5e5" d="M 562.462,-103.532 A 4,4 0 0 0 558.462,-107.532 L 558.462,-103.532 z"/>
+    <rect style="fill: #d8e5e5" x="353.212" y="-103.532" width="209.25" height="62"/>
+    <path style="fill: #d8e5e5" d="M 353.212,-41.5316 A 4,4 0 0 0 357.212,-37.5316 L 357.212,-41.5316 z"/>
+    <path style="fill: #d8e5e5" d="M 558.462,-37.5316 A 4,4 0 0 0 562.462,-41.5316 L 558.462,-41.5316 z"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="357.212" y1="-107.532" x2="558.462" y2="-107.532"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="357.212" y1="-37.5316" x2="558.462" y2="-37.5316"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 357.212,-107.532 A 4,4 0 0 0 353.212,-103.532"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 562.462,-103.532 A 4,4 0 0 0 558.462,-107.532"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="353.212" y1="-103.532" x2="353.212" y2="-41.5316"/>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x1="562.462" y1="-103.532" x2="562.462" y2="-41.5316"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 353.212,-41.5316 A 4,4 0 0 0 357.212,-37.5316"/>
+    <path style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" d="M 558.462,-37.5316 A 4,4 0 0 0 562.462,-41.5316"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="457.837" y="-84.6316">
+      <tspan x="457.837" y="-84.6316">Importer klassifikation/klasse</tspan>
+      <tspan x="457.837" y="-68.6316">til cached ava_installations</tspan>
+      <tspan x="457.837" y="-52.6316"></tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="563.462" y="-80.5316">
+    <tspan x="563.462" y="-80.5316"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="165.512" y="-200.576">
+    <tspan x="165.512" y="-200.576"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="164.612" y="-72.7292">
+    <tspan x="164.612" y="-72.7292"></tspan>
+  </text>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="205.012,-428.5 295.434,-428.5 295.434,-428.754 376.121,-428.754 "/>
+    <polygon style="fill: #000000" points="383.621,-428.754 373.621,-423.754 376.121,-428.754 373.621,-433.754 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="383.621,-428.754 373.621,-423.754 376.121,-428.754 373.621,-433.754 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="474.662,-393.754 474.662,-375.509 152.712,-375.509 152.712,-367 "/>
+    <polygon style="fill: #000000" points="152.712,-359.5 147.712,-369.5 152.712,-367 157.712,-369.5 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="152.712,-359.5 147.712,-369.5 152.712,-367 157.712,-369.5 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="258.912,-322.264 287.633,-322.264 287.633,-322.774 306.618,-322.774 "/>
+    <polygon style="fill: #000000" points="314.118,-322.774 304.118,-317.774 306.618,-322.774 304.118,-327.774 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="314.118,-322.774 304.118,-317.774 306.618,-322.774 304.118,-327.774 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="439.912,-287.774 439.912,-266.178 165.512,-266.178 165.512,-254.317 "/>
+    <polygon style="fill: #000000" points="165.512,-246.817 160.512,-256.817 165.512,-254.317 170.512,-256.817 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="165.512,-246.817 160.512,-256.817 165.512,-254.317 170.512,-256.817 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="284.512,-200.576 335.037,-200.576 335.037,-200.378 375.826,-200.378 "/>
+    <polygon style="fill: #000000" points="383.326,-200.378 373.326,-195.378 375.826,-200.378 373.326,-205.378 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="383.326,-200.378 373.326,-195.378 375.826,-200.378 373.326,-205.378 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="474.512,-165.378 474.512,-141.056 164.612,-141.056 164.612,-126.471 "/>
+    <polygon style="fill: #000000" points="164.612,-118.971 159.612,-128.971 164.612,-126.471 169.612,-128.971 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="164.612,-118.971 159.612,-128.971 164.612,-126.471 169.612,-128.971 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="282.712,-72.7292 317.459,-72.7292 317.459,-72.5316 342.469,-72.5316 "/>
+    <polygon style="fill: #000000" points="349.969,-72.5316 339.969,-67.5316 342.469,-72.5316 339.969,-77.5316 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="349.969,-72.5316 339.969,-67.5316 342.469,-72.5316 339.969,-77.5316 "/>
+  </g>
+</svg>
