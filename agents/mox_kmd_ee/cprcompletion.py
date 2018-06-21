@@ -64,16 +64,17 @@ STRFLOATS = [
 
 def get_results_on_address(**address):
     """ Parses a complex result from the service adrsog1
-        and returns a dictionary like this example:
+    and returns a dictionary with one entry per person
+    who have lived / lives on address::
+
         {
             ("Pjotr Petterson", '311299'):{
                 "cpr":"3112996789',
                 "indflytningsdato": "19841231",
                 "udflytningsdato": None,
             },
-            # same for other persons who
-            # live/have lived on the address
         }
+
     """
 
     person_numbers_from_adress = (
@@ -198,11 +199,18 @@ def stringalign_fields(fields):
 
 
 def get_cpr_by_custdict(custdict, by_name=True):
-    """ Returns a cpr if found using the fields in the custdict.
-        Be advised that this is used for both the utility_address
-        which is natively inhabitating these fields, and for
-        the invoice address, which in that case overwrites
-        these fields after a call to fuzzy_address_uuid
+    """ Returns a cpr if found using the fields in the custdict:
+
+    * Vejkode
+    * Husnr
+    * Postnr
+    * Etage
+    * Sidedørnr
+    * KundeNavn
+    * PersonnrSEnr (first 6 digits)
+
+    If *by_name* is False the lookup disregards KundeNavn
+
     """
     resultdict = get_results_on_address(
         street_code=custdict["Vejkode"],
@@ -230,20 +238,20 @@ def complete_cprs_in_custdict(
 ):
     """ Potentially modifies:
 
-        * _new_fields["PersonnrSEnr"]
-        * _new_fields["LigestPersonnr"]
+    * _new_fields["PersonnrSEnr"]
+    * _new_fields["LigestPersonnr"]
 
-        Returns True if:
+    Returns True if:
 
-        * customer is a cvr-customer (company)
-        * cpr number was found for inhabitant
-          and no ligest-customer is registered
-          in this case _new_fields["PersonnrSEnr"] is completed inplace
-        * cpr number was found for both inhabitant and ligest-customer
-          in this case _new_fields["PersonnrSEnr"]
-          and _new_fields["LigestPersonnr"] are completed inplace
+    * customer is a cvr-customer (company)
+    * cpr number was found for inhabitant
+      and no ligest-customer is registered.
+      In this case _new_fields["PersonnrSEnr"] is completed inplace
+    * cpr number was found for both inhabitant and ligest-customer.
+      In this case _new_fields["PersonnrSEnr"]
+      and _new_fields["LigestPersonnr"] are completed inplace
 
-        Returns False otherwise
+    Returns False otherwise
     """
     # make sure we are only using stringified copies
     # of the new/old dictionaries for the operation
