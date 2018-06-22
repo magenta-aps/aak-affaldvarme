@@ -5,17 +5,20 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#
 
-import oio_interface as oio
-import dawa_interface as dawa
-import cache_interface as cache
+# skip module level code when 
+# generating top level documentation
+import sys
+if not sys.base_prefix.endswith("/docs/python-env"):
+    import oio_interface as oio
+    import dawa_interface as dawa
+    import cache_interface as cache
 
-from logging import getLogger
+    from logging import getLogger
 
 
-# Init logging
-log = getLogger(__name__)
+    # Init logging
+    log = getLogger(__name__)
 
 
 def import_all_addresses():
