@@ -9,6 +9,11 @@ Mox Dynamics CRM
    :caption: Further Contents:
    :titlesonly:
 
+   installation.rst
+   configuration.rst
+   usage.rst
+   modules.rst
+
 Indices and tables
 ------------------
 
