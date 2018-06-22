@@ -1,19 +1,25 @@
 # -*- coding: utf-8 -*-
 
-import crm_interface as crm
-import cache_interface as cache
-import dawa_interface as dawa
 
-from helper import get_config
-from logging import getLogger
-import copy
+# skip module level code when 
+# generating top level documentation
+import sys
+if not sys.base_prefix.endswith("/docs/python-env"):
+
+    import crm_interface as crm
+    import cache_interface as cache
+    import dawa_interface as dawa
+
+    from helper import get_config
+    from logging import getLogger
+    import copy
 
 
-# Init logging
-log = getLogger(__name__)
+    # Init logging
+    log = getLogger(__name__)
 
-# Get config
-config = get_config()
+    # Get config
+    config = get_config()
 
 
 def export_everything():
