@@ -19,5 +19,5 @@ help:
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
     
-	cd "$(SOURCEDIR)/overview" ; $(MAKE) $(MFLAGS)
+	@(cd "$(SOURCEDIR)/overview" ; $(MAKE) $(MFLAGS) $(MAKECMDGOALS))
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
