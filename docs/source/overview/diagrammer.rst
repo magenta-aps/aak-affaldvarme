@@ -22,7 +22,7 @@ Data overføres til Dynamics CRM 365 til tabellerne 'ava_aftales', 'contacts', '
 
 **mox-sp-notifications**
 
-Data, som ikke længere overføres fra KMD EE på grund af uaktualitet vil gravist miste kvalitet i lora og dermed glaspladen på grund af at kunder er fraflyttet de registrerede adresser. Mox-sp-notifications sørger for at disse rettelser alligevel kommer med i LoRa og dermed op i glaspladen.
+Data, som ikke længere overføres fra KMD EE på grund af uaktualitet vil gravist miste kvalitet i LoRa og dermed Dynamics CRM på grund af at kunder er fraflyttet de registrerede adresser. Mox-sp-notifications sørger for at disse rettelser alligevel kommer med i LoRa og dermed op i Dynamics CRM.
 
 Mox-kmd-ee
 ----------
