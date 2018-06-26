@@ -13,7 +13,7 @@ import os
 import xmltodict
 import settings
 from ee_utils import say, cpr_cvr
-# from ee_utils import get_forbrugssted_address_uuid
+from xml.parsers.expat import ExpatError
 from service_clients import DAWA_ADDRESS_URL
 from service_clients import get_address_from_service
 from service_clients import report_error, fuzzy_address_uuid
@@ -86,8 +86,8 @@ def get_results_on_address(**address):
     )
 
     # extract 'Row' payload from deeply nested SOAP structure
-    nested = xmltodict.parse(person_numbers_from_adress)
     try:
+        nested = xmltodict.parse(person_numbers_from_adress)
         table = nested[
             'soap:Envelope'
         ][
@@ -115,7 +115,10 @@ def get_results_on_address(**address):
         ]
 
     except KeyError as e:
-        say("Keyerror: %s, no address found for %r " % (str(e), address))
+        say("KeyError: %s, no address found for %r " % (str(e), address))
+        return {}
+    except ExpatError as e:
+        say("ExpatError: %s, no address found for %r " % (str(e), address))
         return {}
 
     resultdict = {}
@@ -135,7 +138,7 @@ def get_results_on_address(**address):
             continue
         rowdict = {k.get("@r"): k for k in row["Field"]}
         if not CNVN_STATUS_ACTIVE.get(rowdict.get("CNVN_STATUS").get("@v")):
-            say("code %s at %r" % (rowdict.get("CNVN_STATUS"), address))
+            #say("code %s at %r" % (rowdict.get("CNVN_STATUS"), address))
             continue
 
         # convert date to danish cpr-prefix
