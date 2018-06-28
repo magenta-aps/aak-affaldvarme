@@ -29,7 +29,8 @@ def delete_crm_entity(crm_table, lora_ref, external_ref):
         log.warn("ref error lora_ref:%s  external_ref:%s in %s delete in cache", 
             lora_ref, external_ref, crm_table
         )
-        cache.delete(crm_table, lora_ref)
+        if DO_WRITE:
+            cache.delete(crm_table, lora_ref)
         return
 
     response = crm.get_request(
@@ -118,9 +119,9 @@ def get_semi_safe_to_delete_objects_dict(
     semi_safe_to_delete=dict(objects)
     for k in forbidden_keys:
         for loraid, o in objects.items():
-            if o["external_ref"] in forbidden_refs[k]:
+            if o.get("external_ref") in forbidden_refs[k]:
                 log.info("excluding refd by incident lora_ref:%s  external_ref:%s in %s", 
-                    loraid, o["external_ref"], crm_table
+                    loraid, o.get("external_ref"), crm_table
                 ) 
                 semi_safe_to_delete.pop(k, None)
 
@@ -182,7 +183,7 @@ def get_deleted_objects(objects, oio_resource):
 
 def purge_objects(purgable_objects, crm_table):
     for loraid, o in purgable_objects.items():
-        delete_crm_entity(crm_table, loraid, o["external_ref"]) 
+        delete_crm_entity(crm_table, loraid, o.get("external_ref")) 
 
 def get_purgable_objects(
     crm_table, 
