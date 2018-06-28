@@ -434,13 +434,15 @@ def main():
     }
 
     say("Number of changed customer records:", len(changed_records))
+
+    # we are no longer deleting customers - their agreements just expire
     # Handle notifications for customer part, do the installations afterwards.
-    if len(lost_keys) > 0:
-        say("... deleting {} customers...".format(len(lost_keys)))
-        for k in lost_keys:
-            # These records are no longer active and should be deleted in LoRa
-            delete_customer_record(k)
-        say("... done")
+    #if len(lost_keys) > 0:
+    #    say("... deleting {} customers...".format(len(lost_keys)))
+    #    for k in lost_keys:
+    #        # These records are no longer active and should be deleted in LoRa
+    #        delete_customer_record(k)
+    #    say("... done")
     # New customer relations - import along with agreements & products
     # First explicitly create the new customers
 
@@ -522,13 +524,13 @@ def main():
     #  Those that disappear are expired, either by the customer disappearing or
     #  by crossing the expiry date. If the customer disappeared, it should
     #  already be gone.
-    say("... deleting {} expired installations ...".format(
-        len(lost_installation_keys)
-    ))
-    for k in lost_installation_keys:
-        say("deleting product %s" % k)
-        delete_installation_record(k)
-    say("... done")
+    #say("... deleting {} expired installations ...".format(
+    #    len(lost_installation_keys)
+    #))
+    #for k in lost_installation_keys:
+    #    say("deleting product %s" % k)
+    #    delete_installation_record(k)
+    #say("... done")
 
     # New records may come into being by entering the valid period.
     # if so, they should be attached to the Aftale corresponding to this
