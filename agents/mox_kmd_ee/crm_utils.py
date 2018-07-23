@@ -505,7 +505,9 @@ def update_customer_relation(fields, new_values):
 
     for field, role in zip(customer_role_fields, customer_roles):
         # Handle customer role changes.
-        if field in new_values:
+        if field in new_values and (
+                int_str(new_values[field]) != int_str(fields[field])
+            ):
             old_customer_role = lookup_customer_role(cr_uuid, role)
             if old_customer_role:
                 delete_customer_role(old_customer_role)
