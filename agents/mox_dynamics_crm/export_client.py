@@ -641,7 +641,7 @@ def process(kunderolle):
     # TODO: utility address must be added here
     # Utility address fallback
 
-    utility_address = None
+    #utility_address = None
 
     if produkt["dawa_ref"]:
 
