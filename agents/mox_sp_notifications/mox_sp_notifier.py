@@ -58,9 +58,9 @@ def run_task(resource, handler):
 
         # Additional (paranoia) check
         # List should only contain 1 result
-        if len(results) != 1:
+        if not results or len(results) != 1:
             log.error(
-                "OIO REST api has returned more than 1 result"
+                "OIO REST api has returned more or less than 1 result"
             )
 
             # Debug
