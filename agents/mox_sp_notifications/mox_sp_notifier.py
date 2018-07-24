@@ -94,16 +94,21 @@ def run_task(resource, handler):
 
         # Iterate over the sections of the registrering object
         # and apply updates for matched key/value pairs
+        update_applied = False
         for update in list_of_updates:
 
             # Info
             log.info("Applying update: {0}".format(update))
 
             # Update registrering
-            apply_update(registrering, update)
+            update_applied = update and apply_update(registrering, update)
+            if not update_applied:
+                log.error("update skipped for bruger: %s", uuid)
+                break
 
         # Send OIO update request
-        send_update(resource, uuid, registrering)
+        if update_applied:
+            send_update(resource, uuid, registrering)
 
 
 def apply_update(registrering, update):
@@ -155,7 +160,12 @@ def apply_update(registrering, update):
 
     # Iterate over all items in the list
     # Target the items that needs to be updated
-    for item in registrering[section][key]:
+    items = registrering[section].get(key,[])
+    if len(items) == 0:
+        log.error("No %s found in registrering['%s']", key, section)
+        return False
+    
+    for item in items:
 
         # Next we need to target the key/value pairs
         # which need to be updated
@@ -166,6 +176,7 @@ def apply_update(registrering, update):
 
             # Replace the item values with updated values
             item[key] = content[key]
+    return True
 
 
 def send_update(resource, uuid, update):
