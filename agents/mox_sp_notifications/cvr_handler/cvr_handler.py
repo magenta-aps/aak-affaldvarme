@@ -11,7 +11,9 @@ import json
 from helper import get_config
 from logging import getLogger
 from cvr_handler import compare
-from service_cvr_online import get_cvr_data
+#from service_cvr_online import get_cvr_data
+from serviceplatformen_cvr import get_cvr_data
+import zeep.exceptions 
 
 
 # Init logging
@@ -47,13 +49,20 @@ def cvr_handler(org_data):
         "Processing org: {0}".format(uuid)
     )
 
-    # Fetch the CVR dataset from SP
-    sp_data = get_cvr_data_from_sp(cvr_id)
 
-    # Check that something was returned from SP
+    # Service platform data - perform a simple retry on error
+    sp_data = None
+    for i in range(2):
+        try:
+            # Fetch the CVR dataset from SP
+            sp_data = get_cvr_data_from_sp(cvr_id)
+            break
+        except zeep.exceptions.Fault:
+            continue
     if not sp_data:
-        log.error("Nothing was returned from SP")
-        return False
+        log.error("error for uuid, returning empty list of updates for organisation %s",uuid)
+        return []
+
 
     # Prepare list of items to be update
     TO_BE_UPDATED = list()
@@ -64,6 +73,7 @@ def cvr_handler(org_data):
         cvr_field = cvr_extractor(sp_data)
 
         if not org_field or not cvr_field:
+            log.error("Not found in lora or cvr: oio: %s, cvr: %s", org_field, cvr_field)
             return
 
         if org_field != cvr_field:
