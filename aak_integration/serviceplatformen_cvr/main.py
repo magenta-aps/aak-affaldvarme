@@ -39,17 +39,13 @@ def get_cvr_data(cvr_id, service_uuids, service_certificate):
 
     address = {}
     # address["vejnavn"] = extracted["vejnavn"]
-    if "vejkode" in extracted:
-        address["vejkode"] = extracted["vejkode"]
-    if "husnummer" in extracted:
-        address["husnr"] = extracted["husnummer"]
-    if "etage" in address:
-        address["etage"] = extracted["etage"]
-    if "doer" in address:
-        address["dør"] = extracted["doer"]
-    if "postnummer" in address:
-        address['postnr'] = extracted["postnummer"]
+    address["vejkode"] = extracted.get("vejkode")
+    address["husnr"] = extracted.get("husnummer")
+    address["etage"] = extracted.get("etage")
+    address["dør"] = extracted.get("doer")
+    address['postnr'] = extracted.get("postnummer")
 
+    # get result - there should only be one
     extracted["dawa_uuid"] = _get_address_uuid(address)
 
     return extracted
