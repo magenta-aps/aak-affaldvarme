@@ -14,6 +14,7 @@ from cvr_handler import compare
 #from service_cvr_online import get_cvr_data
 from serviceplatformen_cvr import get_cvr_data
 import zeep.exceptions 
+import requests.exceptions
 
 
 # Init logging
@@ -58,6 +59,8 @@ def cvr_handler(org_data):
             sp_data = get_cvr_data_from_sp(cvr_id)
             break
         except zeep.exceptions.Fault:
+            continue
+        except requests.exceptions.ConnectionError:
             continue
     if not sp_data:
         log.error("error for uuid, returning empty list of updates for organisation %s",uuid)
