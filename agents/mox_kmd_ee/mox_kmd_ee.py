@@ -61,7 +61,7 @@ def import_customer(id_and_fields):
 
         new_customer_uuid = create_customer(
             id_number=id_number,
-            key=id_number,
+            key=customer_number,
             name=fields['KundeNavn'],
             master_id=master_id,
             phone=fields['Telefonnr'],
