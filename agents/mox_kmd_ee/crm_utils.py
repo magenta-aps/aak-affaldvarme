@@ -123,7 +123,9 @@ def lookup_products(agreement_uuid):
     # and have an AVA specific relation from Klasse to Indsats.
     agreement = read_agreement(agreement_uuid)
     indsatskvalitet = agreement['relationer'].get('indsatskvalitet', [])
-    product_uuids = [r['uuid'] for r in indsatskvalitet]
+    product_uuids = [r['uuid'] for r in indsatskvalitet if 'uuid' in r]
+    if len(product_uuids) != len(indsatskvalitet):
+        say("indsatskvalitet uden uuid: %s" % agreement_uuid)
 
     return product_uuids
 
@@ -435,6 +437,14 @@ def update_customer_relation(fields, new_values):
     customer_roles = [KUNDE, LIGESTILLINGSKUNDE]
     customer_number = int_str(fields['Kundenr'])
     cr_uuid = lookup_customer_relation(customer_number)
+    if not cr_uuid:
+        report_error(
+            "Customer relation not found, customer {}".format(customer_number)
+        )
+        print(
+            "Customer relation not found, customer {}".format(customer_number)
+        )
+        return
     customer_relation = read_object(cr_uuid, "organisation",
                                     "interessefaellesskab")
     # Dictionary of updated values - no need to exclusively check new_values.
@@ -495,7 +505,9 @@ def update_customer_relation(fields, new_values):
 
     for field, role in zip(customer_role_fields, customer_roles):
         # Handle customer role changes.
-        if field in new_values:
+        if field in new_values and (
+                int_str(new_values[field]) != int_str(fields[field])
+            ):
             old_customer_role = lookup_customer_role(cr_uuid, role)
             if old_customer_role:
                 delete_customer_role(old_customer_role)
@@ -529,7 +541,7 @@ def update_agreement(fields, new_values):
     """Update agreement based on the changed fields."""
     address_fields = ['Vejnavn', 'Postdistrikt']
     date_fields = ['Tilflytningsdato', 'Fraflytningsdato']
-    date_properties = ['startdato', 'slutdato']
+    date_properties = ['starttidspunkt', 'sluttidspunkt']
     new_fields = {**fields, **new_values}
 
     # Look up agreement, we know we're going to need this.

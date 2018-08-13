@@ -10,6 +10,7 @@ import json
 import click
 import import_client
 import export_client
+import purge_client
 import cache_interface as cache
 import crm_interface as crm
 import installer
@@ -31,8 +32,34 @@ if config.getboolean("do_disable_ssl_warnings", "yes"):
 if config.getboolean("do_run_in_test_mode", "yes"):
     LOG_FILE = "debug.log"
 
+
+def create_indexes(connection, table, ixlist=[]):
+    existing_indexes = cache.r.table(table).index_list().run(connection)
+    log.info(
+        "existing_indexes on table: {table}"
+        " {existing_indexes}".format(**locals())
+    )
+    for ix in ixlist:
+        cache.r.table(table).index_create(ix)
+        log.info("creating {ix}".format(**locals()))
+        cache.r.table(table).index_wait(ix).run(connection)
+
+    # await all indexes to be ready on this table
+    existing_indexes = cache.r.table(table).index_list().run(connection)
+    log.info(
+        "existing_indexes after create"
+        " {existing_indexes}".format(**locals())
+    )
+
+
+def await_indexes_ready():
+    create_indexes(
+        cache.connect(), "ava_aftales", ["interessefaellesskab_ref"]
+    )
+
+
 # Set logging
-log = start_logging(20, LOG_FILE)
+log = start_logging(config.getint("loglevel", fallback=20), LOG_FILE)
 
 
 @click.group()
@@ -77,6 +104,7 @@ def import_from_lora():
     Import all OIO entities to the cache layer.
     For further information, please see the 'import_client'.
     """
+    await_indexes_ready()
 
     # Message user
     click.echo("Begin import from OIO to cache")
@@ -96,8 +124,9 @@ def export_to_crm(dry_run):
     Build relations and export all objects to CRM
     For further information, please see the 'export_client'.
     """
+    await_indexes_ready()
 
-    crm.DO_WRITE = not dry_run
+    crm.DO_WRITE = cache.DO_WRITE = not dry_run
 
     # Message user
     click.echo("Begin export from cache to CRM")
@@ -143,6 +172,18 @@ def token(generate):
     click.echo("--- begin token ---")
     click.echo(token)
     click.echo("--- end token ---")
+
+
+@cli.command(name="purge")
+def purge_from_crm():
+    """
+    Purge entities from crm if deleted in lora
+    """
+    # Message user
+    click.echo("Begin purge from crm according to lora delete status")
+
+    # Run purge
+    purge_client.run_purge()
 
 
 if __name__ == "__main__":

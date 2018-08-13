@@ -14,6 +14,7 @@ from datetime import datetime
 from configparser import ConfigParser
 
 
+
 def get_config(section="DEFAULT"):
     """
     Helper function to get a configuration section from config.ini
@@ -130,6 +131,10 @@ def start_logging(loglevel=10, logfile="debug.log"):
 
     :return:            Returns a configured instance of the logging class
     """
+    class NoHttpsWarningFilter(logging.Filter):
+        def filter(self, record):
+            return not record.getMessage().endswith("location to HTTPS")
+
 
     # Set logger name
     logger = logging.getLogger()
@@ -148,6 +153,7 @@ def start_logging(loglevel=10, logfile="debug.log"):
     # Set loglevel
     logger.setLevel(loglevel)
     handler.setLevel(loglevel)
+    handler.addFilter(NoHttpsWarningFilter())
 
     # Return logger
     return logger

@@ -79,6 +79,8 @@ def extract_address_uuid_from_oio(org_data):
     map = create_object_map(org_data)
     relationer = map.get("relationer")
     adresser = relationer.get("adresser")
+    if not adresser:
+        return None
 
     # Filter
     dawa_addresses = [x for x in adresser if

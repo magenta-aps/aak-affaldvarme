@@ -10,13 +10,46 @@ Functions starting with "store" write to files on disk, and files starting with
 
 import pickle
 import os
+import re
+import json
+import datetime
 
 from ee_sql import CUSTOMER_SQL, RELEVANT_TREF_INSTALLATIONS_SQL
 from ee_utils import int_str
 
 
+LASTRUN_FILE = 'var/lastrun.json'
 CUSTOMER_RELATIONS_FILE = 'var/customer_relations'
 INSTALLATIONS_FILE = 'var/installations'
+CRM_FAILED_CUSTOMER_NUMBERS_FILE = "var/kundenumre.txt"
+CRM_FAILED_INSTALLATION_NUMBERS_FILE = "var/installationsnumre.txt"
+
+
+""" LASTRUN """
+
+
+def read_lastrun_dict():
+    lastrun_dict = {"last_run": datetime.datetime.today(
+    ).strftime("%Y-%m-%d")}
+    # update default from file if it exists
+    if os.path.exists(LASTRUN_FILE):
+        with open(LASTRUN_FILE) as f:
+            lastrun_dict.update(json.load(f))
+    lastrun_dict.update({
+            "last_run": datetime.datetime.strptime(
+                lastrun_dict["last_run"],
+                "%Y-%m-%d"
+            )
+    })
+    return lastrun_dict
+
+
+def write_lastrun_dict(lastrun_dict):
+    lastrun_dict.update({"last_run": datetime.datetime.today(
+    ).strftime("%Y-%m-%d")})
+    with open(LASTRUN_FILE, "w") as f:
+        f.write(json.dumps(lastrun_dict))
+
 
 """ CUSTOMER RECORDS """
 
@@ -26,7 +59,7 @@ def has_customer_records():
     return os.path.isfile(CUSTOMER_RELATIONS_FILE)
 
 
-def read_customer_records(cursor):
+def read_customer_records(cursor, lastrun_dict):
     """Read customer relations from database.
 
     Read all data regarding customers, customer roles and customer
@@ -34,7 +67,11 @@ def read_customer_records(cursor):
     changes. Basically, by creating a dictionary with customer
     number as key.
     """
-    cursor.execute(CUSTOMER_SQL)
+    cursor.execute(CUSTOMER_SQL.format(
+        last_year=lastrun_dict["last_run"].year,
+        last_month=lastrun_dict["last_run"].month,
+        last_day=lastrun_dict["last_run"].day
+    ))
     rows = cursor.fetchall()
     customer_dict = {int_str(row['Kundenr']): row for row in rows}
 
@@ -59,15 +96,27 @@ def retrieve_customer_records():
         return {}
 
 
+def get_crm_failed_customer_numbers():
+    if os.path.exists(CRM_FAILED_CUSTOMER_NUMBERS_FILE):
+        with open(CRM_FAILED_CUSTOMER_NUMBERS_FILE) as f:
+            return set(re.findall("[0-9]+", f.read()))
+    else:
+        return set()
+
+
 """ INSTALLATION RECORDS """
 
 
-def read_installation_records(cursor):
+def read_installation_records(cursor, lastrun_dict):
     """Read relevant Tref installation records from database.
 
     Reads all relevant data about installations and meters.
     """
-    cursor.execute(RELEVANT_TREF_INSTALLATIONS_SQL)
+    cursor.execute(RELEVANT_TREF_INSTALLATIONS_SQL.format(
+        last_year=lastrun_dict["last_run"].year,
+        last_month=lastrun_dict["last_run"].month,
+        last_day=lastrun_dict["last_run"].day
+    ))
     rows = cursor.fetchall()
     data_dict = {int_str(row['InstalNummer']): row for row in rows}
 
@@ -87,3 +136,11 @@ def retrieve_installation_records():
             return pickle.load(f)
     except FileNotFoundError:
         return {}
+
+
+def get_crm_failed_installation_numbers():
+    if os.path.exists(CRM_FAILED_INSTALLATION_NUMBERS_FILE):
+        with open(CRM_FAILED_INSTALLATION_NUMBERS_FILE) as f:
+            return set(re.findall("[0-9]+", f.read()))
+    else:
+        return set()

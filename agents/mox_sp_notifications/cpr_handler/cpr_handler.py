@@ -11,6 +11,8 @@ from logging import getLogger
 from helper import get_config
 from service_person_stamdata_udvidet import get_citizen
 from cpr_handler import compare
+from requests.exceptions import ConnectionError, HTTPError
+
 
 
 # Init log
@@ -71,8 +73,19 @@ def cpr_handler(bruger_data):
         "Processing bruger: {0}".format(uuid)
     )
 
-    # Service platform data
-    sp_data = get_cpr_data(cpr_id)
+    # Service platform data - perform a simple retry upon connection-error
+    sp_data = None
+    for i in range(2):
+        try: 
+            sp_data = get_cpr_data(cpr_id)
+            break
+        except ConnectionError:
+            continue
+        except HTTPError:
+            continue
+    if not sp_data:
+        log.error("error for uuid, returning empty list of updates for bruger %s",uuid)  
+        return []
 
     # List of updates found
     list_of_updates = []

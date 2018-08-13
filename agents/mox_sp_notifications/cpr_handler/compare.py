@@ -235,10 +235,10 @@ def extract_address_uuid_from_sp(sp_data):
     # Query parameters
     params = {
         "vejkode": vejkode,
-        "husnummer": husnummer,
+        "husnr": husnummer,
         "postnummer": postnummer,
         "etage": etage,
-        "sidedoer": sidedoer,
+        "dør": sidedoer,
         "struktur": "mini"
     }
 

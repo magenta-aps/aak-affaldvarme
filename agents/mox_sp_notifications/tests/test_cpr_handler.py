@@ -8,7 +8,7 @@
 #
 
 from unittest import TestCase
-from .utils import get_test_data
+from utils import get_test_data
 
 # Testing import
 from helper import create_virkning
@@ -22,7 +22,7 @@ class test_cpr_handler(TestCase):
     """
 
     def setUp(self):
-        self.test_data = get_test_data("oio_bruger.json")
+        self.test_data = get_test_data("get_oio_bruger.json")
         self.sp_data = get_test_data("get_sp_person.json")
 
 

@@ -29,11 +29,14 @@ DAWA_ADDRESS_URL = 'http://dawa.aws.dk/adresser'
 DAWA_ACCESS_URL = 'http://dawa.aws.dk/adgangsadresser'
 
 
-def get_address_from_service(dawa_service, address):
+def get_address_from_service(dawa_service, as_tuple, address):
     """Get DAWA UUID from dictionary with correct fields."""
     address['struktur'] = 'mini'
 
-    if len(address) <= 2:
+    # allow looking up by id only
+    if 'id' in address or len(address) > 2:
+        pass
+    else:
         raise RuntimeError("Insufficient data")
 
     try:
@@ -71,13 +74,16 @@ def get_address_from_service(dawa_service, address):
     else:
         # len(js) == 0
         raise RuntimeError('Address not found')
-    return address_uuid
+    if as_tuple:
+        return address_uuid, js
+    else:
+        return address_uuid
 
 
 get_address_uuid = functools.partial(get_address_from_service,
-                                     DAWA_ADDRESS_URL)
+                                     DAWA_ADDRESS_URL, False)
 access_address_uuid = functools.partial(get_address_from_service,
-                                        DAWA_ACCESS_URL)
+                                        DAWA_ACCESS_URL, False)
 
 
 def fuzzy_address_uuid(addr_str):
@@ -91,7 +97,10 @@ def fuzzy_address_uuid(addr_str):
     if result:
         addrs = result.json()['resultater']
         if len(addrs) == 1:
-            return addrs[0]['adresse']['id']
+            if addrs[0]['adresse']['status'] in [2, 4]:
+                return addrs[0]['adresse']['adgangsadresseid']
+            else:
+                return addrs[0]['adresse']['id']
         elif len(addrs) > 1:
             # print("Adresses found:")
             # print(addrs)
@@ -148,4 +157,5 @@ def report_error(error_message, error_stack=None, error_object=None):
 
 if __name__ == '__main__':
     report_error("Hej med dig!")
-    print(fuzzy_address_uuid('Parkvej 56, 8920 Randers NV'))
+    uuid = fuzzy_address_uuid('Parkvej 56, 8920 Randers NV')
+    assert uuid == get_address_uuid({'id':uuid})
