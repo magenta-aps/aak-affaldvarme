@@ -63,7 +63,7 @@ class CVRAdapter(SPAdapterBase):
         binding_name = '{http://rep.oio.dk/eogs/xml.wsdl/}CvrBinding'
 
         if prod_mode:
-            wsdl_url = 'https://prod.serviceplatformen.dk/administration/wsdl/CvrService.wsdl'
+            wsdl_url = 'https://www.serviceplatformen.dk/administration/wsdl/CvrService.wsdl'
             endpoint_url = 'https://prod.serviceplatformen.dk/service/CVROnline/CVROnline/1'
         else:
             wsdl_url = 'https://exttestwww.serviceplatformen.dk/administration/wsdl/CvrService.wsdl'

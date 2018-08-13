@@ -8,6 +8,7 @@
 #
 
 import json
+import time
 import datetime
 import functools
 
@@ -24,34 +25,65 @@ except ImportError:
 from settings import SP_UUIDS, CERTIFICATE_FILE, ERROR_MQ_QUEUE, ERROR_MQ_HOST
 
 
-DAWA_ADDRESS_URL = 'https://dawa.aws.dk/adresser'
-DAWA_ACCESS_URL = 'https://dawa.aws.dk/adgangsadresser'
+DAWA_ADDRESS_URL = 'http://dawa.aws.dk/adresser'
+DAWA_ACCESS_URL = 'http://dawa.aws.dk/adgangsadresser'
 
 
-def get_address_from_service(dawa_service, address):
+def get_address_from_service(dawa_service, as_tuple, address):
     """Get DAWA UUID from dictionary with correct fields."""
     address['struktur'] = 'mini'
 
-    response = requests.get(
-        url=dawa_service,
-        params=address
-    )
-    js = response.json()
+    # allow looking up by id only
+    if 'id' in address or len(address) > 2:
+        pass
+    else:
+        raise RuntimeError("Insufficient data")
+
+    try:
+        response = requests.get(
+            url=dawa_service,
+            params=address
+        )
+    except MemoryError:
+        print("MemoryError with address = ", address)
+        print("Bug in requests module?")
+        return
+
+    if response.status_code == 429:
+        # Sleep and retry
+        time.sleep(1)
+        response = requests.get(
+            url=dawa_service,
+            params=address
+        )
+    try:
+        js = response.json()
+    except json.decoder.JSONDecodeError:
+        print("Problem looking up address:", str(address),
+              response.text)
+        if response.status_code == 429:
+            print("Blocked by DAWA!")
+            response.raise_for_status()
+        else:
+            raise RuntimeError("Internal Server Error from Dawa")
 
     if len(js) == 1:
         address_uuid = js[0]['id']
     elif len(js) > 1:
-        raise RuntimeError('Non-unique address: {0}'.format(address))
+        raise RuntimeError('Non-unique address')
     else:
         # len(js) == 0
-        raise RuntimeError('Address not found: {0}'.format(address))
-    return address_uuid
+        raise RuntimeError('Address not found')
+    if as_tuple:
+        return address_uuid, js
+    else:
+        return address_uuid
 
 
 get_address_uuid = functools.partial(get_address_from_service,
-                                     DAWA_ADDRESS_URL)
+                                     DAWA_ADDRESS_URL, False)
 access_address_uuid = functools.partial(get_address_from_service,
-                                        DAWA_ACCESS_URL)
+                                        DAWA_ACCESS_URL, False)
 
 
 def fuzzy_address_uuid(addr_str):
@@ -65,7 +97,10 @@ def fuzzy_address_uuid(addr_str):
     if result:
         addrs = result.json()['resultater']
         if len(addrs) == 1:
-            return addrs[0]['adresse']['id']
+            if addrs[0]['adresse']['status'] in [2, 4]:
+                return addrs[0]['adresse']['adgangsadresseid']
+            else:
+                return addrs[0]['adresse']['id']
         elif len(addrs) > 1:
             # print("Adresses found:")
             # print(addrs)
@@ -78,7 +113,8 @@ def fuzzy_address_uuid(addr_str):
                 '(datavask) address not found: {0}'.format(addr_str)
             )
     else:
-        raise RuntimeError("Unable to look up address: {0}".format(addr_str))
+        result.raise_for_status()
+        # raise RuntimeError("Unable to look up address: {0}".format(addr_str))
 
 
 def get_cvr_data(cvr_number):
@@ -121,4 +157,5 @@ def report_error(error_message, error_stack=None, error_object=None):
 
 if __name__ == '__main__':
     report_error("Hej med dig!")
-    print(fuzzy_address_uuid('Parkvej 56, 8920 Randers NV'))
+    uuid = fuzzy_address_uuid('Parkvej 56, 8920 Randers NV')
+    assert uuid == get_address_uuid({'id':uuid})

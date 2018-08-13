@@ -6,6 +6,8 @@ import ava_adapter as adapter
 from helper import get_config
 from logging import getLogger
 
+import cache_interface as cache
+
 
 # Settings (For compatibility)
 # TODO: Make general use of config (Configparser)
@@ -23,7 +25,7 @@ ORGANISATION_UUID = config["parent_organisation"] or None
 # This should be disabled when no commercial certificate is installed
 # (E.g. should be disabled or set to 'no' when using a self signed signature)
 # By default this is set to 'Yes'
-DO_VERIFY_SSL_SIGNATURE = config.getboolean("do_verify_ssl_signature", "yes")
+DO_VERIFY_SSL_SIGNATURE = config.getboolean("do_verify_ssl_signature", True)
 
 # Init logging
 log = getLogger(__name__)
@@ -77,12 +79,14 @@ def batch_generator(resource, list_of_uuids):
 
     # Use switch to determine resource path
     switch = resources.get(resource)
+    table = cache.mapping.get(resource)
 
     resource = switch.get("resource")
     adapter = switch.get("adapter")
 
     # Amount of chuncks a batch contains
-    chunck = 50
+    # max 96 uuids for new lora
+    chunck = 90
 
     # Generate batches until done
     while len(list_of_uuids) > 0:
@@ -100,18 +104,34 @@ def batch_generator(resource, list_of_uuids):
             log.error(uuid_batch)
             return False
 
+        existing_adapted = {
+            d["id"]: d
+            for d in cache.r.table(
+                table
+                ).get_all(*uuid_batch).run(cache.connect())
+        }
+
         batch = []
+
+        # Batch timestamp
+        batch_timestamp = cache.r.now()
 
         # Return iterator
         for result in results:
-            adapted = adapter(result)
+            old_data = existing_adapted.get(result["id"], {}).get("data")
+            try:
+                adapted = adapter(result, existing_adapted.get(result["id"], {}))
+                if not adapted:
+                    raise ValueError()
+                if adapted.get("data") != old_data:
+                    adapted["import_changed"] = True
+                adapted["updated"] = batch_timestamp
+                batch.append(adapted)
 
-            if not adapted:
-                log.error("One faulty result: ")
-                log.error(result)
-                break
-
-            batch.append(adapted)
+            except Exception as e:
+                log.error("error: %r", e)
+                log.error("incoming: %r", result)
+                log.error("retaining: %r", existing_adapted.get(result["id"], {}))
 
         yield batch
 
@@ -185,10 +205,6 @@ def get_request(resource, **params):
 
     results = oio_response.json()["results"]
 
-    # Check if the list is empty
-    if len(results) <= 0:
-        return False
-
     # Currently OIO REST returns a list inside a list,
     # As such, we return the first result which is the actual list
     # {
@@ -196,6 +212,11 @@ def get_request(resource, **params):
     #     [ <objects...> ]  <-- This is what we want
     #   ]
     # }
+
+    # First, check if the list is empty
+    if len(results[0]) <= 0:
+        return False
+
     return results[0]
 
 

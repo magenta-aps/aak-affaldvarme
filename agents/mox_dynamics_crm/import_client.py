@@ -5,17 +5,20 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#
 
-import oio_interface as oio
-import dawa_interface as dawa
-import cache_interface as cache
+# skip module level code when 
+# generating top level documentation
+import sys
+if not sys.base_prefix.endswith("/docs/python-env"):
+    import oio_interface as oio
+    import dawa_interface as dawa
+    import cache_interface as cache
 
-from logging import getLogger
+    from logging import getLogger
 
 
-# Init logging
-log = getLogger(__name__)
+    # Init logging
+    log = getLogger(__name__)
 
 
 def import_all_addresses():
@@ -129,8 +132,15 @@ def run_import():
     """
     Wrapper to run full import.
 
-    :return:
+    records start and finish in a table 'imports'
     """
+
+    import_start = cache.r.now().run(cache.connect())
+    new_import = {
+        "id": import_start.strftime("%Y%m%dT%H%M%S"),
+        "started": import_start,
+        "ended": None
+    }
 
     # Begin
     log.info("Begin import (all) procedure")
@@ -148,3 +158,7 @@ def run_import():
 
     # Done
     log.info("Import procedure completed - Exiting")
+
+    new_import["ended"] = cache.r.now().run(cache.connect())
+    query = cache.r.table("imports").insert(new_import, conflict="update")
+    query.run(cache.connect())

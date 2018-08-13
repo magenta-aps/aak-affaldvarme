@@ -1,0 +1,44 @@
+{
+  "postnummer": "1234",
+  "sidedoer": "th",
+  "etage": "02",
+  "gaeldendePersonnummer": "0102034567",
+  "vejviserbeskyttelse": "false",
+  "boernUnder18": "false",
+  "husnummer": "002",
+  "status": "1",
+  "vejnavn": "Testgade",
+  "foedselsregistreringssted": "Myndighedsnavn for landekode: 9999",
+  "relationer": [
+    {
+      "cprnr": "0202034567",
+      "relation": "mor"
+    },
+    {
+      "cprnr": "0302034567",
+      "relation": "far"
+    },
+    {
+      "cprnr": "0402034567",
+      "relation": "barn"
+    }
+  ],
+  "foedselsdato": "2018-02-13 00:00:00+01",
+  "vejadresseringsnavn": "Testgade",
+  "adressebeskyttelse": "false",
+  "statsborgerskab": "5100",
+  "tilflytningsdato": "2018-02-13 00:00:00+01",
+  "markedsfoeringsbeskyttelse": "true",
+  "alder": "99",
+  "statsborgerskabdato": "2018-02-13 00:00:00+01",
+  "vejkode": "111",
+  "postdistrikt": "København",
+  "fornavn": "First",
+  "civilstand": "G",
+  "adresseringsnavn": "First Last",
+  "kommunekode": "111",
+  "koen": "K",
+  "udrejst": false,
+  "efternavn": "Last",
+  "standardadresse": "Testgade 2,2 th"
+}

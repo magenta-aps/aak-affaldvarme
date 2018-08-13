@@ -12,8 +12,9 @@ import requests
 from .sp_adapter import CVRAdapter
 
 # Settings
-RUN_IN_PROD_MODE = False
+RUN_IN_PROD_MODE = True
 DAWA_SERVICE_URL = 'https://dawa.aws.dk/adresser'
+DAWA_DATAVASK_URL = 'https://dawa.aws.dk/datavask/adresser'
 
 
 def get_cvr_data(cvr_id, service_uuids, service_certificate):
@@ -38,17 +39,12 @@ def get_cvr_data(cvr_id, service_uuids, service_certificate):
     extracted = _extract_zeep_data(zeep_data)
 
     address = {}
-    # address["vejnavn"] = extracted["vejnavn"]
-    if "vejkode" in extracted:
-        address["vejkode"] = extracted["vejkode"]
-    if "husnummer" in extracted:
-        address["husnr"] = extracted["husnummer"]
-    if "etage" in address:
-        address["etage"] = extracted["etage"]
-    if "doer" in address:
-        address["dør"] = extracted["doer"]
-    if "postnummer" in address:
-        address['postnr'] = extracted["postnummer"]
+    address["vejnavn"] = extracted.get("vejnavn")
+    address["vejkode"] = extracted.get("vejkode")
+    address["husnr"] = extracted.get("husnummer")
+    address["etage"] = extracted.get("etage")
+    address["dør"] = extracted.get("doer")
+    address['postnr'] = extracted.get("postnummer")
 
     extracted["dawa_uuid"] = _get_address_uuid(address)
 
@@ -111,17 +107,33 @@ def _extract_zeep_data(data):
 
 def _get_address_uuid(address):
 
-    params = address
+    # try normal lookup - will catch most
+    params = dict(address)
     params['struktur'] = "mini"
+    params.pop("vejnavn")
+
     response = requests.get(
         url=DAWA_SERVICE_URL,
         params=params
     )
-    address_uuid = None
     if response:
         try:
-            address_uuid = response.json()[0]['id']
+            return response.json()[0]['id']
         except (IndexError, KeyError):
             pass
 
-    return address_uuid
+    # datavask lookup - should catch the rest
+    response = requests.get(
+        url=DAWA_DATAVASK_URL,
+        params={
+            "betegnelse":"%(vejnavn)s %(husnr)s %(etage)s %(dør)s, %(postnr)s" % address
+        }
+    )
+    if response:
+        try:
+            if len(response.json()["resultater"]) != 1:
+                return None
+            return response.json()["resultater"][0]['adresse']['id']
+        except (IndexError, KeyError):
+            return None
+

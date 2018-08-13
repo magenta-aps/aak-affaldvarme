@@ -38,7 +38,8 @@ below and will extract all information for relevant customer records. ::
           ,[Etage]
           ,[Sidedørnr]
     FROM Kunde a, Forbrugssted b
-    WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
+    WHERE Tilflytningsdato <= GETDATE()
+    AND Fraflytningsdato >= DATETIMEFROMPARTS({last_year},{last_month},{last_day},0,0,0,0)
     and Afregningsgrpnr <> 999
     and a.ForbrugsstedID = b.ForbrugsstedID
     '''
@@ -75,7 +76,8 @@ SELECT [PersonnrSEnr]
       ,[Etage]
       ,[Sidedørnr]
   FROM Kunde a, Forbrugssted b
-  WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
+  WHERE Tilflytningsdato <= GETDATE()
+  AND Fraflytningsdato >= DATETIMEFROMPARTS({last_year},{last_month},{last_day},0,0,0,0)
   and Afregningsgrpnr <> 999
   and a.ForbrugsstedID = b.ForbrugsstedID
 """
@@ -95,10 +97,12 @@ RELEVANT_TREF_INSTALLATIONS_SQL = """SELECT [InstalNummer],
     a.InstallationID = b.InstallationID
     AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
     AND a.ForbrugsstedID = c.ForbrugsstedID
-    AND c.Tilflytningsdato <= GETDATE() AND c.Fraflytningsdato >= GETDATE()
+    AND c.Tilflytningsdato <= GETDATE()
+    AND c.Fraflytningsdato >= DATETIMEFROMPARTS({last_year},{last_month},{last_day},0,0,0,0)
     AND a.ForbrugsstedID IN (SELECT a.ForbrugsstedID from Kunde a,
     Forbrugssted b
-  WHERE Tilflytningsdato <= GETDATE() AND Fraflytningsdato >= GETDATE()
+  WHERE Tilflytningsdato <= GETDATE()
+  AND Fraflytningsdato >= DATETIMEFROMPARTS({last_year},{last_month},{last_day},0,0,0,0)
   and Afregningsgrpnr <> 999
   and a.ForbrugsstedID = b.ForbrugsstedID)
     """
@@ -112,9 +116,10 @@ TREFINSTALLATION_SQL = """SELECT [InstalNummer],
                                  [DatoFra],
                                  [DatoTil]
     FROM TrefInstallation a, TrefMaaler b
-    WHERE ForbrugsstedID = {0}
+    WHERE ForbrugsstedID = {forbrugssted}
     AND a.InstallationID = b.InstallationID
-    AND b.DatoFra <= GETDATE() and b.DatoTil >= GETDATE()
+    AND b.DatoFra <= GETDATE()
+    AND b.DatoTil >= DATETIMEFROMPARTS({last_year},{last_month},{last_day},0,0,0,0)
     """
 
 #: Alternative address for a given Alt Place ID.

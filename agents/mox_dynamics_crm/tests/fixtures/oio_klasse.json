@@ -1,0 +1,78 @@
+{
+  "id": "fd20055c-cfcd-405e-911d-62b1fdef4efe",
+  "registreringer": [
+    {
+      "attributter": {
+        "klasseegenskaber": [
+          {
+            "beskrivelse": "999-Identifier qp 9",
+            "brugervendtnoegle": "112233",
+            "eksempel": "11223344",
+            "titel": "11223344, Testfacility 999-Identifier qp 9",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2014-07-03 00:00:00+02",
+              "from_included": true,
+              "to": "9999-12-31 00:00:00+01",
+              "to_included": false
+            }
+          }
+        ]
+      },
+      "brugerref": "42c432e8-9c4a-11e6-9f62-873cf34a735f",
+      "fratidspunkt": {
+        "graenseindikator": true,
+        "tidsstempeldatotid": "2017-12-04 11:32:38.707548+01"
+      },
+      "livscykluskode": "Opstaaet",
+      "relationer": {
+        "ejer": [
+          {
+            "objekttype": "Organisation",
+            "uuid": "842092f6-7147-4349-bf8c-626757a28771",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2014-07-03 00:00:00+02",
+              "from_included": true,
+              "to": "9999-12-31 00:00:00+01",
+              "to_included": false
+            }
+          }
+        ],
+        "overordnetklasse": [
+          {
+            "urn": "urn:Varme",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2014-07-03 00:00:00+02",
+              "from_included": true,
+              "to": "9999-12-31 00:00:00+01",
+              "to_included": false
+            }
+          }
+        ]
+      },
+      "tilstande": {
+        "klassepubliceret": [
+          {
+            "publiceret": "Publiceret",
+            "virkning": {
+              "aktoerref": "55f509fb-06e8-45b7-a489-12f0543c876c",
+              "aktoertypekode": "Bruger",
+              "from": "2014-07-03 00:00:00+02",
+              "from_included": true,
+              "to": "9999-12-31 00:00:00+01",
+              "to_included": false
+            }
+          }
+        ]
+      },
+      "tiltidspunkt": {
+        "tidsstempeldatotid": "infinity"
+      }
+    }
+  ]
+}

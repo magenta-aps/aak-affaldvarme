@@ -5,10 +5,13 @@ import time
 import json
 import adal
 import requests
+import re
 
 from logging import getLogger
 from helper import get_config
 
+# If this is set to True, the agent will not write anything to CRM.
+DO_WRITE = False
 
 # Configuration section
 # A configuration block must be added to config.ini
@@ -70,6 +73,19 @@ headers = {
     "Content-Type": "application/json; charset=utf-8",
     "Prefer": "return=representation"
 }
+
+
+class DummyRequest:
+    """Simulate a real return value from requests."""
+
+    def __init__(self, status_code, json_field=None):
+        self.status_code = status_code
+        self.json_field = json_field
+        self.text = "Hej!"
+
+    def json(self):
+        from uuid import uuid4
+        return {self.json_field: str(uuid4())}
 
 
 def get_token():
@@ -230,6 +246,7 @@ def post_request(resource, payload):
 
         # Generate a new token
         log.info("Generating a new token")
+        request_token()
 
         # Sleep 10 seconds
         time.sleep(10)
@@ -290,6 +307,7 @@ def patch_request(resource, payload):
 
         # Generate a new token
         log.info("Generating a new token")
+        request_token()
 
         # Sleep 10 seconds
         time.sleep(10)
@@ -391,7 +409,10 @@ def store_address(payload):
 
     log.info("Creating address in CRM")
     log.debug(payload)
-    response = post_request(resource, payload)
+    if DO_WRITE:
+        response = post_request(resource, payload)
+    else:
+        response = DummyRequest(201, "ava_adresseid")
 
     crm_guid = response.json()["ava_adresseid"]
 
@@ -402,6 +423,42 @@ def store_address(payload):
         return False
 
     return crm_guid
+
+
+def update_address(identifier, payload):
+    """
+    Wrapper function to update CRM address via a PATCH request.
+
+    CRM:    Adresse (ava_adresses)
+
+    :param identifier:  DAR/DAWA identifier (Type: uuid)
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns updated CRM object
+    """
+
+    # REST resource
+    resource = "ava_adresses({identifier})".format(
+        identifier=identifier
+    )
+
+    log.info("Updating address in CRM")
+    if DO_WRITE:
+        response = patch_request(resource, payload)
+    else:
+        response = DummyRequest(200)
+
+    # Return False if not created
+    if response.status_code != 200:
+        log.error(
+            "Error updating address in CRM for"
+            " resource: {resource}".format(**locals())
+        )
+        log.error(response.text)
+        return False
+
+    log.info("Address updated")
+    return response
 
 
 def store_contact(payload):
@@ -430,7 +487,10 @@ def store_contact(payload):
     # Attempt to store
     log.info("Creating contact in CRM")
     log.debug(payload)
-    response = post_request(resource, payload)
+    if DO_WRITE:
+        response = post_request(resource, payload)
+    else:
+        response = DummyRequest(201, "contactid")
 
     # Return False if not created
     if response.status_code != 201:
@@ -467,11 +527,17 @@ def update_contact(identifier, payload):
     )
 
     log.info("UPDATING contact in CRM")
-    response = patch_request(resource, payload)
+    if DO_WRITE:
+        response = patch_request(resource, payload)
+    else:
+        response = DummyRequest(200)
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error updating contact in CRM")
+        log.error(
+            "Error updating contact in CRM"
+            " for resource: {resource}".format(**locals())
+        )
         log.error(response.text)
         return False
 
@@ -503,7 +569,10 @@ def store_kunderolle(payload):
     # Attempt to store
     log.info("Creating kunderolle in CRM")
     log.debug(payload)
-    response = post_request(resource, payload)
+    if DO_WRITE:
+        response = post_request(resource, payload)
+    else:
+        response = DummyRequest(201, "ava_kunderolleid")
 
     # Return False if not created
     if response.status_code != 201:
@@ -522,6 +591,43 @@ def store_kunderolle(payload):
         return False
 
     return crm_guid
+
+
+def update_kunderolle(identifier, payload):
+    """
+    Wrapper function to update CRM account via a PATCH request.
+
+    OIO:    Organisationfunktion
+    CRM:    Kunderolle (ava_kunderolles)
+
+    :param identifier:  CRM object identifier (Type: uuid)
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns updated CRM object
+    """
+
+    # REST resource
+    resource = "ava_kunderolles({identifier})".format(
+        identifier=identifier
+    )
+
+    log.info("Updating CRM kunderolle")
+    if DO_WRITE:
+        response = patch_request(resource, payload)
+    else:
+        response = DummyRequest(200)
+
+    # Return False if not created
+    if response.status_code != 200:
+        log.error(
+            "Error updating CRM kunderolle for"
+            " resource: {resource}".format(**locals())
+        )
+        log.error(response.text)
+        return False
+
+    log.info("CRM kunderolle updated")
+    return response
 
 
 def store_account(payload):
@@ -547,7 +653,10 @@ def store_account(payload):
         return None
 
     log.info("Creating account in CRM")
-    response = post_request(resource, payload)
+    if DO_WRITE:
+        response = post_request(resource, payload)
+    else:
+        response = DummyRequest(201, "accountid")
 
     # Return False if not created
     if response.status_code != 201:
@@ -563,6 +672,43 @@ def store_account(payload):
         return False
 
     return crm_guid
+
+
+def update_account(identifier, payload):
+    """
+    Wrapper function to update CRM account via a PATCH request.
+
+    OIO:    Interessefaellesskab
+    CRM:    Kundeforhold (accounts)
+
+    :param identifier:  CRM object identifier (Type: uuid)
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns updated CRM object
+    """
+
+    # REST resource
+    resource = "accounts({identifier})".format(
+        identifier=identifier
+    )
+
+    log.info("Updating CRM account")
+    if DO_WRITE:
+        response = patch_request(resource, payload)
+    else:
+        response = DummyRequest(200)
+
+    # Return False if not created
+    if response.status_code != 200:
+        log.error(
+            "Error updating CRM account for"
+            " resource: {resource}".format(**locals())
+        )
+        log.error(response.text)
+        return False
+
+    log.info("Account updated")
+    return response
 
 
 def store_aftale(payload):
@@ -587,7 +733,10 @@ def store_aftale(payload):
         return None
 
     log.info("Creating aftale in CRM")
-    response = post_request(resource, payload)
+    if DO_WRITE:
+        response = post_request(resource, payload)
+    else:
+        response = DummyRequest(201, "ava_aftaleid")
 
     # Return False if not created
     if response.status_code != 201:
@@ -601,6 +750,43 @@ def store_aftale(payload):
         return False
 
     return crm_guid
+
+
+def update_aftale(identifier, payload):
+    """
+    Wrapper function to update CRM aftale via a PATCH request.
+
+    OIO:    Indsats
+    CRM:    Aftale (ava_aftales)
+
+    :param identifier:  CRM object identifier (Type: uuid)
+    :param payload:     Payload (dictionary)
+
+    :return:            Returns updated CRM object
+    """
+
+    # REST resource
+    resource = "ava_aftales({identifier})".format(
+        identifier=identifier
+    )
+
+    log.info("Updating CRM aftale")
+    if DO_WRITE:
+        response = patch_request(resource, payload)
+    else:
+        response = DummyRequest(200)
+
+    # Return False if not created
+    if response.status_code != 200:
+        log.error(
+            "Error updating CRM aftale for"
+            " resource: {resource} ".format(**locals())
+        )
+        log.error(response.text)
+        return False
+
+    log.info("CRM aftale updated")
+    return response
 
 
 def store_produkt(payload):
@@ -625,7 +811,10 @@ def store_produkt(payload):
         return None
 
     log.info("Creating produkt in CRM")
-    response = post_request(resource, payload)
+    if DO_WRITE:
+        response = post_request(resource, payload)
+    else:
+        response = DummyRequest(201, "ava_installationid")
 
     # Return False if not created
     if response.status_code != 201:
@@ -660,11 +849,17 @@ def update_produkt(identifier, payload):
     )
 
     log.info("UPDATING produkt in CRM")
-    response = patch_request(resource, payload)
+    if DO_WRITE:
+        response = patch_request(resource, payload)
+    else:
+        response = DummyRequest(200)
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error updating produkt in CRM")
+        log.error(
+            "Error updating CRM produkt for"
+            " resource: {resource} ".format(**locals())
+        )
         log.error(response.text)
         return False
 
@@ -672,37 +867,79 @@ def update_produkt(identifier, payload):
     return response
 
 
-def contact_and_aftale_link(aftale_guid, contact_guid):
-    """
-    Temporary solution to create a link between contact and aftale
-    NOTES: This should be replaced by the cache functionality
-
-    :param aftale_guid:     CRM identifier (GUID) for entity: ava_aftale
-    :param contact_guid:    CRM identifier (GUID) for entity: contact
-
-    :return:                Nothing is returned from CRM,
-                            returning True when request is successfull
+def mend_contact_and_aftale_link(contact, aftale, skip_if_no_changes=True):
+    """ link from aftale to contact - aftale has it cached
     """
 
     resource = "ava_aftales({guid})/ava_aktoerens_aftaler/$ref".format(
-        guid=aftale_guid
+        guid=aftale["external_ref"]
     )
 
-    odata_id = "{base}/contacts({guid})".format(
+    # the new link is absolute (server-specific)
+
+    contact_ref_link = "{base}/contacts({guid})".format(
         base=base_endpoint,
-        guid=contact_guid
+        guid=contact["external_ref"]
     )
+
+    # get or setget existing contact external_refs in aftale
+    # we don't cache the links directly as they are instance-bound
+    # instead we store the external_refs of the linked contacts
+
+    if not aftale.get("contact_refs"):
+        # Not existing, None or empty
+        response = get_request(resource)
+        if response.status_code == 200:
+            aftale["contact_refs"] = [
+                re.findall("\((.*)\)", v["@odata.id"])[0]
+                for v in response.json()["value"]
+            ]
+
+    # see if the new link is already stored
+
+    if (
+        # aftale.get because get_request above may have been <> 200
+        # and then we just try to insert
+        skip_if_no_changes and
+        contact["external_ref"] in aftale.get("contact_refs", [])
+    ):
+        log.debug(
+            "skipping linking contact:{contact_id} to this aftale:{id}"
+            " as it is already in contact_refs:{contact_refs}".format(
+                contact_id=contact["external_ref"],
+                **aftale
+            )
+        )
+        return True
 
     payload = {
-        "@odata.id": odata_id
+        "@odata.id": contact_ref_link
     }
 
-    response = post_request(resource, payload)
+    if DO_WRITE:
+        response = post_request(resource, payload)
+    else:
+        response = DummyRequest(200)
 
     # Return False if not created
     if response.status_code != 200:
-        log.error("Error creating link between contact and aftale")
+        log.error(
+            "Error creating link between contact:{contact}"
+            " and aftale:{aftale} for resource:{resource} with"
+            " payload:{payload}".format(**locals())
+        )
+
         log.error(response.text)
+
+        if (
+            not skip_if_no_changes and
+            "matching key values already exists" in response.text
+        ):
+            # we asked for this behaviour - thus it is not an error
+            return True
         return False
+
+    # link has been successfully inserted in crm, cache it
+    aftale.setdefault("contact_refs", []).append(contact["external_ref"])
 
     return True

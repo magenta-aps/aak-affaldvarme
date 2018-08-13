@@ -8,9 +8,11 @@
 #
 
 import sys
+import functools
 
 from multiprocessing.dummy import Pool
 
+import ee_utils
 from mssql_config import username, password, server, database
 from ee_utils import connect, int_str, cpr_cvr
 from ee_oio import KUNDE, LIGESTILLINGSKUNDE
@@ -24,25 +26,21 @@ from crm_utils import delete_agreement, delete_product
 from crm_utils import add_product_to_agreement, update_product
 from crm_utils import update_customer, update_agreement, read_agreement
 from crm_utils import update_customer_relation, write_agreement_dict
+from crm_utils import get_sp_address
 
 from ee_utils import get_forbrugssted_address_uuid
 from ee_utils import get_products_for_location
-from ee_utils import get_alternativsted_address_uuid
+from ee_utils import get_alternativsted_address_uuid, say, hide_cpr
 
 from ee_data import read_customer_records, store_customer_records
 from ee_data import retrieve_customer_records, read_installation_records
 from ee_data import store_installation_records, retrieve_installation_records
-
+from ee_data import has_customer_records
+from ee_data import get_crm_failed_customer_numbers
+from ee_data import get_crm_failed_installation_numbers
+from ee_data import read_lastrun_dict, write_lastrun_dict
 from service_clients import report_error, fuzzy_address_uuid
-
-
-VERBOSE = False
-
-
-def say(*args):
-    """Local utility to give output in verbose mode."""
-    if __name__ == '__main__' and VERBOSE:
-        print(*args)
+from cprcompletion import complete_cprs_in_custdict
 
 
 """CUSTOMER RELATED FUNCTIONS.
@@ -63,12 +61,13 @@ def import_customer(id_and_fields):
 
         new_customer_uuid = create_customer(
             id_number=id_number,
-            key=id_number,
+            key=customer_number,
             name=fields['KundeNavn'],
             master_id=master_id,
             phone=fields['Telefonnr'],
             email=fields['EmailKunde'],
             mobile=fields['MobilTlf'],
+            customer_number=customer_number
         )
 
         if new_customer_uuid:
@@ -83,13 +82,14 @@ def import_customer(id_and_fields):
                 role = 'ligestilling'
             report_error(
                 "No customer created: {} {} {} ({})".format(
-                    fields['KundeNavn'], id_number, customer_number, role
+                    fields['KundeNavn'], hide_cpr(id_number),
+                    customer_number, role
                 )
             )
             return
 
 
-def import_customer_record(fields):
+def _import_customer_record(fields, lastrun_dict={}):
     """Import a new customer record including relation, agreement, products.
 
     Assume customers themselves have already been imported.
@@ -109,7 +109,8 @@ def import_customer_record(fields):
     # Customer *must* have been created during previous import step
     if not customer_uuid:
         # This must have failed
-        print("Customer not found:", id_number, fields['KundeNavn'])
+        report_error("Customer not found:", hide_cpr(id_number),
+                     fields['KundeNavn'])
 
     # Create customer relation
     # NOTE: In KMD EE, there's always one customer relation for each row in
@@ -120,7 +121,9 @@ def import_customer_record(fields):
      forbrugssted_address_uuid) = get_forbrugssted_address_uuid(fields)
 
     if not forbrugssted_address_uuid:
-        report_error(forbrugssted_address)
+        report_error("No Forbrugssted address found ({}): {}".format(
+            customer_number, forbrugssted_address
+        ))
     cr_name = "{0}, {1}".format(VARME, forbrugssted_address)
     cr_type = VARME  # Always for KMD EE
     cr_address_uuid = forbrugssted_address_uuid
@@ -129,22 +132,25 @@ def import_customer_record(fields):
     )
 
     if not cr_uuid:
-        print("Unable to create customer relation for customer {}".format(
-            customer_number)
+        report_error(
+            "Unable to create customer relation for customer {}".format(
+                customer_number)
         )
 
     # This done, create customer roles & link customer and relation
-    role_uuid = create_customer_role(customer_uuid, cr_uuid, KUNDE)
-    assert(role_uuid)
+    create_customer_role(customer_uuid, cr_uuid, KUNDE)
 
     # Now handle partner/roommate, ignore empty CPR numbers
     if len(ligest_personnr) > 1:
 
         ligest_uuid = lookup_customer(ligest_personnr)
         # Customer was already created before this step
-        if not customer_uuid:
+        if not ligest_uuid:
             # This must have failed
-            print("Ligest Customer not found:", id_number, fields['KundeNavn'])
+            report_error(
+                "Ligest Customer not found:", hide_cpr(id_number),
+                fields['KundeNavn']
+            )
 
         create_customer_role(
             ligest_uuid, cr_uuid, LIGESTILLINGSKUNDE
@@ -158,12 +164,14 @@ def import_customer_record(fields):
     try:
         invoice_address_uuid = fuzzy_address_uuid(invoice_address)
     except Exception as e:
-        invoice_address_uuid = None
-        report_error(
-            "Customer {1}: Unable to lookup invoicing address: {0}".format(
-                str(e), id_number
+        # try ServicePlatformen
+        invoice_address_uuid = get_sp_address(id_number, customer_number)
+        if not invoice_address_uuid:
+            report_error(
+                "Customer {1}: Unable to lookup invoicing address: {0}".format(
+                    str(e), customer_number
+                )
             )
-        )
     agreement_start_date = fields['Tilflytningsdato']
     agreement_end_date = fields['Fraflytningsdato']
 
@@ -172,19 +180,26 @@ def import_customer_record(fields):
 
     forbrugssted = fields['ForbrugsstedID']
 
-    products = get_products_for_location(forbrugssted)
+    products = get_products_for_location(forbrugssted, lastrun_dict)
 
     no_of_products = len(products)
 
     product_uuids = []
 
     for p in products:
+
         meter_number = p['Målernr']
         meter_type = p['MaalerTypeBetegnel']
+        name="{0}, {1} {2}".format(
+            meter_number, p['Målertypefabrikat'], meter_type
+        )
+        
+        product_uuid = lookup_product(p['InstalNummer'])
+        if product_uuid:
+            product_uuids.append(product_uuid)
+            continue
         product_uuid = create_product(
-            name="{0}, {1} {2}".format(
-                meter_number, p['Målertypefabrikat'], meter_type
-            ),
+            name=name,
             identification=p['InstalNummer'],
             installation_type=VARME,
             meter_number=meter_number,
@@ -205,6 +220,11 @@ def import_customer_record(fields):
         product_uuids
     )
     assert(agreement_uuid)
+
+
+import_customer_record = functools.partial(
+    _import_customer_record, lastrun_dict=read_lastrun_dict()
+)
 
 
 def update_customer_record(fields, changed_fields):
@@ -231,10 +251,7 @@ def delete_customer_record(customer_number):
         cr_uuid = lookup_customer_relation(customer_number)
         # This should exist provided everything is up to date!
         if not cr_uuid:
-            print("Customer number {} not found.".format(customer_number))
-            report_error(
-                "Customer number {} not found.".format(customer_number)
-            )
+            # Trying to delete a customer that doesn't exist is not an error.
             return
 
         # Look up the customer roles and customers for this customer relation.
@@ -256,10 +273,15 @@ def delete_customer_record(customer_number):
             products = lookup_products(agreement_uuid=agreement_uuid)
 
             for p in products:
-                delete_product(p)
-
+                # delete_product(p)
+                # temporary logging
+                say("releasing customer %r from product %s" % (
+                    customer_number,
+                    p
+                ))
             delete_agreement(agreement_uuid)
         # Now go ahead and delete the customer relation
+
         delete_customer_relation(cr_uuid)
 
 
@@ -302,7 +324,7 @@ def import_installation_record(fields):
             # add it to the agreement
             add_product_to_agreement(product_uuid, agreement_uuid)
     else:
-        print("No agreement found for customer number {}".format(
+        say("No agreement found for customer number {}".format(
             customer_number))
 
 
@@ -316,7 +338,6 @@ def update_installation_record(old_fields, changed_fields):
             say("Error: Product {} not found".format(
                 old_fields['InstalNummer']))
             return
-        say("Updating product: {}".format(changed_fields))
         update_product(product_uuid, old_fields, changed_fields)
 
 
@@ -357,26 +378,36 @@ def main():
     """
     # argument parsing
     import argparse
-    global VERBOSE
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--verbose', action='store_true',
                         help='print helpful comments during execution')
-    parser.add_argument('--initial-import', action='store_true',
-                        help='only perform inital import')
     args = parser.parse_args()
-    VERBOSE = args.verbose
-    initial_import = args.initial_import
+    ee_utils.VERBOSE = args.verbose
+
+    # Decide if this is the initial import.
+    initial_import = not has_customer_records()
+    say("Initial import: {}".format("YES" if initial_import else "NO"))
+
+    # last ran when (defaults to today)
+    lastrun_dict = read_lastrun_dict()
 
     """CUSTOMERS AND CUSTOMER RELATIONS"""
     connection = connect(server, database, username, password)
     cursor = connection.cursor(as_dict=True)
-    new_values = read_customer_records(cursor)
-    new_installation_values = read_installation_records(cursor)
+    new_values = read_customer_records(cursor, lastrun_dict)
+    new_installation_values = read_installation_records(cursor, lastrun_dict)
     old_installation_values = retrieve_installation_records()
     connection.close()
 
     old_values = retrieve_customer_records()
+
+    # restore already found cpr_numbers in read values,
+    # alternatively, if they miss the last four, find them
+    for k, fields in list(new_values.items()):
+        if not complete_cprs_in_custdict(fields, old_values.get(k)):
+            new_values.pop(k)
+            continue
 
     say('Comparison, new_values == old_values:', new_values == old_values)
 
@@ -392,21 +423,26 @@ def main():
     # Build a mapping between customer numbers and
     # dictionaries containing only the changed values.
 
+    crm_failed = get_crm_failed_customer_numbers()
     changed_records = {
         k: {
             f: v for f, v in new_values[k].items() if
-            new_values[k][f] != old_values[k][f]
-          } for k in common_keys if new_values[k] != old_values[k]
+            new_values[k][f] != old_values[k][f] or k in crm_failed
+          } for k in common_keys if (
+              new_values[k] != old_values[k] or k in crm_failed
+          )
     }
 
     say("Number of changed customer records:", len(changed_records))
+
+    # we are no longer deleting customers - their agreements just expire
     # Handle notifications for customer part, do the installations afterwards.
-    if len(lost_keys) > 0:
-        say("... deleting {} customers...".format(len(lost_keys)))
-        for k in lost_keys:
-            # These records are no longer active and should be deleted in LoRa
-            delete_customer_record(k)
-        say("... done")
+    #if len(lost_keys) > 0:
+    #    say("... deleting {} customers...".format(len(lost_keys)))
+    #    for k in lost_keys:
+    #        # These records are no longer active and should be deleted in LoRa
+    #        delete_customer_record(k)
+    #    say("... done")
     # New customer relations - import along with agreements & products
     # First explicitly create the new customers
 
@@ -423,7 +459,7 @@ def main():
         say("... importing {} new customers ...".format(
             len(new_customer_fields)
         ))
-        p = Pool(15)
+        p = Pool(10)
         p.map(import_customer, new_customer_fields.items())
         p.close()
         p.join()
@@ -433,8 +469,11 @@ def main():
         say('... importing {} new customer relations ...'.format(
             len(new_keys)
         ))
-        p = Pool(16)
-        p.map(import_customer_record, [new_values[k] for k in new_keys])
+        p = Pool(10)
+        p.map(
+            import_customer_record,
+            [new_values[k] for k in new_keys]
+        )
         p.close()
         p.join()
         say("... done")
@@ -468,24 +507,30 @@ def main():
     say("lost installations:", len(lost_installation_keys))
     say("existing installations:", len(common_installation_keys))
 
+    crm_failed = get_crm_failed_installation_numbers()
     changed_installation_records = {
         k: {
-            f: v for f, v in new_installation_values[k].items() if
-            new_installation_values[k][f] != old_installation_values[k][f]
-          } for k in common_installation_keys if
-        new_installation_values[k] != old_installation_values[k]
+            f: v for f, v in new_installation_values[k].items() if (
+                new_installation_values[k][f] != old_installation_values[k][f]
+                or k in crm_failed
+            )
+          } for k in common_installation_keys if (
+            new_installation_values[k] != old_installation_values[k]
+            or k in crm_failed
+          )
     }
 
     say("Number of changed installation records:", len(changed_records))
     #  Those that disappear are expired, either by the customer disappearing or
     #  by crossing the expiry date. If the customer disappeared, it should
     #  already be gone.
-    say("... deleting {} expired installations ...".format(
-        len(lost_installation_keys)
-    ))
-    for k in lost_installation_keys:
-        delete_installation_record(k)
-    say("... done")
+    #say("... deleting {} expired installations ...".format(
+    #    len(lost_installation_keys)
+    #))
+    #for k in lost_installation_keys:
+    #    say("deleting product %s" % k)
+    #    delete_installation_record(k)
+    #say("... done")
 
     # New records may come into being by entering the valid period.
     # if so, they should be attached to the Aftale corresponding to this
@@ -511,6 +556,7 @@ def main():
     # All's well that ends well
     store_customer_records(new_values)
     store_installation_records(new_installation_values)
+    write_lastrun_dict(lastrun_dict)
 
 
 if __name__ == '__main__':

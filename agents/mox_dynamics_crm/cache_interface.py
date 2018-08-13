@@ -5,6 +5,8 @@ import rethinkdb as r
 from helper import get_config
 from logging import getLogger
 
+import datetime
+
 # Temporary mapping
 mapping = {
     "bruger": "contacts",
@@ -15,10 +17,13 @@ mapping = {
     "indsats": "ava_aftales",
     "organisationfunktion": "ava_kunderolles",
     "klasse": "ava_installations",
+    "imports": "imports",
 }
 
 # Init logger
 log = getLogger(__name__)
+
+DO_WRITE = True
 
 
 def connect():
@@ -30,7 +35,10 @@ def connect():
     """
 
     # Get configuration
-    config = get_config("cache_layer")
+    # config = get_config("cache_layer")
+
+    # Changed for compatibility
+    config = get_config("rethinkdb")
 
     if not config:
         raise Exception("Unable to connect")
@@ -85,6 +93,9 @@ def insert(table, payload, conflict="error"):
     # Debug
     log.debug(payload)
 
+    if not DO_WRITE:
+        return {"errors": ["dry run"], "first_error": "dry run"}
+
     with connect() as connection:
         query = r.table(table).insert(payload, conflict=conflict)
         run = query.run(connection)
@@ -127,6 +138,9 @@ def update(table, document):
 
     identifier = document["id"]
 
+    if not DO_WRITE:
+        return {"errors": ["dry run"], "first_error": "dry run"}
+
     with connect() as connection:
         query = r.table(table).get(identifier)
         update = query.update(document)
@@ -152,6 +166,24 @@ def update(table, document):
         return run
 
 
+def delete(table, uuid):
+    """ delete an entry from cache
+    """
+    with connect() as connection:
+        query = r.table(table).get(uuid).delete()
+        run = query.run(connection)
+
+        # Debug
+        log.debug(
+            "{table}: {query}".format(
+                table=table,
+                query=run
+            )
+        )
+
+        return run
+
+
 def get(table, uuid):
     """
     Parent function to retrieve a specific document by 'id'.
@@ -166,8 +198,8 @@ def get(table, uuid):
         query = r.table(table).get(uuid)
         run = query.run(connection)
 
-        # Info
-        log.info(
+        # Debug
+        log.debug(
             "{table}: {query}".format(
                 table=table,
                 query=run
@@ -196,17 +228,60 @@ def filter(table, **params):
 
     with connect() as connection:
         query = r.table(table).filter(params)
-        run = query.run(connection)
+        result = query.run(connection)
 
         # Info
         log.info(
             "{table}: {query}".format(
                 table=table,
-                query=run
+                query=result
             )
         )
 
-        return run
+        return result
+
+
+def get_latest_import_interval():
+    _import = list(r.table("imports").order_by(
+        index=r.desc("id")
+    ).limit(1).run(connect()))[0]
+    if not _import["ended"]:
+        raise ValueError("Latest import is not finished")
+    else:
+        return _import["started"], _import["ended"]
+
+
+def all_obsolete(table):
+    """
+        only return the objects that were not
+        refreshed during the latest import
+        isinstance datetime because really
+        obsolete objects has updated be a string
+    """
+    started, ended = get_latest_import_interval()
+    return [
+        x for x in all(table)
+        if (
+            not isinstance(x["updated"], datetime.datetime)
+            or x["updated"] < started
+        )
+    ]
+
+
+def all_current(table):
+    """  only return the objects that were
+         refreshed during the latest import
+         isinstance datetime because really
+         obsolete objects has updated be a string
+    """
+    started, ended = get_latest_import_interval()
+    return [
+        x for x in all(table)
+        if (
+            isinstance(x["updated"], datetime.datetime)
+            and x["updated"] > started
+        )
+    ]
 
 
 def all(table):
@@ -268,16 +343,12 @@ def find_indsats(uuid):
     :param uuid:    Document identifier (Type: uuid)
     :return:        Returns either empty list or list of documents
     """
+    documents = r.table("ava_aftales").get_all(
+        uuid, index="interessefaellesskab_ref"
+        ).run(connect())
 
-    documents = []
-
-    for document in filter(
-        table=mapping.get("indsats"),
-        interessefaellesskab_ref=uuid
-    ):
-        documents.append(document)
-
-    return documents[0]
+    for d in documents:
+        return d
 
 
 def store(resource, payload):

@@ -5,8 +5,13 @@ from logging import getLogger
 
 log = getLogger(__name__)
 
+CRM_FIRSTNAME_LIMIT = 150  # issue 22298 lifted to 150
+CRM_LASTNAME_LIMIT = 100  # issue 22298 lifted to 100
+CRM_MIDDLENAME_LIMIT = 80  # issue 22298 lifted to 80
+CRM_FULLNAME_LIMIT = 260  # issue 22298 N/A
 
-def ava_bruger(entity):
+
+def ava_bruger(entity, old_adapted):
     """
     Adapter to convert (LORA) bruger object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -63,11 +68,11 @@ def ava_bruger(entity):
 
     try:
         # Filter "living" address
-        residence = (key for key in relationer[
-                     "adresser"] if "uuid" in key.keys())
+        addresses = relationer.get("adresser", {})
+        residence = (addr for addr in addresses if "uuid" in addr)
 
         # Filter other address items
-        other = (key for key in relationer["adresser"] if "urn" in key.keys())
+        other = (addr for addr in addresses if "urn" in addr)
 
         for item in residence:
             dawa_address = item["uuid"]
@@ -83,10 +88,13 @@ def ava_bruger(entity):
             if "urn:email" in item["urn"]:
                 kmd_ee["email"] = item["urn"].split(":")[-1]
 
-    except:
+    except Exception as error:
         # TODO: Must be sent to error queue for manual processing
         log.error("Error getting address from: {0}".format(origin_id))
         log.error("Relationer: {0}".format(relationer))
+
+        # Debug
+        log.debug(error)
 
     # Convert gender to CRM values
     gender = egenskaber.get("ava_koen")
@@ -125,35 +133,46 @@ def ava_bruger(entity):
     # Cache layer compliant document
     document = {
         "id": origin_id,
-        "external_ref": None,
+        "external_ref": old_adapted.get("external_ref"),
         "dawa_ref": dawa_address,
-        "data": {
-            "firstname": firstname,
-            "middlename": middlename,
-            "lastname": lastname,
-            "ava_eradressebeskyttet": ava_eradressebeskyttet,
-            "ava_modtag_sms_notifikation": ava_modtag_sms_notifikation,
-            "ava_cpr_nummer": ava_cpr_id,
-            "gendercode":  gendercode,
-
-            # KMD EE
-            "ava_kmdeemasterid": ava_kmdeemasterid,
-            "ava_mobilkmdee": kmd_ee.get("mobile"),
-            "ava_fastnetkmdee": kmd_ee.get("landline"),
-            "ava_emailkmdee": kmd_ee.get("email"),
-
-            # Arosia fields (Not supported by CRM)
-            # "telephone1": None,
-            # "emailaddress1": None
-            # "arosia_telephone": None,
-            # "ava_arosiaid": None
-        }
+        "data": dict(old_adapted.get("data", {}))
     }
+
+    document["data"].update({
+        "firstname": (
+            firstname[:CRM_FIRSTNAME_LIMIT]
+            if firstname else None
+        ),
+        "middlename": (
+            middlename[:CRM_MIDDLENAME_LIMIT]
+            if middlename else None
+        ),
+        "lastname": (
+            lastname[:CRM_LASTNAME_LIMIT]
+            if lastname else None
+        ),
+        "ava_eradressebeskyttet": ava_eradressebeskyttet,
+        "ava_modtag_sms_notifikation": ava_modtag_sms_notifikation,
+        "ava_cpr_nummer": ava_cpr_id,
+        "gendercode":  gendercode,
+
+        # KMD EE
+        "ava_kmdeemasterid": ava_kmdeemasterid,
+        "ava_mobilkmdee": kmd_ee.get("mobile"),
+        "ava_fastnetkmdee": kmd_ee.get("landline"),
+        "ava_emailkmdee": kmd_ee.get("email"),
+
+        # Arosia fields (Not supported by CRM)
+        # "telephone1": None,
+        # "emailaddress1": None
+        # "arosia_telephone": None,
+        # "ava_arosiaid": None
+    })
 
     return document
 
 
-def ava_organisation(entity):
+def ava_organisation(entity, old_adapted):
     """
     Adapter to convert (LORA) object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -187,10 +206,11 @@ def ava_organisation(entity):
     kmd_ee = {}
 
     # Filter "living" address
-    residence = (key for key in relationer["adresser"] if "uuid" in key.keys())
+    residence = (addr for addr in relationer.get("adresser", []) if
+                 "uuid" in addr)
 
     # Filter other address items
-    other = (key for key in relationer["adresser"] if "urn" in key.keys())
+    other = (addr for addr in relationer.get("adresser", []) if "urn" in addr)
 
     # Fetch address uuid
     dawa_address = None
@@ -206,6 +226,9 @@ def ava_organisation(entity):
         if "urn:mobile" in item["urn"]:
             kmd_ee["mobile"] = item["urn"].split(":")[-1]
 
+        if "urn:email" in item["urn"]:
+            kmd_ee["email"] = item["urn"].split(":")[-1]
+
     # Fetch CVR ID from field
     cvr_id = relationer.get("virksomhed")[0]["urn"].split(":")
     ava_cvr_id = cvr_id[-1]
@@ -217,33 +240,35 @@ def ava_organisation(entity):
     # Cache layer compliant document
     document = {
         "id": origin_id,
-        "external_ref": None,
+        "external_ref": old_adapted.get("external_ref"),
         "dawa_ref": dawa_address,
-        "data": {
-            "firstname": organisationsnavn,
-            "ava_eradressebeskyttet": ava_eradressebeskyttet,
-            "ava_modtag_sms_notifikation": ava_modtag_sms_notifikation,
-            "ava_cvr_nummer": ava_cvr_id,
-            "ava_virksomhedsform": ava_virksomhedsform,
-
-            # KMD EE
-            "ava_kmdeemasterid": ava_kmdeemasterid,
-            "ava_mobilkmdee": kmd_ee.get("mobile"),
-            "ava_fastnetkmdee": kmd_ee.get("landline"),
-            "ava_emailkmdee": kmd_ee.get("email"),
-
-            # Arosia
-            # "telephone1": None,
-            # "emailaddress1": None
-            # "arosia_telephone": None,
-            # "ava_arosiaid": None,
-        }
+        "data": dict(old_adapted.get("data", {}))
     }
+
+    document["data"].update({
+        "firstname": organisationsnavn[:CRM_FIRSTNAME_LIMIT],
+        "ava_eradressebeskyttet": ava_eradressebeskyttet,
+        "ava_modtag_sms_notifikation": ava_modtag_sms_notifikation,
+        "ava_cvr_nummer": ava_cvr_id,
+        "ava_virksomhedsform": ava_virksomhedsform,
+
+        # KMD EE
+        "ava_kmdeemasterid": ava_kmdeemasterid,
+        "ava_mobilkmdee": kmd_ee.get("mobile"),
+        "ava_fastnetkmdee": kmd_ee.get("landline"),
+        "ava_emailkmdee": kmd_ee.get("email"),
+
+        # Arosia
+        # "telephone1": None,
+        # "emailaddress1": None
+        # "arosia_telephone": None,
+        # "ava_arosiaid": None,
+    })
 
     return document
 
 
-def ava_kunderolle(entity):
+def ava_kunderolle(entity, old_adapted):
     """
     Adapter to convert (LORA) object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -269,7 +294,7 @@ def ava_kunderolle(entity):
 
     # Fetch references
     tilknyttedebrugere = relationer.get("tilknyttedebrugere")[0]
-    customer_ref = tilknyttedebrugere["uuid"]
+    customer_ref = tilknyttedebrugere.get("uuid")
 
     rolle_ref = egenskaber.get("funktionsnavn")
 
@@ -293,22 +318,28 @@ def ava_kunderolle(entity):
     # Related reference
     kundeforhold = relationer.get("tilknyttedeinteressefaellesskaber")[0]
     ava_kundeforhold = kundeforhold.get("uuid")
+    if not ava_kundeforhold:
+        log.error(
+            "Kundeforhold not found on role: {0}".format(entity)
+        )
 
     # Cache layer compliant document
     document = {
         "id": origin_id,
-        "external_ref": None,
+        "external_ref": old_adapted.get("external_ref"),
         "contact_ref": customer_ref,
         "interessefaellesskab_ref": ava_kundeforhold,
-        "data": {
-            "ava_rolle": ava_rolle
-        }
+        "data": dict(old_adapted.get("data", {}))
     }
+
+    document["data"].update({
+        "ava_rolle": ava_rolle
+    })
 
     return document
 
 
-def ava_account(entity):
+def ava_account(entity, old_adapted):
     """
     Adapter to convert (LORA) object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -359,19 +390,21 @@ def ava_account(entity):
     # Cache layer compliant document
     document = {
         "id": origin_id,
-        "external_ref": None,
+        "external_ref": old_adapted.get("external_ref"),
         "dawa_ref": ava_adresse,
-        "data": {
-            "name": account_name,
-            "ava_kundenummer": ava_kundenummer,
-            "ava_kundetype": ava_kundetype
-        }
+        "data": dict(old_adapted.get("data", {}))
     }
+
+    document["data"].update({
+        "name": account_name,
+        "ava_kundenummer": ava_kundenummer,
+        "ava_kundetype": ava_kundetype
+    })
 
     return document
 
 
-def ava_aftale(entity):
+def ava_aftale(entity, old_adapted):
     """
     Adapter to convert (LORA) object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -392,7 +425,16 @@ def ava_aftale(entity):
     # Map data object
     data = entity["registreringer"][0]
     attributter = data["attributter"]
-    relationer = data["relationer"]
+
+    # relationer = data["relationer"]
+    relationer = data.get("relationer")
+    # Bail out on no relations, avoiding program crash
+    if not relationer:
+        log.error(
+            "Error no relationer for: {0}".format(origin_id)
+        )
+        return False  # make oio_interface skip
+
     egenskaber = attributter["indsatsegenskaber"][0]
 
     # Fetch references
@@ -427,38 +469,41 @@ def ava_aftale(entity):
     ava_slutdato = egenskaber.get("sluttidspunkt").split(" ")[0]
 
     # Billing
-    ava_faktureringsgrad = None
+    ava_billing_address = None
 
     try:
         indsatsdokument = relationer.get("indsatsdokument")[0]
-        ava_faktureringsgrad = indsatsdokument.get("uuid")
-    except:
+        ava_billing_address = indsatsdokument.get("uuid")
+    except Exception as error:
         log.error(
             "Error getting address for: {0}".format(origin_id)
         )
 
-        log.debug(relationer.get("indsatsdokument"))
+        log.debug(error)
 
     # Cache layer compliant document
     document = {
         "id": origin_id,
-        "external_ref": None,
+        "external_ref": old_adapted.get("external_ref"),
         "interessefaellesskab_ref": ava_kundeforhold,
-        "dawa_ref": ava_faktureringsgrad,
+        "contact_refs": old_adapted.get("contact_refs", []),
+        "dawa_ref": ava_billing_address,
         "klasse_ref": ava_produkter,
-        "data": {
-            "ava_name": ava_name,
-            "ava_aftaletype": ava_aftaletype,
-            "ava_antal_produkter": ava_antal_produkter,
-            "ava_startdato": ava_startdato,
-            "ava_slutdato": ava_slutdato
-        }
+        "data": dict(old_adapted.get("data", {}))
     }
+
+    document["data"].update({
+        "ava_name": ava_name,
+        "ava_aftaletype": ava_aftaletype,
+        "ava_antal_produkter": ava_antal_produkter,
+        "ava_startdato": ava_startdato,
+        "ava_slutdato": ava_slutdato
+    })
 
     return document
 
 
-def ava_installation(entity):
+def ava_installation(entity, old_adapted):
     """
     Adapter to convert (LORA) object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -479,14 +524,18 @@ def ava_installation(entity):
     # Map data object
     registeringer = entity["registreringer"][0]
     attributter = registeringer["attributter"]
-    relationer = registeringer["relationer"]
+    relationer = registeringer.get("relationer", {})
     egenskaber = attributter["klasseegenskaber"][0]
 
     # Fetch references
     ava_name = egenskaber.get("titel")
     ava_identifikation = egenskaber.get("brugervendtnoegle")
     ava_maalertype = egenskaber.get("beskrivelse")
-    installationstype = relationer.get("overordnetklasse")[0]
+    if relationer:
+        installationstype = relationer.get("overordnetklasse")[0]
+    else:
+        # TODO: Change this when we add Arosia integration
+        installationstype = {"urn": "urn:Varme"}
 
     # Convert type to literal
     type_ref = installationstype.get("urn").split(":")[-1]
@@ -496,7 +545,7 @@ def ava_installation(entity):
     }
 
     # Get type
-    ava_installationstype = installation_types.get(type_ref)
+    ava_installationstype = installation_types[type_ref]
 
     ava_maalernummer = egenskaber.get("eksempel")
 
@@ -507,15 +556,16 @@ def ava_installation(entity):
     alternative_address = relationer.get("ava_opstillingsadresse")
 
     if alternative_address:
-        ava_adresse = alternative_address[0]["uuid"]
+        ava_adresse = alternative_address[0].get('uuid')
 
     # Referenced by other entities
 
     # Entity: Lora (Aftale/Indsats)
-    ava_aftale = None
+    # ava_aftale used to be nulled - below we take it from old_adapted
+    # ava_aftale = None
 
     # Entity: Lora (Account/Interessefaellesskab)
-    ava_kundenummer = None
+    ava_kundenummer = old_adapted.get("data", {}).get("ava_kundenummer")
 
     # Arosia not yet implemented
     # ava_arosiaid = None
@@ -523,17 +573,19 @@ def ava_installation(entity):
     # Cache layer compliant document
     document = {
         "id": origin_id,
-        "external_ref": None,
-        "indsats_ref": ava_aftale,
+        "external_ref": old_adapted.get("external_ref"),
+        "indsats_ref": old_adapted.get("indsats_ref"),
         "dawa_ref": ava_adresse,
-        "data": {
-            "ava_name": ava_name,
-            "ava_identifikation": ava_identifikation,
-            "ava_installationstype": ava_installationstype,
-            "ava_maalernummer": ava_maalernummer,
-            "ava_maalertype": ava_maalertype,
-            "ava_kundenummer": ava_kundenummer
-        }
+        "data": dict(old_adapted.get("data", {}))
     }
+
+    document["data"].update({
+        "ava_name": ava_name,
+        "ava_identifikation": ava_identifikation,
+        "ava_installationstype": ava_installationstype,
+        "ava_maalernummer": ava_maalernummer,
+        "ava_maalertype": ava_maalertype,
+        "ava_kundenummer": ava_kundenummer
+    })
 
     return document

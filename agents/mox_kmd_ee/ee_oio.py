@@ -17,7 +17,11 @@ import requests
 import functools
 import collections
 
-from settings import SYSTEM_USER, AVA_ORGANISATION, BASE_URL
+from settings import SYSTEM_USER, AVA_ORGANISATION, BASE_URL, DO_VERIFY_SSL
+
+if not DO_VERIFY_SSL:
+    requests.packages.urllib3.disable_warnings()
+
 
 KUNDE = 'Kunde'
 LIGESTILLINGSKUNDE = 'Ligestillingskunde'
@@ -63,7 +67,7 @@ def lookup_objects(service, oio_class, **conditions):
             BASE_URL, service, oio_class, condition_string
         ))
 
-        result = requests.get(request_string)
+        result = requests.get(request_string, verify=DO_VERIFY_SSL)
 
         if result:
             search_results = result.json()['results'][0]
@@ -94,7 +98,7 @@ def read_object(uuid, service, oio_class):
     request_string = '{0}/{1}/{2}/{3}'.format(
         BASE_URL, service, oio_class, uuid
     )
-    response = requests.get(request_string)
+    response = requests.get(request_string, verify=DO_VERIFY_SSL)
     if response:
         object_dict = response.json()
         # Only the current registration.
@@ -112,7 +116,7 @@ def delete_object(uuid, service, oio_class):
     request_string = '{0}/{1}/{2}/{3}'.format(
         BASE_URL, service, oio_class, uuid
     )
-    response = requests.delete(request_string)
+    response = requests.delete(request_string, verify=DO_VERIFY_SSL)
     if response.status_code == 400 and ALREADY_DELETED in response.text:
         # Already deleted, this is OK
         print('Deleting object {} again'.format(uuid))
@@ -124,7 +128,7 @@ def delete_object(uuid, service, oio_class):
 def write_object_dict(uuid, object_dict, service, oio_class):
     """Write object dict provided by caller."""
     url = "{0}/{1}/{2}/{3}".format(BASE_URL, service, oio_class, uuid)
-    response = requests.put(url, json=object_dict)
+    response = requests.put(url, json=object_dict, verify=DO_VERIFY_SSL)
 
     return response
 
@@ -134,7 +138,7 @@ def write_object(uuid, properties, relations, service, oio_class):
     """Update bruger with UUID uuid with the given properties and relations."""
     object_dict = create_object_dict(oio_class, properties, relations, note="")
     url = "{0}/{1}/{2}/{3}".format(BASE_URL, service, oio_class, uuid)
-    response = requests.put(url, json=object_dict)
+    response = requests.put(url, json=object_dict, verify=DO_VERIFY_SSL)
 
     return response
 
@@ -232,6 +236,8 @@ def create_object_dict(oio_class, properties, relations, note,
             ] for name, rels in relations.items()
         }
     }
+    if len(relations) == 0:
+        del object_dict["relationer"]
     return object_dict
 
 
@@ -254,7 +260,7 @@ def create_organisation(cvr_number, key, name, master_id, phone="", email="",
     if phone:
         adresser.append(Relation("urn", "urn:tel:{0}".format(phone)))
     if mobile:
-        adresser.append(Relation("urn", "urn:mobile:{0}".format(phone)))
+        adresser.append(Relation("urn", "urn:mobile:{0}".format(mobile)))
     if email:
         adresser.append(Relation("urn", "urn:email:{0}".format(email)))
     if address_uuid:
@@ -282,7 +288,7 @@ def create_organisation(cvr_number, key, name, master_id, phone="", email="",
         }]
 
     url = "{0}/organisation/organisation".format(BASE_URL)
-    response = requests.post(url, json=organisation_dict)
+    response = requests.post(url, json=organisation_dict, verify=DO_VERIFY_SSL)
 
     return response
 
@@ -326,7 +332,7 @@ def create_bruger(cpr_number, key, name, master_id, phone="", email="",
     bruger_dict = create_object_dict("bruger", properties, relations, note)
 
     url = "{0}/organisation/bruger".format(BASE_URL)
-    response = requests.post(url, json=bruger_dict)
+    response = requests.post(url, json=bruger_dict, verify=DO_VERIFY_SSL)
 
     return response
 
@@ -343,7 +349,8 @@ def create_interessefaellesskab(customer_number, customer_relation_name,
     interessefaellesskab_dict = create_object_dict("interessefaellesskab",
                                                    properties, relations, note)
     url = "{0}/organisation/interessefaellesskab".format(BASE_URL)
-    response = requests.post(url, json=interessefaellesskab_dict)
+    response = requests.post(url, json=interessefaellesskab_dict,
+                             verify=DO_VERIFY_SSL)
     if not response:
         print(interessefaellesskab_dict)
 
@@ -369,7 +376,8 @@ def create_organisationfunktion(customer_uuid,
                                                    properties, relations, note)
 
     url = "{0}/organisation/organisationfunktion".format(BASE_URL)
-    response = requests.post(url, json=organisationfunktion_dict)
+    response = requests.post(url, json=organisationfunktion_dict,
+                             verify=DO_VERIFY_SSL)
 
     return response
 
@@ -407,7 +415,7 @@ def create_indsats(name, agreement_type, no_of_products, invoice_address,
         ]
 
     url = "{0}/indsats/indsats".format(BASE_URL)
-    response = requests.post(url, json=indsats_dict)
+    response = requests.post(url, json=indsats_dict, verify=DO_VERIFY_SSL)
 
     return response
 
@@ -436,5 +444,5 @@ def create_klasse(name, identification, installation_type,
             }
         ]
     url = "{0}/klassifikation/klasse".format(BASE_URL)
-    response = requests.post(url, json=klasse_dict)
+    response = requests.post(url, json=klasse_dict, verify=DO_VERIFY_SSL)
     return response

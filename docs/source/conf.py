@@ -19,8 +19,14 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../agents/mox_kmd_ee'))
+sys.path[0:0]=[
+    os.path.abspath('../../agents/mox_kmd_ee'),
+    os.path.abspath('../../agents/mox_dynamics_crm'),
+]
 
+autodoc_mock_imports=[
+    "adrog1_cpr_opslag_lokal"
+]
 
 # -- General configuration ------------------------------------------------
 

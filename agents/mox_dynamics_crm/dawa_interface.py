@@ -3,6 +3,7 @@
 import re
 import requests
 from logging import getLogger
+import cache_interface as cache
 
 # DAR Service settings
 BASE_URL = "https://dawa.aws.dk"
@@ -81,6 +82,8 @@ def get_access_address(uuid):
 
 
 def access_adapter(data):
+    # no old_adapted here, as these do not seem to be imported
+    # thus an already cached external_ref is not overwritten
     """
     Adapter to convert an access address object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -176,7 +179,10 @@ def get_address(uuid):
     return adapter(data)
 
 
-def adapter(data):
+def adapter(data, old_adapted={}):
+    # old_adapted is defaulted because the call can also stem from
+    # export_client, but this happens only when address is not cached
+    # and in that case the document would be empty anyway
     """
     Adapter to convert an address object to cache layer document.
     The document contains both transport meta data and the original content.
@@ -239,27 +245,30 @@ def adapter(data):
     # Cache layer compliant document
     document = {
         "id": adresseid,
-        "external_ref": None,
-        "data": {
-            "ava_dawaadgangsadresseid": adgangsadresseid,
-            "ava_name": search,
-            "ava_gadenavn": vejnavn,
-            "ava_husnummer": husnr_nr,
-            "ava_bogstav": husnr_bogstav,
-            "ava_etage": etage,
-            "ava_doer": doer,
-            "ava_postnummer": postnr,
-            "ava_kommunenummer": kommunekode,
-            "ava_by": postnrnavn,
-            "ava_land": land,
-            "ava_kvhx": kvhx,
-            "ava_vejkode": vejkode,
-            "ava_koordinat_nord": str(koordinat_nord),
-            "ava_koordinat_oest": str(koordinat_oest),
-            "ava_laengdegrad": str(laengdegrad),
-            "ava_breddegrad": str(breddegrad)
-        }
+        "external_ref": old_adapted.get("external_ref"),
+        "data": dict(old_adapted.get("data", {}))
     }
+
+    document["data"].update({
+        "ava_dawaadgangsadresseid": adgangsadresseid,
+        "ava_name": search,
+        "ava_gadenavn": vejnavn,
+        "ava_husnummer": husnr_nr,
+        "ava_bogstav": husnr_bogstav,
+        "ava_etage": etage,
+        "ava_doer": doer,
+        "ava_postnummer": postnr,
+        "ava_kommunenummer": kommunekode,
+        "ava_by": postnrnavn,
+        "ava_land": land,
+        "ava_kvhx": kvhx,
+        "ava_vejkode": vejkode,
+        "ava_koordinat_nord": str(koordinat_nord),
+        "ava_koordinat_oest": str(koordinat_oest),
+        "ava_laengdegrad": str(laengdegrad),
+        "ava_breddegrad": str(breddegrad)
+    })
+
     return document
 
 
@@ -273,6 +282,7 @@ def get_all(area_code):
     """
 
     resource = "adresser"
+    table = cache.mapping.get("dawa")
 
     addresses = get_request(
         resource=resource,
@@ -283,12 +293,30 @@ def get_all(area_code):
     if not addresses:
         return
 
+    # cache all previous addresses in memory dict
+    existing_adapted = {
+        d["id"]: d
+        for d in cache.r.table(
+            table
+            ).get_all(*[a["id"] for a in addresses]).run(cache.connect())
+    }
+
     # Create empty payload:
     list_of_documents = []
 
+    batch_timestamp = cache.r.now()
+
     # Iterate and append converted documents to the list
     for address in addresses:
-        converted = adapter(address)
+        converted = adapter(address, existing_adapted.get(address["id"], {}))
+        old_data = existing_adapted.get(address["id"], {}).get("data")
+        if converted["data"] != old_data:
+            # change this back after export
+            converted["import_changed"] = True
+
+        # set update time
+        converted["updated"] = batch_timestamp
+
         list_of_documents.append(converted)
 
     return list_of_documents
