@@ -25,7 +25,7 @@ sys.path[0:0]=[
 ]
 
 autodoc_mock_imports=[
-    "adrog1_cpr_opslag_lokal"
+    "adrog1_cpr_opslag_lokal", "settings", "mssql_config"
 ]
 
 # -- General configuration ------------------------------------------------
