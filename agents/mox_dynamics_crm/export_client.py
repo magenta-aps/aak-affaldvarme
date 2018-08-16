@@ -3,8 +3,8 @@
 
 # skip module level code when 
 # generating top level documentation
-import sys
-if not sys.base_prefix.endswith("/docs/python-env"):
+import os
+if not os.environ.get("SPHINXBUILDING"):
 
     import crm_interface as crm
     import cache_interface as cache
@@ -28,8 +28,6 @@ def export_everything():
     During this process all the relations between the entities are created.
     Relations are stored in the cache layer as references.
 
-    TODO:   This function should be rewritten to base relations
-            on 'contacts' rather than 'kunderolles'.
     """
 
     all_kunderolle = cache.all("ava_kunderolles")
@@ -41,13 +39,9 @@ def export_everything():
 def process(kunderolle):
     """
     Process sequence of related documents (by 'ava_kunderolles')
-    TODO: Process should be merged with all of the updates modules.
-
-    (For further information, see update functions below)
 
     :param kunderolle:  Kunderolle document retrieved from the cache layer.
 
-    :return:
     """
 
     # calls to store an entity in crm may fail and thus cause the value False
