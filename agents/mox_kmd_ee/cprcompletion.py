@@ -282,6 +282,7 @@ def complete_cprs_in_custdict(
     old_fields = stringalign_fields(_old_fields) if _old_fields else None
 
     if not new_fields:
+        say("stringalign_fields error for %r" % fields.get("Kundenr"))
         return False
 
     cpr_ok = (
