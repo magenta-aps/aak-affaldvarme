@@ -6,7 +6,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-""" This module is used for completing customer records from KMD_EE with full cpr numbers
+""" This module is used for completing customer records
+from KMD_EE with full cpr numbers
 """
 import adrog1_cpr_opslag_lokal
 import os
@@ -17,6 +18,7 @@ from xml.parsers.expat import ExpatError
 from service_clients import DAWA_ADDRESS_URL
 from service_clients import get_address_from_service
 from service_clients import report_error, fuzzy_address_uuid
+from requests.exceptions import ConnectionError, HTTPError
 
 # use the default envelope supplied by the module if none is specified
 envelope = settings.ADRSOG1_SP_SOAP_REQUEST_ENVELOPE
@@ -78,16 +80,28 @@ def get_results_on_address(**address):
 
     """
 
-    person_numbers_from_adress = (
-        adrog1_cpr_opslag_lokal.get_person_numbers_from_address(
-            dependencies_dict=dependencies,
-            address_dict=address
-        )
-    )
+    resultdict = {}
+    persons_from_address = None
+    for i in range(2):
+        try:
+            persons_from_address = (
+                adrog1_cpr_opslag_lokal.get_person_numbers_from_address(
+                    dependencies_dict=dependencies,
+                    address_dict=address
+                )
+            )
+            break
+        except ConnectionError:
+            continue
+        except HTTPError:
+            continue
+    if not persons_from_address:
+        say("connection error for address %r", address)
+        return resultdict
 
     # extract 'Row' payload from deeply nested SOAP structure
     try:
-        nested = xmltodict.parse(person_numbers_from_adress)
+        nested = xmltodict.parse(persons_from_address)
         table = nested[
             'soap:Envelope'
         ][
@@ -121,8 +135,6 @@ def get_results_on_address(**address):
         say("ExpatError: %s, no address found for %r " % (str(e), address))
         return {}
 
-    resultdict = {}
-
     # make sure payload is a list
     if not isinstance(table, list):
         table = [table]
@@ -138,7 +150,7 @@ def get_results_on_address(**address):
             continue
         rowdict = {k.get("@r"): k for k in row["Field"]}
         if not CNVN_STATUS_ACTIVE.get(rowdict.get("CNVN_STATUS").get("@v")):
-            #say("code %s at %r" % (rowdict.get("CNVN_STATUS"), address))
+            # say("code %s at %r" % (rowdict.get("CNVN_STATUS"), address))
             continue
 
         # convert date to danish cpr-prefix
@@ -192,14 +204,18 @@ def stringalign_fields(fields):
         using cpr_cvr prefixing where appropriate
     """
     fields = dict(fields)
-    for k, v in list(fields.items()):
-        if k in STRINTS:
-            fields[k] = str(v)
-        elif k in STRFLOATS:
-            fields[k] = str(int(v))
-    fields["PersonnrSEnr"] = cpr_cvr(fields["PersonnrSEnr"])
-    fields["LigestPersonnr"] = cpr_cvr(fields["LigestPersonnr"])
-    return fields
+    try:
+        for k, v in list(fields.items()):
+            if k in STRINTS:
+                fields[k] = str(v)
+            elif k in STRFLOATS:
+                fields[k] = str(int(v))
+        fields["PersonnrSEnr"] = cpr_cvr(fields["PersonnrSEnr"])
+        fields["LigestPersonnr"] = cpr_cvr(fields["LigestPersonnr"])
+        return fields
+    except ValueError:
+        # unexpected value in field from KMD_EE
+        return None
 
 
 def get_cpr_by_custdict(custdict, by_name=True):
@@ -264,6 +280,9 @@ def complete_cprs_in_custdict(
     # we can simply take this logic out of the loop again
     new_fields = stringalign_fields(_new_fields)
     old_fields = stringalign_fields(_old_fields) if _old_fields else None
+
+    if not new_fields:
+        return False
 
     cpr_ok = (
         len(new_fields["PersonnrSEnr"]) < 10
