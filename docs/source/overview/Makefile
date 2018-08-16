@@ -12,6 +12,6 @@ clean:
 	@rm -f $(SVG_FILES)
 
 all: $(SVG_FILES)
-	@echo Generated svg files feom dia files
+	@echo Generated svg files from dia files
 
 html: all
