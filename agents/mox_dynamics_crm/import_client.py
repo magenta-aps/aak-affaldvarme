@@ -8,8 +8,8 @@
 
 # skip module level code when 
 # generating top level documentation
-import sys
-if not sys.base_prefix.endswith("/docs/python-env"):
+import os
+if not os.environ.get("SPHINXBUILDING"):
     import oio_interface as oio
     import dawa_interface as dawa
     import cache_interface as cache
@@ -79,7 +79,6 @@ def import_to_cache(resource):
 
     :param resource:    Name of the entity to import
 
-    :return:
     """
 
     # Get all uuids
@@ -112,9 +111,6 @@ def import_sanity_check():
     It iterates over all addresses stored in the cache layer,
     and confirms that the address exists in the DAR database.
 
-    TODO: Create check
-
-    :return:
     """
 
     # Retrieve all address from cache
