@@ -24,8 +24,14 @@ sys.path[0:0]=[
     os.path.abspath('../../agents/mox_dynamics_crm'),
 ]
 
+os.environ["SPHINXBUILDING"] = "YES"
+
 autodoc_mock_imports=[
-    "adrog1_cpr_opslag_lokal"
+    "aak_integration",
+    "aak-integration",
+    "adrog1_cpr_opslag_lokal",
+    "settings",
+    "mssql_config"
 ]
 
 # -- General configuration ------------------------------------------------

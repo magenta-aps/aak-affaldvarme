@@ -1,3 +1,15 @@
+* Version 0.1.1, August 20, 2018
+
+- Upgraded python dependencies in Mox KMD EE
+- Upgraded python dependencies in Mox Dynamics CRM
+- Upgraded python dependencies in Mox SP 
+- Upgraded python dependencies in AAK Integration
+- Upgraded python dependencies in docs
+- Retry on connection error in Mox KMD EE CPR Completion
+- Removed deprecated CVR notification directory from agents
+- Removed migrations, no longer used, from Mox Dynamics CRM
+
+
 * Version 0.1.0, March 1, 2018
 
 New in this version:
