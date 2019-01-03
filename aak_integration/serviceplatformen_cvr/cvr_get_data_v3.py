@@ -1,6 +1,9 @@
-# -*- coding: utf-8 -*-
+""" get_cvr_data as used in aak-integration
+depending on the https://github.com/magenta-aps/cvronline-get-legal-unit/tree/development
+
+"""
 #
-# Copyright (c) 2017, Magenta ApS
+# Copyright (c) 2019, Magenta ApS
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,51 +11,20 @@
 #
 
 import requests
+import logging
 
-from .sp_adapter import CVRAdapter
+from cvronline_get_legal_unit import get_legal_unit
 
-# Settings
-RUN_IN_PROD_MODE = True
+logger = logging.getLogger("cvr")
+
 DAWA_SERVICE_URL = 'https://dawa.aws.dk/adresser'
 DAWA_DATAVASK_URL = 'https://dawa.aws.dk/datavask/adresser'
+logger = logging.getLogger("cvr")
 
 
-def get_cvr_data(cvr_id, service_uuids, service_certificate):
-    """
-    Run client
-    TODO: Description missing
-    """
-
-    # Retrieve UUIDS from settings and run CVRAdapter
-    cvr_adapter = CVRAdapter(
-        service_uuids,
-        service_certificate,
-        prod_mode=RUN_IN_PROD_MODE
-    )
-
-    zeep_data = cvr_adapter.getLegalUnit(cvr_id)
-
-    if not zeep_data:
-        # No CVR data found
-        raise RuntimeError("CVR number {} not found".format(cvr_id))
-
-    extracted = _extract_zeep_data(zeep_data)
-
-    address = {}
-    address["vejnavn"] = extracted.get("vejnavn")
-    address["vejkode"] = extracted.get("vejkode")
-    address["husnr"] = extracted.get("husnummer")
-    address["etage"] = extracted.get("etage")
-    address["dør"] = extracted.get("doer")
-    address['postnr'] = extracted.get("postnummer")
-
-    extracted["dawa_uuid"] = _get_address_uuid(address)
-
-    return extracted
-
-
-def _extract_zeep_data(data):
-    """Extract values from zeep object and returns formatted dictionary"""
+def processor_v2(data):
+    import pdb; pdb.set_trace()
+    """Extract values from data and returns formatted dictionary"""
 
     # Categories
     organisation_name = (
@@ -75,18 +47,18 @@ def _extract_zeep_data(data):
 
     extended = {
         "vejnavn":
-            address["AddressPostalExtended"]["StreetName"],
+            address["AddressPostalExtended"].get("StreetName", ''),
         "husnummer":
-            address["AddressPostalExtended"]["StreetBuildingIdentifier"],
+            address["AddressPostalExtended"].get("StreetBuildingIdentifier", ''),
         "etage":
-            address["AddressPostalExtended"]["FloorIdentifier"],
+            address["AddressPostalExtended"].get("FloorIdentifier", ''),
         "doer":
-            address["AddressPostalExtended"]["SuiteIdentifier"],
+            address["AddressPostalExtended"].get("SuiteIdentifier", ''),
         "postnummer":
-            address["AddressPostalExtended"]["PostCodeIdentifier"],
+            address["AddressPostalExtended"].get("PostCodeIdentifier", ''),
         "postboks":
-            address["AddressPostalExtended"]["PostOfficeBoxIdentifier"]
-    } if address["AddressPostalExtended"] else {}
+            address["AddressPostalExtended"].get("PostOfficeBoxIdentifier", '')
+    } if address.get("AddressPostalExtended", '') else {}
 
     access = {
         "vejkode":
@@ -101,9 +73,17 @@ def _extract_zeep_data(data):
         if value is None:
             formatted[key] = ""
 
+    address = {
+        "vejnavn": formatted.get("vejnavn"),
+        "vejkode": formatted.get("vejkode"),
+        "husnr": formatted.get("husnummer"),
+        "etage": formatted.get("etage"),
+        "dør": formatted.get("doer"),
+        'postnr': formatted.get("postnummer"),
+    }
+    formatted["dawa_uuid"] = _get_address_uuid(address)
     # Return the data
     return formatted
-
 
 def _get_address_uuid(address):
 
@@ -137,3 +117,33 @@ def _get_address_uuid(address):
         except (IndexError, KeyError):
             return None
 
+def processor_v3(certificate, **kwargs):
+    pass
+
+_services = {
+    "93a48b42-3945-11e2-9724-d4bed98c63db": {
+        "processor": processor_v2,
+    },
+    "c0daecde-e278-43b7-84fd-477bfeeea027": {
+        "processor": processor_v3,
+    }
+}
+
+
+def get_cvr_data(certificate, **kwargs):
+    _service = _services[kwargs["service"]]
+    try:
+        data = get_legal_unit(certificate, **kwargs)
+        processed = _service["processor"](data)
+    except Exception as e:
+        logger.exception(e)
+        return None
+    return processed
+
+if __name__ == '__main__':
+    import configparser, pprint
+    config = configparser.ConfigParser()
+    config.read("config.ini")
+    config = config["sp_cvr"]
+    result = get_cvr_data(**config, cvrnumber="25052943")
+    pprint.pprint(result)

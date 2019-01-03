@@ -1,4 +1,5 @@
 -e ../../aak_integration
+git+https://github.com/magenta-aps/cvronline-get-legal-unit@development
 alabaster==0.7.11
 appdirs==1.4.3
 attrs==18.1.0

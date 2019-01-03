@@ -6,4 +6,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 
-from .main import get_cvr_data
+from .cvr_get_data_v3 import get_cvr_data
