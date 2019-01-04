@@ -1,0 +1,4 @@
+git+https://github.com/magenta-aps/cpr_abonnement
+requests
+flake8
+
