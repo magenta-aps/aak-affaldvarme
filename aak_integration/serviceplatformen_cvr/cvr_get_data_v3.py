@@ -23,7 +23,6 @@ logger = logging.getLogger("cvr")
 
 
 def processor_v2(data):
-    import pdb; pdb.set_trace()
     """Extract values from data and returns formatted dictionary"""
 
     # Categories
@@ -74,12 +73,12 @@ def processor_v2(data):
             formatted[key] = ""
 
     address = {
-        "vejnavn": formatted.get("vejnavn"),
-        "vejkode": formatted.get("vejkode"),
-        "husnr": formatted.get("husnummer"),
-        "etage": formatted.get("etage"),
-        "dør": formatted.get("doer"),
-        'postnr': formatted.get("postnummer"),
+        "vejnavn": formatted.get("vejnavn", ""),
+        "vejkode": formatted.get("vejkode", ""),
+        "husnr": formatted.get("husnummer", ""),
+        "etage": formatted.get("etage", ""),
+        "dør": formatted.get("doer", ""),
+        'postnr': formatted.get("postnummer", ""),
     }
     formatted["dawa_uuid"] = _get_address_uuid(address)
     # Return the data
@@ -117,7 +116,7 @@ def _get_address_uuid(address):
         except (IndexError, KeyError):
             return None
 
-def processor_v3(certificate, **kwargs):
+def processor_v3(data):
     pass
 
 _services = {
@@ -125,7 +124,7 @@ _services = {
         "processor": processor_v2,
     },
     "c0daecde-e278-43b7-84fd-477bfeeea027": {
-        "processor": processor_v3,
+        "processor": processor_v2,
     }
 }
 
