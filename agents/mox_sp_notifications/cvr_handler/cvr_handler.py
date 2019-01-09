@@ -166,6 +166,9 @@ def get_cvr_data_from_sp(cvr_id):
     # Get config
     config = get_config("sp_cvr")
 
+    # Location of the service certificate
+    certificate = config["certificate"]
+
     # GET data from SP
     sp_data = get_cvr_data(**config, cvrnumber=cvr_id)
 
