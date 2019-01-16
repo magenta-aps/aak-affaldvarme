@@ -32,13 +32,13 @@ def lora_get(url, **params):
         logger.exception(url)
 
 
-def lora_get_all_cpr_numbers(start=0, end=180):
+def lora_get_all_cpr_numbers(start=0, end=-1):
     alluuids = lora_get(
         "{BASE}/organisation/bruger/?bvn=%"
     ).json()["results"][0] 
     allcprs = []
     if end == -1:
-        end = len(alluids)
+        end = len(alluuids)
     for i in range(start, end, 90):
         somebrugere=lora_get("{BASE}/organisation/bruger",
                              uuid=alluuids[i:i+90])

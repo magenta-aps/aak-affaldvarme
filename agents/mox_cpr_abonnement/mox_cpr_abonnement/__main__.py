@@ -12,8 +12,10 @@ import logging
 import os
 import json
 
-from mox_cpr_abonnement import (
+from mox_cpr_abonnement.lora_interface import (
     lora_get_all_cpr_numbers,
+)
+from mox_cpr_abonnement.cpr_interface import (
     cpr_add_subscription,
     cpr_remove_subscription,
     cpr_get_all_subscribed,
@@ -21,8 +23,6 @@ from mox_cpr_abonnement import (
 
 from settings import (
     MOX_LOG_LEVEL,
-    MOX_JSON_CACHE,
-    SFTP_DOWNLOAD_PATH
 )
 
 # set warning-level for all loggers

@@ -17,7 +17,6 @@ else:
 config = configparser.ConfigParser(defaults={
     "MOX_LOG_LEVEL": "10",
     "MOX_LOG_FILE": "",  # "" sends log to console
-    "MOX_JSON_CACHE": "var/mox_cpr_delta_lora.json",
     "ADD_PNR_SUBSCRIPTION": "AddPNRSubscription",
     "REMOVE_PNR_SUBSCRIPTION": "RemovePNRSubscription",
     "GET_PNR_SUBSCRIPTIONS": "GetAllFilters",
@@ -42,7 +41,6 @@ settings = config["settings"]
 
 MOX_LOG_LEVEL = int(settings["MOX_LOG_LEVEL"])
 MOX_LOG_FILE = settings["MOX_LOG_FILE"]
-MOX_JSON_CACHE = settings["MOX_JSON_CACHE"]
 SP_ABO_SERVICE_ENDPOINT = settings["SP_ABO_SERVICE_ENDPOINT"]
 SP_ABO_CERTIFICATE = settings["SP_ABO_CERTIFICATE"]
 SP_ABO_SOAP_REQUEST_ENVELOPE = settings["SP_ABO_SOAP_REQUEST_ENVELOPE"]
