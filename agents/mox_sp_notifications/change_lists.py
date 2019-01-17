@@ -46,3 +46,5 @@ def get_changed_uuids(resource):
         return oio.get_all(resource)
 
 
+if __name__ == '__main__':
+    cprs = get_changed_cprs()
