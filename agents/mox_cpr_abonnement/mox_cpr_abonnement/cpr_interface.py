@@ -10,7 +10,7 @@
 import os
 import logging
 import xmltodict
-import settings
+from mox_cpr_abonnement import settings
 
 # settings must be imported before cpr_udtraek and cpr_abonnement
 import cpr_abonnement

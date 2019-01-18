@@ -21,7 +21,7 @@ from mox_cpr_abonnement.cpr_interface import (
     cpr_get_all_subscribed,
 )
 
-from settings import (
+from mox_cpr_abonnement.settings import (
     MOX_LOG_LEVEL,
 )
 
