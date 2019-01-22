@@ -3,7 +3,8 @@ import requests
 import datetime
 import cpr_udtraek
 from helper import get_config
-
+import logging
+logger = logging.getLogger("change-lists")
 
 cpr_config = get_config("cpr_udtraek")
 oio_config = get_config("oio")
@@ -34,7 +35,9 @@ def get_changed_bruger_uuids():
     changed_uuids = []
     #return oio.get_all("bruger")  # current functionality
     cprnos = get_changed_cprs()   # new functionality
+    logger.info("changed cprs: %d", len(cprnos))
     for i in cprnos :
+        logger.info("getting uuid for cpr %s", i)
         changed_uuids.extend(get_bruger_uuids_from_cprno(i))
     return changed_uuids
 
