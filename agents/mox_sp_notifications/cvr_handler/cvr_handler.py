@@ -62,6 +62,9 @@ def cvr_handler(org_data):
             continue
         except requests.exceptions.ConnectionError:
             continue
+        except RuntimeError:
+            # cvr not found
+            continue
     if not sp_data:
         log.error("error for uuid, returning empty list of updates for organisation %s",uuid)
         return []
@@ -166,11 +169,23 @@ def get_cvr_data_from_sp(cvr_id):
     # Get config
     config = get_config("sp_cvr")
 
+    # Set service uuids
+    uuids = {
+        'service_agreement': config["service_agreement"],
+        'user_system': config["user_system"],
+        'user': config["user"],
+        'service': config["service"]
+    }
+
     # Location of the service certificate
     certificate = config["certificate"]
 
     # GET data from SP
-    sp_data = get_cvr_data(**config, cvrnumber=cvr_id)
+    sp_data = get_cvr_data(
+        cvr_id=cvr_id,
+        service_uuids=uuids,
+        service_certificate=certificate
+    )
 
     # Check
     if not sp_data:
