@@ -161,11 +161,11 @@ def apply_update(registrering, update):
 
     # Iterate over all items in the list
     # Target the items that needs to be updated
-    items = registrering[section].get(key,[])
+    items = registrering[section].get(key, [])
     if len(items) == 0:
         log.error("No %s found in registrering['%s']", key, section)
         return False
-    
+
     for item in items:
 
         # Next we need to target the key/value pairs
