@@ -12,7 +12,7 @@ import logging
 import xmltodict
 from mox_cpr_abonnement import settings
 
-# settings must be imported before cpr_udtraek and cpr_abonnement
+# settings must be imported before cpr_abonnement
 import cpr_abonnement
 from cpr_abonnement.cpr_abonnement import (
     pnr_subscription,
@@ -56,14 +56,14 @@ def cpr_get_all_subscribed():
     logger.debug("cpr_get_all_subscribed")
     operation = settings.GET_PNR_SUBSCRIPTIONS
     cpr_abonnement_response_envelope = pnr_all_subscribed(
-        dependencies_dict=abo_dependencies, 
+        dependencies_dict=abo_dependencies,
         operation=operation,
     )
     reply = xmltodict.parse(cpr_abonnement_response_envelope)
     operation_response_key = "ns3:{}Response".format(operation)
-    x=reply["soap:Envelope"]["soap:Body"][operation_response_key].get(
-        "ns2:PNR",[])
-    if isinstance(x,list):
+    x = reply["soap:Envelope"]["soap:Body"][operation_response_key].get(
+        "ns2:PNR", [])
+    if isinstance(x, list):
         return x
     else:
         return[x]

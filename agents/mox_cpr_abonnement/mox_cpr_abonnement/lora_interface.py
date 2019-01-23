@@ -10,6 +10,7 @@ import requests
 import logging
 from .settings import LORA_HTTP_BASE, LORA_CA_BUNDLE, LORA_ORG_UUID
 
+
 logger = logging.getLogger("mox_cpr_delta_mo")
 
 
@@ -28,20 +29,20 @@ def lora_get(url, **params):
     url = lora_url(url)
     try:
         return requests.get(url, params=params, verify=LORA_CA_BUNDLE)
-    except Exception as e:
+    except Exception:
         logger.exception(url)
 
 
 def lora_get_all_cpr_numbers(start=0, end=-1):
     alluuids = lora_get(
         "{BASE}/organisation/bruger/?bvn=%"
-    ).json()["results"][0] 
+    ).json()["results"][0]
     allcprs = []
     if end == -1:
         end = len(alluuids)
     for i in range(start, end, 90):
-        somebrugere=lora_get("{BASE}/organisation/bruger",
-                             uuid=alluuids[i:i+90])
+        somebrugere = lora_get("{BASE}/organisation/bruger",
+                               uuid=alluuids[i:i+90])
         for b in somebrugere.json()["results"][0]:
             urn = b["registreringer"][0]["relationer"][
                     "tilknyttedepersoner"][0]["urn"]

@@ -7,10 +7,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
-import datetime
 import logging
-import os
-import json
 
 from mox_cpr_abonnement.lora_interface import (
     lora_get_all_cpr_numbers,
@@ -21,23 +18,19 @@ from mox_cpr_abonnement.cpr_interface import (
     cpr_get_all_subscribed,
 )
 
-from mox_cpr_abonnement.settings import (
-    MOX_LOG_LEVEL,
-)
+from mox_cpr_abonnement.settings import MOX_LOG_LEVEL
 
 # set warning-level for all loggers
-[
+for i in logging.root.manager.loggerDict:
     logging.getLogger(i).setLevel(logging.WARNING)
-    for i in logging.root.manager.loggerDict
-]
 
-logging.basicConfig(level=MOX_LOG_LEVEL)
+logging.basicConfig(level=MOX_LOG_LEVEL, filename="debug.log")
 logger = logging.getLogger("mox_cpr_abonnement")
 logger.setLevel(logging.DEBUG)
 
 
 def update_cpr_subscriptions():
-    "add or remove subscriptions according to mora data"
+    "Add or remove subscriptions according to mora data"
     logger.debug("update_cpr_subscriptions started")
     must_subscribe = set(lora_get_all_cpr_numbers())
     are_subscribed = set(cpr_get_all_subscribed())
