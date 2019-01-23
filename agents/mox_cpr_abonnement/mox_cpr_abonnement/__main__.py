@@ -30,7 +30,7 @@ logger.setLevel(logging.DEBUG)
 
 
 def update_cpr_subscriptions():
-    "Add or remove subscriptions according to mora data"
+    "Add or remove subscriptions according to mora data."
     logger.debug("update_cpr_subscriptions started")
     must_subscribe = set(lora_get_all_cpr_numbers())
     are_subscribed = set(cpr_get_all_subscribed())
