@@ -14,7 +14,7 @@ oio_config = get_config("oio")
 
 
 def get_changed_cprs():
-    "Get the updated CPR numbers from serviceplatformen"
+    "Get the updated CPR numbers from serviceplatformen."
     cprnos = []
     yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
     citizen_changes_by_date = cpr_udtraek.delta(
@@ -28,7 +28,7 @@ def get_changed_cprs():
 
 
 def get_bruger_uuids_from_cprno(cprno):
-    "Translate a cpr number to a list of one or more uuids"
+    "Translate a cpr number to a list of one or more uuids."
     return requests.get(
         url="{oio_rest_url}/organisation/bruger".format(**oio_config),
         params={"tilknyttedepersoner": "urn:{pnr}".format(pnr=cprno)},
@@ -37,7 +37,7 @@ def get_bruger_uuids_from_cprno(cprno):
 
 
 def get_changed_bruger_uuids():
-    "Get changed cprnumbers from SP and translate them to uuids in lora"
+    "Get changed cprnumbers from SP and translate them to uuids in lora."
     changed_uuids, cprnos = [], None
     # retry a couple of times in case of trouble
     for i in range(3):
@@ -60,7 +60,7 @@ def get_changed_bruger_uuids():
 
 
 def get_changed_uuids(resource):
-    "Get changed uuids for resource"
+    "Get changed uuids for resource."
     if resource == "bruger":
         return get_changed_bruger_uuids()
     else:
