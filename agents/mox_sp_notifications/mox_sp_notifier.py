@@ -11,6 +11,7 @@ import requests
 from helper import start_logging
 from cpr_handler import cpr_handler
 from cvr_handler import cvr_handler
+from change_lists import get_changed_uuids
 import interfaces.oio_interface as oio
 
 
@@ -24,7 +25,7 @@ log_level = 20
 log = start_logging(log_level)
 
 
-def run_task(resource, handler):
+def run_task(lister, resource, handler):
     """
     Main task runner.
 
@@ -44,7 +45,7 @@ def run_task(resource, handler):
     """
 
     # Get all uuids
-    list_of_uuids = oio.get_all(resource)
+    list_of_uuids = lister(resource)
 
     # Debug
     log.debug(list_of_uuids)
@@ -160,11 +161,11 @@ def apply_update(registrering, update):
 
     # Iterate over all items in the list
     # Target the items that needs to be updated
-    items = registrering[section].get(key,[])
+    items = registrering[section].get(key, [])
     if len(items) == 0:
         log.error("No %s found in registrering['%s']", key, section)
         return False
-    
+
     for item in items:
 
         # Next we need to target the key/value pairs
@@ -251,10 +252,10 @@ if __name__ == "__main__":
 
     # List of available tasks
     available_tasks = [
-        ("bruger", cpr_handler),
-        ("organisation", cvr_handler)
+        (get_changed_uuids, "bruger", cpr_handler),
+        (get_changed_uuids, "organisation", cvr_handler)
     ]
 
     # Run all tasks from the list
-    for resource, handler in available_tasks:
-        run_task(resource, handler)
+    for lister, resource, handler in available_tasks:
+        run_task(lister, resource, handler)

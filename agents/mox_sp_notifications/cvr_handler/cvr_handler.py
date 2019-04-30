@@ -62,6 +62,9 @@ def cvr_handler(org_data):
             continue
         except requests.exceptions.ConnectionError:
             continue
+        except RuntimeError:
+            # cvr not found
+            continue
     if not sp_data:
         log.error("error for uuid, returning empty list of updates for organisation %s",uuid)
         return []
