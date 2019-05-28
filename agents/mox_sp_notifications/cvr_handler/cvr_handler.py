@@ -59,11 +59,10 @@ def cvr_handler(org_data):
             sp_data = get_cvr_data_from_sp(cvr_id)
             break
         except zeep.exceptions.Fault:
+            log.warning("zeep exception for organisation %s",uuid)
             continue
         except requests.exceptions.ConnectionError:
-            continue
-        except RuntimeError:
-            # cvr not found
+            log.warning("connection error for organisation %s",uuid)
             continue
     if not sp_data:
         log.error("error for uuid, returning empty list of updates for organisation %s",uuid)
