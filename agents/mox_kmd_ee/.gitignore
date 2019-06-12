@@ -2,3 +2,4 @@ settings.py
 mssql_config.py
 python-env
 certificates
+mock-runner.sh

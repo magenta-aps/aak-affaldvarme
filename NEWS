@@ -3,8 +3,8 @@
 * Version 0.1.2 - May 28, 2019
 
 
-* #25972 delta update from serviceplatformen
-* #25921 Upgraded python dependencies in serviceplatformen_cpr
+- #25972 Delta update from serviceplatformen cpr
+- #25921 Upgraded python dependencies in serviceplatformen_cpr
 
 * Version 0.1.1, August 20, 2018
 

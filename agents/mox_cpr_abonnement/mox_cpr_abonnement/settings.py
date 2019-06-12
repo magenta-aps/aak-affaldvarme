@@ -54,3 +54,9 @@ GET_PNR_SUBSCRIPTIONS = settings["GET_PNR_SUBSCRIPTIONS"]
 LORA_HTTP_BASE = settings["LORA_HTTP_BASE"]
 LORA_ORG_UUID = settings["LORA_ORG_UUID"]
 LORA_CA_BUNDLE = settings["LORA_CA_BUNDLE"]
+
+if LORA_CA_BUNDLE:
+    if LORA_CA_BUNDLE.lower() in ["1", "true", "yes", "on"]:
+        LORA_CA_BUNDLE = True
+    elif LORA_CA_BUNDLE.lower() in ["0", "false", "no", "off"]:
+        LORA_CA_BUNDLE = False
