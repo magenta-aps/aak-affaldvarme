@@ -20,4 +20,4 @@ python-dotenv==0.9.1
 requests==2.19.1
 rethinkdb==2.3.0.post6
 six==1.11.0
-urllib3==1.23
+urllib3==1.26.5
